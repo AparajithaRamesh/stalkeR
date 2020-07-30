@@ -4,7 +4,7 @@
 #'
 #' @param dataset A dataframe: data that you get from the PIT antenna
 #'
-#' @details The function can dataframe of any kind
+#' @details The function can work on dataframe that is the output of TROVAN RFID system
 #'
 #' @return The same dataframe but without the unnecessary columns
 #'
@@ -12,5 +12,6 @@
 
 #getting only required cols from the data
 get_useful_cols <- function(dataset) {
-  dataset<-subset(dataset, select=Identifier, Date, Time, `Unit number`, `Transponser code`)
-}
+  new_dataset<-subset(dataset, select=c(Identifier, Date, Time, `Unit number`, `Transponder code`))
+  new_dataset
+  }
