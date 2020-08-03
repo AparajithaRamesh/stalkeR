@@ -16,5 +16,5 @@ The same dataframe but without the unnecessary columns
 This function trims the dataset from the original raw data obtained from PIT antenna
 }
 \details{
-The function can dataframe of any kind
+The function can work on dataframe that is the output of TROVAN RFID system
 }
