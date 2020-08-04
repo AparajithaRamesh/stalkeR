@@ -7,7 +7,7 @@
 filter_exp_targets(mydataset)
 }
 \arguments{
-\item{mydataset}{Dataframe with the PIT tag data. It should already be filtered according to the time of exploration experiments}
+\item{mydataset}{Dataframe with the PIT tag data. It should already be filtered according to the time of exploration/boldness experiments}
 }
 \value{
 The filtered dataset

@@ -16,6 +16,6 @@ filter_exp_targets<-function(mydataset)
   exp_targets<-c(21,22,23,24,25,41,42,43,44,45)
 
   mydataset_new<-mydataset%>%
-    filter(Unit.number %in% exp_targets)
+    filter(`Unit number` %in% exp_targets)
   mydataset_new
 }
