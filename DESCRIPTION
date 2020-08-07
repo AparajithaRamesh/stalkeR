@@ -1,4 +1,4 @@
-Package: pondanalyser
+Package: pondr
 Type: Package
 Title: Automate analysing data from TROVAN PIT tag system
 Version: 0.1.0
