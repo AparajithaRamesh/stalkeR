@@ -9,7 +9,7 @@ get_pond_duration(pit_pond, test_details)
 \arguments{
 \item{pit_pond}{Given dataset with start and endtimes for filtering, filter tests}
 
-\item{test_details}{Dataset with details of the test}
+\item{test_details}{Dataset with details of the test. It should contain the columns "test_id", "start_time", "end_time"}
 }
 \value{
 The filtered dataset
