@@ -13,6 +13,13 @@
 
 get_pond_duration<-function(pit_pond, test_details){
 
+  #check input data
+  assertthat::assert_that("data.frame" %in% class(pit_pond),
+                          msg = "pit_pond: input not a dataframe object!")
+
+  assertthat::assert_that("data.frame" %in% class(test_details),
+                          msg = "test_details: input not a dataframe object!")
+
   #add pond IDs
   my_data<-pit_pond%>%
     mutate("pond_id"=recode(Unit.number, "44"=1,"43"=2,"42"=2,"41"=3,"35"=3,"33"=4,"32"=4,"31"=5,
@@ -28,11 +35,11 @@ get_pond_duration<-function(pit_pond, test_details){
   empty_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
 
   #loop all tests
-  for(j in 1:nrow(tests)){
+  for(j in 1:nrow(test_details)){
 
     #filter according to test times
     my_new<-my_data%>%
-      filter(Actual_time > tests$Start_time_pond[j] & Actual_time < tests$End_time_pond[j])
+      filter(Actual_time > test_details$Start_time_pond[j] & Actual_time < test_details$End_time_pond[j])
 
     #individuals in test
     indiv<-my_new%>%
@@ -46,12 +53,12 @@ get_pond_duration<-function(pit_pond, test_details){
 
       #get the vector of instances of pond crosses
       pond_crosses<-which(my_indiv$pond_id != lag(my_indiv$pond_id))
-      entry_time<-c(tests$Start_time_pond[j], my_indiv$Actual_time[pond_crosses])
-      exit_time<-c(my_indiv$Actual_time[pond_crosses-1], tests$End_time_pond[j])
+      entry_time<-c(test_details$Start_time_pond[j], my_indiv$Actual_time[pond_crosses])
+      exit_time<-c(my_indiv$Actual_time[pond_crosses-1], test_details$End_time_pond[j])
 
       start_pond_id<-my_indiv$pond_id[1]
       pond_id<-c(start_pond_id, my_indiv$pond_id[pond_crosses])
-      test_id<-rep(tests$test_ID[j], length(pond_id))
+      test_id<-rep(test_details$test_ID[j], length(pond_id))
 
       my_indiv_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
 

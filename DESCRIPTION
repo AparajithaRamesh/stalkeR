@@ -17,6 +17,8 @@ Suggests:
     rmarkdown
 Imports:
     assertthat,
-    magrittr, 
-    lubridate
+    dplyr,
+    lubridate,
+    magrittr
+    
 VignetteBuilder: knitr

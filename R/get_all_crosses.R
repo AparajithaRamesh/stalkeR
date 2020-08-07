@@ -10,7 +10,9 @@
 #needs data set, start and end times of test ----run code from above
 
 
-get_all_crosses<-function(pit_dataset, test_details){
+get_all_crosses<-function(pit_dataset,
+                          test_details,
+                          method = c("total", "hourly")){
 tag_ID<-"tagID"
 exp_crosses<-0
 bold_crosses<-0
