@@ -3,7 +3,7 @@
 #'
 #'
 #' @param pit_pond Given dataset with start and endtimes for filtering, filter tests
-#' @param test_details Dataset with details of the test
+#' @param test_details Dataset with details of the test. It should contain the columns "test_id", "start_time", "end_time"
 #' @return The filtered dataset
 #'
 #'@description pit_dataset is the cleaned up dataset

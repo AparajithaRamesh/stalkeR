@@ -4,7 +4,7 @@
 \alias{get_all_crosses}
 \title{Get all crosses}
 \usage{
-get_all_crosses(pit_dataset, test_details)
+get_all_crosses(pit_dataset, test_details, method = c("total", "hourly"))
 }
 \arguments{
 \item{mydataset}{Given dataset with start and endtimes for filtering, filter tests}

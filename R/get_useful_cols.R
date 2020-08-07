@@ -12,6 +12,9 @@
 
 #getting only required cols from the data
 get_useful_cols <- function(dataset) {
+  #check input data
+  assertthat::assert_that("data.frame" %in% class(dataset),
+                          msg = "dataset: input not a dataframe object!")
 
   dataset$Identifier<-as.integer(dataset$Identifier)
   dataset$Time<-as.character(dataset$Time) #this needs to be changed while reading the file
