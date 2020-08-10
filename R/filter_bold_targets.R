@@ -16,6 +16,6 @@ filter_bold_targets<-function(mydataset)
   bold_targets<-c(11,12,13,14,31,32,33,35)
 
   mydataset_new<-mydataset%>%
-    filter(`Unit number` %in% bold_targets)
+    filter(Unit.number %in% bold_targets)
   mydataset_new
 }

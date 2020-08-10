@@ -3,6 +3,7 @@
 export("%>%")
 export(filter_bold_targets)
 export(filter_exp_targets)
+export(get_all_crosses)
 export(get_useful_cols)
 export(multimerge)
 importFrom(magrittr,"%>%")

@@ -4,14 +4,15 @@
 \alias{get_all_crosses}
 \title{Get all crosses}
 \usage{
-get_all_crosses(pit_dataset, test_details, method = c("total", "hourly"))
+get_all_crosses(pit_dataset, test_details)
 }
 \arguments{
 \item{mydataset}{Given dataset with start and endtimes for filtering, filter tests}
 }
 \value{
-The filtered dataset
+a datafrme with 5 columns containing tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses
 }
 \description{
-pit_dataset is the cleaned up dataset
+pit_dataset is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
+  This function is particularly for handling exploration_migration tests in the ponds
 }

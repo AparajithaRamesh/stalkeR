@@ -20,8 +20,8 @@ get_useful_cols <- function(dataset) {
   dataset$Time<-as.character(dataset$Time) #this needs to be changed while reading the file
   dataset$Unit.number<-as.integer(dataset$Unit.number)
   dataset$Transponder.code<-as.character(dataset$Transponder.code)
-  dataset$actual_time<-lubridate::dmy_hms(paste(dataset$Date,dataset$Time,sep=" "))
+  dataset$Actual_time<-lubridate::dmy_hms(paste(dataset$Date,dataset$Time,sep=" "))
 
-  new_dataset<-subset(dataset, select=c(Identifier, actual_time, Unit.number, Transponder.code))
+  new_dataset<-subset(dataset, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
   new_dataset
   }
