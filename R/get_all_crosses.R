@@ -2,7 +2,9 @@
 #'
 #'
 #'
-#' @param mydataset Given dataset with start and endtimes for filtering, filter tests
+#' @param pit_dataset Given dataset with start
+#' and endtimes for filtering, filter tests
+#'
 #' @return a datafrme with 5 columns containing tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses
 #'
 #' @description pit_dataset is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
@@ -18,6 +20,8 @@ get_all_crosses<-function(pit_dataset,
 #filter useful cols and add the date-time column here already
 pit_dataset<-get_useful_cols(pit_dataset)
 
+#check data
+#pondr::check_data()
 #create an empty dataset as a placeholder for data from loops
 tag_ID<-"tagID"
 exp_crosses<-0
@@ -25,6 +29,17 @@ bold_crosses<-0
 pond_crosses<-0
 test_id<-"test_id"
 empty_data<-data.frame(tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses)
+
+numeric()
+
+data.frame(
+  'var1' = numeric(),
+  'var2' = character()
+)
+tibble::tibble(
+  'var1' = numeric(),
+  'var2' = character()
+)
 
 ###first loop through separate tests
 for (i in 1:as.numeric(nrow(test_details)))
