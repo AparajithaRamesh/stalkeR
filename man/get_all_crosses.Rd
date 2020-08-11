@@ -7,7 +7,8 @@
 get_all_crosses(pit_dataset, test_details)
 }
 \arguments{
-\item{mydataset}{Given dataset with start and endtimes for filtering, filter tests}
+\item{pit_dataset}{Given dataset with start
+and endtimes for filtering, filter tests}
 }
 \value{
 a datafrme with 5 columns containing tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses

@@ -7,11 +7,13 @@
 #' @return The filtered dataset
 #'
 #'@description pit_dataset is the cleaned up dataset
+#'@export
 #Loop through different pairs of start and end times for each test
 #needs data set, start and end times of test ----run code from above
 
 
-get_pond_duration<-function(pit_pond, test_details){
+
+get_pond_duration<-function(pit_pond, test_details) {
 
   #check input data
   assertthat::assert_that("data.frame" %in% class(pit_pond),
@@ -27,11 +29,11 @@ get_pond_duration<-function(pit_pond, test_details){
     arrange(my_data$Transponder.code)
 
   #starting empty dataset
-  tag_id<-c("tag_id")
-  test_id<-c("test_id")
-  pond_id<-c(0)
-  entry_time<-as.POSIXct("2021-04-11 15:00:00 UTC",tz="UTC")
-  exit_time<-as.POSIXct("2021-04-11 15:00:00 UTC",tz="UTC")
+  tag_id<-as.character()
+  test_id<-as.character()
+  pond_id<-as.integer()
+  entry_time<-as.character()
+  exit_time<-as.character()
   empty_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
 
   #loop all tests
