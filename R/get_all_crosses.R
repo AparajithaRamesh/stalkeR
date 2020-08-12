@@ -2,26 +2,27 @@
 #'
 #'
 #'
-#' @param pit_dataset Given dataset with start
-#' and endtimes for filtering, filter tests
+#' @param pit_data A dataframe: data that you get from the PIT antenna
+#' @param test_details Dataframe containing the details of the test including the columns "test_ID","Start_time_exp","End_time_exp", "Start_time_pond","End_time_pond"
 #'
 #' @return a datafrme with 5 columns containing tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses
 #'
-#' @description pit_dataset is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
+#' @description pit_data is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
 #'   This function is particularly for handling exploration_migration tests in the ponds
 #' @export
 #Loop through different pairs of start and end times for each test
 #needs data set, start and end times of test ----run code from above
 
 
-get_all_crosses<-function(pit_dataset,
+get_all_crosses<-function(pit_data,
                           test_details){
 
 #filter useful cols and add the date-time column here already
-pit_dataset<-get_useful_cols(pit_dataset)
+pit_data<-get_useful_cols(pit_data)
 
 #check data
 #pondr::check_data()
+
 #create an empty dataset as a placeholder for data from loops
 tag_ID<-"tagID"
 exp_crosses<-0
@@ -30,26 +31,15 @@ pond_crosses<-0
 test_id<-"test_id"
 empty_data<-data.frame(tag_ID, test_id, exp_crosses, bold_crosses, pond_crosses)
 
-numeric()
-
-data.frame(
-  'var1' = numeric(),
-  'var2' = character()
-)
-tibble::tibble(
-  'var1' = numeric(),
-  'var2' = character()
-)
-
 ###first loop through separate tests
 for (i in 1:as.numeric(nrow(test_details)))
   {
   #Filter with start and end time for exploration/boldness
-  temp_expbold<- pit_dataset %>%
+  temp_expbold<- pit_data %>%
     dplyr::filter(Actual_time > test_details$Start_time_exp[i] & Actual_time < test_details$End_time_exp[i])
 
   #filter pond migration data also for the same test
-  temp_pond_full<- pit_dataset %>%
+  temp_pond_full<- pit_data %>%
     dplyr::filter(Actual_time > test_details$Start_time_pond [i] & Actual_time < test_details$End_time_pond [i])
 
   #get number of individuals for this test as whole: including exp, bold, mig

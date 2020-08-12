@@ -4,10 +4,10 @@
 \alias{filter_exp_targets}
 \title{Filter all the exploration targets}
 \usage{
-filter_exp_targets(mydataset)
+filter_exp_targets(pit_data)
 }
 \arguments{
-\item{mydataset}{Dataframe with the PIT tag data. It should already be filtered according to the time of exploration/boldness experiments}
+\item{pit_data}{Dataframe with the PIT tag data. It should already be filtered according to the time of exploration/boldness experiments}
 }
 \value{
 The filtered dataset

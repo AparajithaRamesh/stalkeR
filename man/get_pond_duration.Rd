@@ -4,10 +4,10 @@
 \alias{get_pond_duration}
 \title{Get time spent in ponds}
 \usage{
-get_pond_duration(pit_pond, test_details)
+get_pond_duration(pit_data, test_details)
 }
 \arguments{
-\item{pit_pond}{Given dataset with start and endtimes for filtering, filter tests}
+\item{pit_data}{A dataframe: data that you get from the PIT antenna}
 
 \item{test_details}{Dataset with details of the test. It should contain the columns "test_id", "start_time", "end_time"}
 }
@@ -15,5 +15,5 @@ get_pond_duration(pit_pond, test_details)
 The filtered dataset
 }
 \description{
-pit_dataset is the cleaned up dataset
+pit_data is the cleaned up dataset
 }
