@@ -16,6 +16,6 @@ filter_exp_targets<-function(pit_data)
   exp_targets<-c(21,22,23,24,25,41,42,43,44,45)
 
   pit_data_new<-pit_data%>%
-    filter(Unit.number %in% exp_targets)
+    dplyr::filter(Unit.number %in% exp_targets)
   pit_data_new
 }

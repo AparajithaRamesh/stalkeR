@@ -25,6 +25,75 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
 
 #handle the method
   if (method == "exp"){
+    #starting empty dataset
+    tag_id<-as.character()
+    test_id<-as.character()
+    test_start_time<-as.character()
+    hour_number<-as.integer()
+    exp_crosses<-as.integer()
+    bold_crosses<-as.integer()
+    total_crosses<-as.integer()
+    empty_data<-data.frame(tag_id, test_id, test_start_time, hour_number,
+                           exp_crosses, bold_crosses, total_crosses)
+
+    #loop by tests
+    for(j in 1:nrow(test_details)){
+      #total number of individuals detected in test
+      num_indiv<-pit_data%>%
+        dplyr::distinct(Transponder.code)
+
+      #filter according to test time for exploration and boldness
+      my_data<-pit_data%>%
+        dplyr::filter(Actual_time > test_details$Start_time_exp[j]
+                      & Actual_time < test_details$End_time_exp[j])
+
+      #get the time of crossing wrt to start time
+      my_data$crosstime<-as.numeric(my_data$Actual_time-test_details$Start_time_exp[j], units="hours")
+
+      #loop for time in hours of test
+      for(i in 1:total_exp_hours){
+        filter_time<-my_data%>%
+          dplyr::filter(crosstime>i-1)%>%
+          dplyr::filter(crosstime<i)%>%
+          dplyr::arrange(Identifier)
+
+        #loop through individuals in the data
+        for(ind in 1:nrow(num_indiv)){
+          #select that particular individual
+          focal_ind<-num_indiv[[1]][ind]
+
+          indiv<-filter_time%>%
+            dplyr::filter(Transponder.code==focal_ind)
+          #see if that individual is present in this hour or not
+          if(nrow(indiv)==0){
+            exp_crosses<-0
+            bold_crosses<-0
+            total_crosses<-0
+            new_row<-c(focal_ind, test_details$test_ID[j],as.character(test_details$Start_time_exp[j]),i,exp_crosses, bold_crosses, total_crosses)
+          }
+
+          else{
+            #calculate all the exp_crosses
+            exp_indiv<-pondr::filter_exp_targets(indiv)
+            exp_crosses<-length(which(exp_indiv$Unit.number != dplyr::lag(exp_indiv$Unit.number)))
+
+            #calculate all the bold_crosses
+            bold_indiv<-pondr::filter_bold_targets(indiv)
+            bold_crosses<-length(which(bold_indiv$Unit.number != dplyr::lag(bold_indiv$Unit.number)))
+
+            #calculate total_crosses
+            total_crosses<-length(which(indiv$Unit.number != dplyr::lag(indiv$Unit.number)))
+
+            new_row<-c(focal_ind, test_details$test_ID[j],as.character(test_details$Start_time_exp[j]),i,exp_crosses, bold_crosses, total_crosses)
+          }
+          #add new row to empty dataset
+          empty_data<-rbind(empty_data, new_row)
+        }
+      }
+    }
+    empty_data<-empty_data[-1,]
+    colnames(empty_data)<-c("tag_id", "test_id","test_start_time", "hour_number","pond_crosses")
+    empty_data
   }
 
   if (method == "pond"){
@@ -38,6 +107,10 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
 
     #loop by tests
     for(j in 1:nrow(test_details)){
+      #total number of individuals detected in test
+      num_indiv<-pit_data%>%
+        dplyr::distinct(Transponder.code)
+
       #filter according to test time
       my_data<-pit_data%>%
         dplyr::filter(Actual_time > test_details$Start_time_pond[j]
@@ -50,10 +123,6 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
 
       #get the time of crossing wrt to start time
       my_data$crosstime<-as.numeric(my_data$Actual_time-test_details$Start_time_pond[j], units="hours")
-
-      #total number of individuals detected in test
-      num_indiv<-my_data%>%
-        dplyr::distinct(Transponder.code)
 
   #loop for time in hours of test
   for(i in 1:total_pond_hours){
@@ -84,10 +153,11 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
     }
   }
     }
+    empty_data<-empty_data[-1,]
+    colnames(empty_data)<-c("tag_id", "test_id","test_start_time", "hour_number","pond_crosses")
+    empty_data
   }
-empty_data
 }
-
 
 
 

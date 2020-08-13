@@ -16,6 +16,6 @@ filter_bold_targets<-function(pit_data)
   bold_targets<-c(11,12,13,14,31,32,33,35)
 
   pit_data_new<-pit_data%>%
-    filter(Unit.number %in% bold_targets)
+    dplyr::filter(Unit.number %in% bold_targets)
   pit_data_new
 }
