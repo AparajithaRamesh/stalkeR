@@ -38,14 +38,15 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
 
     #loop by tests
     for(j in 1:nrow(test_details)){
-      #total number of individuals detected in test
-      num_indiv<-pit_data%>%
-        dplyr::distinct(Transponder.code)
 
       #filter according to test time for exploration and boldness
       my_data<-pit_data%>%
         dplyr::filter(Actual_time > test_details$Start_time_exp[j]
                       & Actual_time < test_details$End_time_exp[j])
+
+      #total number of individuals detected in test
+      num_indiv<-my_data%>%
+        dplyr::distinct(Transponder.code)
 
       #get the time of crossing wrt to start time
       my_data$crosstime<-as.numeric(my_data$Actual_time-test_details$Start_time_exp[j], units="hours")
@@ -91,12 +92,11 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
         }
       }
     }
-    empty_data<-empty_data[-1,]
-    colnames(empty_data)<-c("tag_id", "test_id","test_start_time", "hour_number","pond_crosses")
+    colnames(empty_data)<-c("tag_id", "test_id","test_start_time","hour_number","exp_crosses","bold_crosses","total_crosses" )
     empty_data
   }
 
-  if (method == "pond"){
+ else if (method == "pond"){
     #starting empty dataset
     tag_id<-as.character()
     test_id<-as.character()
@@ -107,14 +107,14 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
 
     #loop by tests
     for(j in 1:nrow(test_details)){
-      #total number of individuals detected in test
-      num_indiv<-pit_data%>%
-        dplyr::distinct(Transponder.code)
 
       #filter according to test time
       my_data<-pit_data%>%
         dplyr::filter(Actual_time > test_details$Start_time_pond[j]
                       & Actual_time < test_details$End_time_pond[j])
+      #total number of individuals detected in test
+      num_indiv<-my_data%>%
+        dplyr::distinct(Transponder.code)
 
       #give pond_id to Unit.number i.e. the antenna number
       my_data<-my_data%>%
@@ -153,7 +153,6 @@ test_details$End_time_exp<-as.POSIXct(test_details$End_time_exp, tz="UTC")
     }
   }
     }
-    empty_data<-empty_data[-1,]
     colnames(empty_data)<-c("tag_id", "test_id","test_start_time", "hour_number","pond_crosses")
     empty_data
   }
