@@ -4,7 +4,7 @@
 \alias{get_latency_antenna}
 \title{Get latency : time until an antenna was 'crossed' by an individual}
 \usage{
-get_latency_antenna(pit_data, test_details)
+get_latency_antenna(pit_data, test_details, method = c("exp", "pond"))
 }
 \arguments{
 \item{pit_data}{A dataframe: data that you get from the PIT antenna}
