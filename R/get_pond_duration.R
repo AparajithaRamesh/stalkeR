@@ -14,9 +14,6 @@
 
 
 get_pond_duration<-function(pit_data, test_details) {
-
-  pit_data<-pure_data
-  test_details<-tests
   #check input data
   assertthat::assert_that("data.frame" %in% class(pit_data),
                           msg = "pit_data: input not a dataframe object!")
@@ -58,15 +55,24 @@ get_pond_duration<-function(pit_data, test_details) {
 
       #get the vector of instances of pond crosses
       pond_crosses<-which(my_indiv$pond_id != dplyr::lag(my_indiv$pond_id))
-      entry_time<-c(test_details$Start_time_pond[j], my_indiv$Actual_time[pond_crosses])
-      exit_time<-c(my_indiv$Actual_time[pond_crosses-1], test_details$End_time_pond[j])
 
-      start_pond_id<-my_indiv$pond_id[1]
-      pond_id<-c(start_pond_id, my_indiv$pond_id[pond_crosses])
-      test_id<-rep(test_details$test_ID[j], length(pond_id))
+      if(length(pond_crosses)==0){
+        entry_time<-test_details$Start_time_pond[j]
+        exit_time<-test_details$End_time_pond[j]
+        my_indiv_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
+      }
 
-      my_indiv_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
+      else {
+        entry_time<-c(test_details$Start_time_pond[j], my_indiv$Actual_time[pond_crosses])
+        exit_time<-c(my_indiv$Actual_time[pond_crosses-1], test_details$End_time_pond[j])
 
+        start_pond_id<-my_indiv$pond_id[1]
+        pond_id<-c(start_pond_id, my_indiv$pond_id[pond_crosses])
+        test_id<-rep(test_details$test_ID[j], length(pond_id))
+
+        my_indiv_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
+
+      }
       empty_data<-rbind(empty_data, my_indiv_data)
     }
   }
@@ -82,7 +88,7 @@ get_pond_duration<-function(pit_data, test_details) {
 
   #summarise per individual, per pond the total staying times
   #remove the first row, which is just a placeholder for variable type when the dataframe is empty
-  count<-empty_data%>%
+  visits<-empty_data%>%
     dplyr::group_by(tag_id,test_id, pond_id)%>%
     dplyr::count()
 
@@ -90,7 +96,11 @@ get_pond_duration<-function(pit_data, test_details) {
     dplyr::group_by(tag_id,test_id, pond_id)%>%
     dplyr::summarise(stay_time=sum(time_spent_hrs))
 
-  final_data<-data.frame(time_spent_inponds, count$n)
+  final_data<-data.frame(time_spent_inponds, visits$n)
 
   final_data
 }
+
+#to test
+#When there are no crosses,is it handling properly
+#When a fish missed detection in one pond, how does it handle it
