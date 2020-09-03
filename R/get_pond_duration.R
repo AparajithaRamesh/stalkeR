@@ -59,7 +59,9 @@ get_pond_duration<-function(pit_data, test_details) {
       if(length(pond_crosses)==0){
         entry_time<-test_details$Start_time_pond[j]
         exit_time<-test_details$End_time_pond[j]
-        my_indiv_data<-data.frame(tag_id, test_id, pond_id, entry_time, exit_time)
+        test_id<-test_details$test_ID[j]
+        pond_id=1
+        my_indiv_data<-data.frame(tag_id,test_id , pond_id, entry_time, exit_time)
       }
 
       else {

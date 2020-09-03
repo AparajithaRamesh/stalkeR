@@ -173,6 +173,6 @@ get_latency_antenna<-function(pit_data, test_details,
       colnames(empty_data)<-c("tag_id", "test_id", "unique_pond_antenna","latency_pond1","latency_pond2",
                               "latency_pond3", "latency_pond4", "latency_pond5")
 
-      empty_data
+      empty_data[, -4]
     }
 }
