@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1602420698654.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "667171877",
+    "id" : "6B6E5B99",
+    "lastKnownWriteTime" : 1602420775,
+    "last_content_update" : 1602420779237,
+    "path" : "~/Cours/M2 - Sticklebacks/R scripts/1. Preliminary tests/Exploration box/Latency_to_explore_3 (with function).R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "6,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

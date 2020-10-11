@@ -1,0 +1,134 @@
+# Packages
+library(dplyr)
+library(tibble)
+library(lubridate)
+library(ggplot2)
+
+
+## 1. DATA IMPORT AND MANIPULATION
+# Import data
+df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
+
+# I create the 'lat.expl' for 'Latency to explore', for hte whole script.
+lat.expl <- function(df, pattern1, pattern2){
+  # Naming my columns
+  names(df) <- c( "Identifier", "Date", "Time",
+                  "Unit.number", "Antenna.number", "Transponder.type",
+                  "Transponder.code", "Weight", "Input.status",
+                  "Output.status", "Event", "GPS.coordinates")
+  
+  # Defining my variables
+  df$Identifier <- as.integer(df$Identifier)
+  df$Time <- as.character(df$Time) #this needs to be changed while reading the file
+  df$Unit.number <- as.integer(df$Unit.number)
+  df$Transponder.code <- as.character(df$Transponder.code)
+  df$Actual_time <- dmy_hms(paste(df$Date,df$Time,sep=" "))
+  
+  # I make a new df with a subset of the variables of interest here
+  new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
+  names(new_dataset) <- c("Identifier", "time", "name", "id")
+  
+  # I split my dataframe into a list of dataframes (one object per individual)
+  df_list <- split(new_dataset, f = new_dataset$id)
+  
+  
+  
+  
+  ## 2. REMOVE THE REPEATED READS
+  # For each individual, I reduce the input vector (e.g., 1, 1, 1, 2, 2, 3) in a
+  # way that one read is kept per sequence of identical numbers (e.g., 1, 2, 3).
+  
+  # I define 'df_list_red' which is basically 'df_list' except that the input vector
+  # is replaced by the output vector.
+  df_list_red <- list()
+  nb_ind <- length(df_list)
+  
+  # I obtain the output vectors and the associated time and Identifier
+  for (i in 1:nb_ind) {
+    changes          <- which(df_list[[i]]$name!= lag(df_list[[i]]$name))
+    name             <- c(df_list[[i]]$name[1], df_list[[i]]$name[changes])
+    time             <- c(df_list[[i]]$time[1], df_list[[i]]$time[changes])
+    id               <- c(df_list[[i]]$id[1], df_list[[i]]$id[changes])
+    Identifier       <- c(df_list[[i]]$Identifier[1], df_list[[i]]$Identifier[changes])
+    df_list_red[[i]] <- data.frame(name, time, id)
+  }
+  
+  # I bind the rows of the list (i.e. make it a dataframe, as it initially was)
+  df2 <- bind_rows(df_list_red)
+  df2 <- as_tibble(df2)
+  # df2 is basically the initial 'new_dataset' but the repeated reads
+  # have been eliminated only to keep the first one.
+  
+  
+  
+  
+  ## 3. IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
+  # I stole the next piece of code from someone way smarter than me (see R Stack Overflow 41130912).
+  # First, I keep reads when individuals go through the box the following way: 11 -> 12 -> 13 -> 14
+  len_pattern = length(pattern1)
+  df_abcd <- df2 %>% arrange(id, time) %>% group_by(id) %>%
+    # check multiple lags condition
+    mutate(ab = Reduce("&", Map("==", shift(name, n = 0:(len_pattern - 1), type = "lead"), pattern1)),
+           g = cumsum(ab)) %>%
+    # use reduce or to subset sequence rows having the same length as the pattern
+    filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
+    # make unique names
+    group_by(g, add = TRUE) %>% mutate(name = paste(name, 1:n(), sep = "_")) %>%
+    # pivoting the table to wide format
+    select(-ab) %>% spread(name, time)
+  
+  
+  # Second, I keep reads when individuals go through the box the other way around: 14 -> 13 -> 12 -> 11
+  df_dcba <- df2 %>% arrange(id, time) %>% group_by(id) %>%
+    # check multiple lags condition
+    mutate(ab = Reduce("&", Map("==", shift(name, n = 0:(len_pattern - 1), type = "lead"), pattern2)),
+           g = cumsum(ab)) %>%
+    # use reduce or to subset sequence rows having the same length as the pattern
+    filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
+    # make unique names
+    group_by(g, add = TRUE) %>% mutate(name = paste(name, 1:n(), sep = "_")) %>%
+    # pivoting the table to wide format
+    select(-ab) %>% spread(name, time)
+  
+  
+  # I rename the columns of the two dataframes I created
+  names(df_abcd) <- c("id", "g", "Ant1", "Ant2", "Ant3", "Ant4")
+  names(df_dcba) <- c("id", "g", "Ant1", "Ant2", "Ant3", "Ant4")
+  
+  # I obtain a dataframe in which each row represents one individual full crossing
+  df3 <- rbind(df_abcd, df_dcba)
+  
+  # I keep individuals with the smallest 'arrival' (i.e. Ant4) value.
+  df3 <- df3 %>%
+    group_by(id) %>%
+    slice(which.min(Ant2))
+  
+  
+  
+  
+  ## 4. CALCULATE LATENCY TIME
+  # Set initial time
+  initial_time <- as.POSIXct("2020-10-08 11:30:00 UTC", tz="UTC")
+  
+  # I add a new column with the time to cross the box since the start of the test
+  df3 <- mutate(df3, time_since_start = Ant2 - initial_time)
+  df3$time_since_start <- as.numeric(df3$time_since_start)
+  
+  return(df3)
+}
+
+
+pattern1 = c(11, 12, 13, 14)
+pattern2 = c(14, 13, 12, 11)
+
+lat.expl(df, pattern1, pattern2)
+
+
+## PLOTTING
+ggplot(data=df3, aes(time_since_start)) +
+  geom_histogram(aes(),
+                 fill="#6f7b96",
+                 alpha = .8) +
+  labs(x="Latency to explore the box (minutes)", y="Count") +
+  theme(axis.ticks.x = element_blank(),
+        panel.background = element_rect(fill = "#f7f5f5"))
