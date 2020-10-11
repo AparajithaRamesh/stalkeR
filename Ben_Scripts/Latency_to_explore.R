@@ -1,15 +1,15 @@
 # Packages
-library(dplyr)
-library(tibble)
-library(lubridate)
-library(ggplot2)
+  library(dplyr)
+  library(tibble)
+  library(lubridate)
+  library(ggplot2)
 
 
 ## 1. DATA IMPORT AND MANIPULATION
 # Import data
 df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
 
-# I create the 'lat.expl' for 'Latency to explore', for hte whole script.
+# 2. I create the 'lat.expl' for 'Latency to explore', for hte whole script.
 lat.expl <- function(df, pattern1, pattern2){
   # Naming my columns
   names(df) <- c( "Identifier", "Date", "Time",
@@ -34,7 +34,7 @@ lat.expl <- function(df, pattern1, pattern2){
   
   
   
-  ## 2. REMOVE THE REPEATED READS
+  ## 2.1 REMOVE THE REPEATED READS
   # For each individual, I reduce the input vector (e.g., 1, 1, 1, 2, 2, 3) in a
   # way that one read is kept per sequence of identical numbers (e.g., 1, 2, 3).
   
@@ -62,7 +62,7 @@ lat.expl <- function(df, pattern1, pattern2){
   
   
   
-  ## 3. IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
+  ## 2.2 IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
   # I stole the next piece of code from someone way smarter than me (see R Stack Overflow 41130912).
   # First, I keep reads when individuals go through the box the following way: 11 -> 12 -> 13 -> 14
   len_pattern = length(pattern1)
@@ -106,7 +106,7 @@ lat.expl <- function(df, pattern1, pattern2){
   
   
   
-  ## 4. CALCULATE LATENCY TIME
+  ## 2.3 CALCULATE LATENCY TIME
   # Set initial time
   initial_time <- as.POSIXct("2020-10-08 11:30:00 UTC", tz="UTC")
   
@@ -117,9 +117,10 @@ lat.expl <- function(df, pattern1, pattern2){
   return(df3)
 }
 
-
+# 3. I createthe two patterns of crossing (a -> d and d -> a)
 pattern1 = c(11, 12, 13, 14)
 pattern2 = c(14, 13, 12, 11)
+
 
 lat.expl(df, pattern1, pattern2)
 
