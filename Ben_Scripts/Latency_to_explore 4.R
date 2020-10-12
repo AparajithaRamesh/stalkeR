@@ -31,7 +31,7 @@
 
   # I make a new df with a subset of the variables of interest here
     new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
-   names(new_dataset) <- c("Identifier", "time", "name", "id")
+    names(new_dataset) <- c("Identifier", "time", "name", "id")
 
   # I split my dataframe into a list of dataframes (one object per individual)
    df_list <- split(new_dataset, f = new_dataset$id)
@@ -144,4 +144,52 @@
     labs(x="Latency to explore the box (minutes)", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5"))
+
+
+# Plotting the non-visitors
+
+# I obtain the individuals that did not cross at all during the duration of the test
+  non_expl_babies <- setdiff(df$`Transponder code`, final_df$id)
+  nb_non_expl <- length(non_expl_babies)
+
+# I create a very simple dataframe with two columns
+# The first one is the ids of the individuals that crossed
+# The second one is a '1' for each row
+  id <- c(non_expl_babies)
+  crossings <- c(nb_non_expl)
+  non_expl_df <- data.frame(id, crossings)
+
+
+# I merge this dataframe with the one created above
+  final_df2 <- merge(final_df, non_expl_df, by = c("id"), all = T)
+
+  a <- ggplot(data=final_df2, aes(time_since_start)) +
+    geom_histogram(
+      aes(),
+      fill="#6f7b96",
+      alpha = .8) +
+    labs(x="Latency to explore the box (minutes)", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"),
+          aspect.ratio = .4) +
+    ylim(0, 3)
+
+  b <- ggplot(data=non_expl_df, aes(crossings)) +
+    geom_histogram(aes(),
+                   fill="#6f7b96",
+                   alpha = .8) +
+    labs(x = "No visit", y=" ") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"),
+          aspect.ratio = 14,
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+    ylim(0, 3)
+
+  (a + b)
+
+
 
