@@ -125,6 +125,7 @@
 
 
 
+
     mutate(result = case_when(
             sum(start_11) + sum(next_12) == 2 ~ TRUE,
             sum(start_13) + sum(next_14) == 2 ~ TRUE,
