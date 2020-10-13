@@ -7,6 +7,7 @@
   library(readr)
   library(data.table)
   library(patchwork)
+  library(stringr)
 
 
 ## 1. DATA IMPORT AND MANIPULATION
@@ -68,7 +69,7 @@
 # All the individuals names
   Names <- numeric()
   for(i in 1:length(df_list_red)){
-    Names[i] <- (df_list_red[[i]][1,3])
+    Names[i] <- df_list_red[[i]][1,3]
   }
 
 
@@ -76,7 +77,6 @@
 ## 1. NUMBER OF ANTENNA CHANGES PER INDIVIDUAL
 # Data frame with number of crosses per individual
   df3 <- data.frame(Names, Changes)
-  df3 <- df3[-1,]
 
   # I check if individuals have not been recorded by the antennas
   non_read_babies <- setdiff(df$`Transponder.code`, df3$Names)
@@ -90,7 +90,51 @@
 
 
 ## 2. DISTANCE TRAVELLED BY EACH INDIVIDUAL
-  df_result <- df_list_red[[1]] %>%
+
+  pond.width   <- 1
+  pond.length  <- 1.5
+  pond.diagonal<- 1.7
+
+  seq.width  <- c('1112', '1211', '1314', '1413')
+  seq.length <- c('1113', '1311', '1214', '1412')
+  seq.diag   <- c('1114', '1411', '1213', '1312')
+
+
+
+  Dist <- numeric()
+  for (i in 1:length(df_list_red)){
+    width <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.width)
+    length <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.length)
+    diagonal <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.diag)
+
+    dist.width <- sum(width)*pond.width
+    dist.length <- sum(length)*pond.length
+    dist.diagonal <- sum(diagonal)*pond.diagonal
+    Dist[i] <- (dist.width + dist.length + dist.diagonal)
+  }
+
+# Distance travalled by all individuals
+  df3 <- cbind(df3, Dist)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # Pullshit codes
+  ############################################"
+
+
+    df_result <- df_list_red[[1]] %>%
     group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
     ungroup() %>%
     mutate(if_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 11),
@@ -103,23 +147,20 @@
     ungroup() %>%
     select(result)
 
-  ?case_
-  df_result
-
-
+#########"
 
 
   df_result <- df_list_red[[1]] %>%
     group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
     ungroup() %>%
-    mutate(start_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 11),
+    mutate(start_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 13),
                              TRUE ~ NA_real_),
-           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 12),
+           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14),
                                TRUE ~ NA_real_),
 
-           start_13 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 13),
+           start_13 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 14),
                                 TRUE ~ NA_real_),
-           next_14 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14),
+           next_14 = case_when(lead(seq) != seq ~ as.numeric(antenna == 13),
                                TRUE ~ NA_real_)) %>%
     group_by(seq, antenna) %>%
 
@@ -135,3 +176,29 @@
 
   df_result
   df_list_red[[1]]
+
+
+#################
+
+  df_result <- df_list_red[[1]] %>%
+    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
+    ungroup() %>%
+
+    mutate(if_11 = case_when(seq ~ as.numeric(lag(antenna) == 13)),
+           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14))
+           ) %>%
+
+    group_by(seq, antenna) %>%
+    mutate(result = case_when(sum(if_11) + sum(next_12) == 2 ~ TRUE,
+                              TRUE ~ FALSE)) %>%
+    ungroup() %>%
+    select(result)
+
+
+  df_result
+  df_list_red[[1]]
+
+
+  #########
+
+
