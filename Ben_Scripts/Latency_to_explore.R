@@ -31,7 +31,7 @@
 
   # I make a new df with a subset of the variables of interest here
     new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
-    names(new_dataset) <- c("Identifier", "time", "name", "id")
+    names(new_dataset) <- c("Identifier", "time", "antenna", "id")
 
   # I split my dataframe into a list of dataframes (one object per individual)
    df_list <- split(new_dataset, f = new_dataset$id)
@@ -50,12 +50,12 @@
 
   # I obtain the output vectors and the associated time and Identifier
     for (i in 1:nb_ind) {
-      changes          <- which(df_list[[i]]$name!= lag(df_list[[i]]$name))
-      name             <- c(df_list[[i]]$name[1], df_list[[i]]$name[changes])
+      changes          <- which(df_list[[i]]$antenna!= lag(df_list[[i]]$antenna))
+      antenna             <- c(df_list[[i]]$antenna[1], df_list[[i]]$antenna[changes])
       time             <- c(df_list[[i]]$time[1], df_list[[i]]$time[changes])
       id               <- c(df_list[[i]]$id[1], df_list[[i]]$id[changes])
       Identifier       <- c(df_list[[i]]$Identifier[1], df_list[[i]]$Identifier[changes])
-      df_list_red[[i]] <- data.frame(name, time, id)
+      df_list_red[[i]] <- data.frame(antenna, time, id)
     }
 
   # I bind the rows of the list (i.e. make it a dataframe, as it initially was)
@@ -73,27 +73,27 @@
     len_pattern = length(pattern1)
     df_abcd <- df2 %>% arrange(id, time) %>% group_by(id) %>%
     # check multiple lags condition
-    mutate(ab = Reduce("&", Map("==", shift(name, n = 0:(len_pattern - 1), type = "lead"), pattern1)),
+    mutate(ab = Reduce("&", Map("==", shift(antenna, n = 0:(len_pattern - 1), type = "lead"), pattern1)),
     g = cumsum(ab)) %>%
     # use reduce or to subset sequence rows having the same length as the pattern
     filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
     # make unique names
-    group_by(g, add = TRUE) %>% mutate(name = paste(name, 1:n(), sep = "_")) %>%
+    group_by(g, add = TRUE) %>% mutate(antenna = paste(antenna, 1:n(), sep = "_")) %>%
     # pivoting the table to wide format
-    select(-ab) %>% spread(name, time)
+    select(-ab) %>% spread(antenna, time)
 
 
   # Second, I keep reads when individuals go through the box the other way around: 14 -> 13 -> 12 -> 11
     df_dcba <- df2 %>% arrange(id, time) %>% group_by(id) %>%
     # check multiple lags condition
-    mutate(ab = Reduce("&", Map("==", shift(name, n = 0:(len_pattern - 1), type = "lead"), pattern2)),
+    mutate(ab = Reduce("&", Map("==", shift(antenna, n = 0:(len_pattern - 1), type = "lead"), pattern2)),
     g = cumsum(ab)) %>%
     # use reduce or to subset sequence rows having the same length as the pattern
     filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
     # make unique names
-    group_by(g, add = TRUE) %>% mutate(name = paste(name, 1:n(), sep = "_")) %>%
+    group_by(g, add = TRUE) %>% mutate(antenna = paste(antenna, 1:n(), sep = "_")) %>%
     # pivoting the table to wide format
-    select(-ab) %>% spread(name, time)
+    select(-ab) %>% spread(antenna, time)
 
 
   # I rename the columns of the two dataframes I created
