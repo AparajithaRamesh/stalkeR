@@ -81,10 +81,56 @@
   # I check if individuals have not been recorded by the antennas
   non_read_babies <- setdiff(df$`Transponder.code`, df3$Names)
   # Normal to have an error message if there is all the indviduals have been read
-  non_read_babies <- data.frame(non_read_babies, 0)
-  names(non_read_babies) <- c("Names", "Changes")
+  non_read_babies <- data.frame(Names = non_read_babies,Changes =  0)
 
 # Final df containing the read (and potential non-read) individuals
   df3 <- rbind(df3, non_read_babies)
 
+
+
+
 ## 2. DISTANCE TRAVELLED BY EACH INDIVIDUAL
+  df_result <- df_list_red[[1]] %>%
+    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
+    ungroup() %>%
+    mutate(if_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 11),
+                              TRUE ~ NA_real_),
+           next_12 = case_when(lead(seq) != seq ~ as.numeric(lead(antenna) == 11),
+                              TRUE ~ NA_real_)) %>%
+    group_by(seq, antenna) %>%
+    mutate(result = case_when(sum(if_11) + sum(next_12) == 2 ~ TRUE,
+                              TRUE ~ FALSE)) %>%
+    ungroup() %>%
+    select(result)
+
+  ?case_
+  df_result
+
+
+
+
+  df_result <- df_list_red[[1]] %>%
+    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
+    ungroup() %>%
+    mutate(start_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 11),
+                             TRUE ~ NA_real_),
+           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 12),
+                               TRUE ~ NA_real_),
+
+           start_13 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 13),
+                                TRUE ~ NA_real_),
+           next_14 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14),
+                               TRUE ~ NA_real_)) %>%
+    group_by(seq, antenna) %>%
+
+
+
+    mutate(result = case_when(
+            sum(start_11) + sum(next_12) == 2 ~ TRUE,
+            sum(start_13) + sum(next_14) == 2 ~ TRUE,
+            TRUE ~ FALSE)) %>%
+    ungroup() %>%
+    select(result)
+
+  df_result
+  df_list_red[[1]]
