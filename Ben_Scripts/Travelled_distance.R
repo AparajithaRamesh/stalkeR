@@ -1,3 +1,7 @@
+# Here I obtain the number of antenna changes as well as distance travelled between antennas per individual for one pond
+# where the antennas S1-S2-S3-S4 are 11-12-13-14.
+
+
 # Packages
   library(dplyr)
   library(tidyr)
@@ -11,11 +15,9 @@
 
 
 ## 1. DATA IMPORT AND MANIPULATION
-# Import data
-  df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
+  # Import data
+    df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
 
-# 2. I create the 'lat.expl' function for 'Latency to explore'.
-# From the raw data, it outputs all the individual full crossings.
   # Naming my columns
     names(df) <- c( "Identifier", "Date", "Time",
                   "Unit.number", "Antenna.number", "Transponder.type",
@@ -39,7 +41,7 @@
 
 
 
-  ## 2.1 REMOVE THE REPEATED READS
+## 2. REMOVE THE REPEATED READS AND OBTAIN THE ANTENNA CHANGE
   # For each individual, I reduce the input vector (e.g., 1, 1, 1, 2, 2, 3) in a
   # way that one read is kept per sequence of identical numbers (e.g., 1, 2, 3).
 
@@ -64,141 +66,62 @@
   # df2 is basically the initial 'new_dataset' but the repeated reads
   # have been eliminated only to keep the first one.
 
-# All the individuals antenna changes
-  Changes <- sapply(df_list_red, nrow)
-# All the individuals names
-  Names <- numeric()
-  for(i in 1:length(df_list_red)){
-    Names[i] <- df_list_red[[i]][1,3]
-  }
+  # I obtain the number of times each individual was read in two different antennas consecutively
+    Changes <- sapply(df_list_red, nrow)
+    Names <- numeric() # I obtain the individual names
+    for(i in 1:length(df_list_red)){
+      Names[i] <- df_list_red[[i]][1,3]}
 
+  # I can generate a data frame with number of changes per individual
+    df3 <- data.frame(Names, Changes)
 
+    # I check if individuals might have not been recorded at all by the antennas
+    non_read_babies <- setdiff(df$`Transponder.code`, df3$Names)
+    # Normal to have an error message if there is all the indviduals have been read
+    non_read_babies <- data.frame(Names = non_read_babies,Changes =  0)
 
-## 1. NUMBER OF ANTENNA CHANGES PER INDIVIDUAL
-# Data frame with number of crosses per individual
-  df3 <- data.frame(Names, Changes)
-
-  # I check if individuals have not been recorded by the antennas
-  non_read_babies <- setdiff(df$`Transponder.code`, df3$Names)
-  # Normal to have an error message if there is all the indviduals have been read
-  non_read_babies <- data.frame(Names = non_read_babies,Changes =  0)
-
-# Final df containing the read (and potential non-read) individuals
-  df3 <- rbind(df3, non_read_babies)
+  # Final df containing the read (and potential non-read) individuals
+    df3 <- rbind(df3, non_read_babies)
 
 
 
 
-## 2. DISTANCE TRAVELLED BY EACH INDIVIDUAL
+## 3. DISTANCE TRAVELLED BY EACH INDIVIDUAL
+  # Distances between antennas
+    pond.width   <- 1
+    pond.length  <- 1.1
+    pond.diagonal<- 1.25
 
-  pond.width   <- 1
-  pond.length  <- 1.5
-  pond.diagonal<- 1.7
+  # Sequence of antenna changes corresponding to the distances above
+    seq.width  <- c('1112', '1211', '1314', '1413')
+    seq.length <- c('1113', '1311', '1214', '1412')
+    seq.diag   <- c('1114', '1411', '1213', '1312')
 
-  seq.width  <- c('1112', '1211', '1314', '1413')
-  seq.length <- c('1113', '1311', '1214', '1412')
-  seq.diag   <- c('1114', '1411', '1213', '1312')
-
-
-
+  # A for loop generating the total distance travelled by each individuals between the antennas it's been read at
+  # I define my Dist numerical vector
   Dist <- numeric()
   for (i in 1:length(df_list_red)){
-    width <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.width)
-    length <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.length)
-    diagonal <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.diag)
+    # I make three numerical vectors, each for a distance type (i.e. width/length/diagonal)
+    # Each element of this vector is the number of times an individual achieved the pattern above
+    # E.g. width = c(4, 2, 3, 7) corresponds to an individuals crossing 4 times 11->12, 2 times 12->11,
+    # 3 times 13->14 and 7 times 14-13.
+      width <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.width)
+      length <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.length)
+      diagonal <- str_count(paste(df_list_red[[i]]$antenna, collapse=""), seq.diag)
 
-    dist.width <- sum(width)*pond.width
-    dist.length <- sum(length)*pond.length
-    dist.diagonal <- sum(diagonal)*pond.diagonal
-    Dist[i] <- (dist.width + dist.length + dist.diagonal)
+    # I obtain the achieved distance per distance type (i.e. width/length/diagonal)
+      dist.width <- sum(width)*pond.width
+      dist.length <- sum(length)*pond.length
+      dist.diagonal <- sum(diagonal)*pond.diagonal
+    # Total distance
+      Dist[i] <- (dist.width + dist.length + dist.diagonal)
   }
 
-# Distance travalled by all individuals
-  df3 <- cbind(df3, Dist)
+  # Total distance travalled by all individuals
+    df4 <- cbind(df3, Dist)
 
+  # We can see that as expected, the correlation between nb ob crosses and distance is very strong.
+    plot(df4$Changes, df4$Dist)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # Pullshit codes
-  ############################################"
-
-
-    df_result <- df_list_red[[1]] %>%
-    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
-    ungroup() %>%
-    mutate(if_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 11),
-                              TRUE ~ NA_real_),
-           next_12 = case_when(lead(seq) != seq ~ as.numeric(lead(antenna) == 11),
-                              TRUE ~ NA_real_)) %>%
-    group_by(seq, antenna) %>%
-    mutate(result = case_when(sum(if_11) + sum(next_12) == 2 ~ TRUE,
-                              TRUE ~ FALSE)) %>%
-    ungroup() %>%
-    select(result)
-
-#########"
-
-
-  df_result <- df_list_red[[1]] %>%
-    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
-    ungroup() %>%
-    mutate(start_11 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 13),
-                             TRUE ~ NA_real_),
-           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14),
-                               TRUE ~ NA_real_),
-
-           start_13 = case_when(lag(seq) != seq ~ as.numeric(lag(antenna) == 14),
-                                TRUE ~ NA_real_),
-           next_14 = case_when(lead(seq) != seq ~ as.numeric(antenna == 13),
-                               TRUE ~ NA_real_)) %>%
-    group_by(seq, antenna) %>%
-
-
-
-
-    mutate(result = case_when(
-            sum(start_11) + sum(next_12) == 2 ~ TRUE,
-            sum(start_13) + sum(next_14) == 2 ~ TRUE,
-            TRUE ~ FALSE)) %>%
-    ungroup() %>%
-    select(result)
-
-  df_result
-  df_list_red[[1]]
-
-
-#################
-
-  df_result <- df_list_red[[1]] %>%
-    group_by(seq = {seq = rle(antenna); rep(seq_along(seq$lengths), seq$lengths)}) %>%
-    ungroup() %>%
-
-    mutate(if_11 = case_when(seq ~ as.numeric(lag(antenna) == 13)),
-           next_12 = case_when(lead(seq) != seq ~ as.numeric(antenna == 14))
-           ) %>%
-
-    group_by(seq, antenna) %>%
-    mutate(result = case_when(sum(if_11) + sum(next_12) == 2 ~ TRUE,
-                              TRUE ~ FALSE)) %>%
-    ungroup() %>%
-    select(result)
-
-
-  df_result
-  df_list_red[[1]]
-
-
-  #########
 
 
