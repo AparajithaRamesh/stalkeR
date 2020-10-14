@@ -137,7 +137,7 @@
 
 
 
-    # We can see that as expected, the correlation between nb ob crosses and distance is strong
+    # We can see that as expected, the correlation between nb of crosses and distance is strong
     plot(Travelled.distance$Changes, Travelled.distance$Dist)
 
 
