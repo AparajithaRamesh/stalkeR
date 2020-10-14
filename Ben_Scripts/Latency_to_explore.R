@@ -189,7 +189,7 @@
           panel.grid.minor = element_blank()) +
     ylim(0, 3)
 
-  (a + b)
+(a + b)
 
 
 
