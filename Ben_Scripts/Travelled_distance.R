@@ -126,14 +126,12 @@
              pond.width, pond.length, pond.diagonal,
              seq.width, seq.length, seq.diag)
 
-
     # I check if individuals might have not been recorded at all by the antennas
     non_read_babies <- setdiff(df$`Transponder code`, Travelled.distance$Names)
-    # Normal to have an error message if there is all the indviduals have been read
-    non_read_babies <- data.frame(Names = non_read_babies, Changes =  0)
+    non_read_babies <- data.frame(Names = non_read_babies, Changes =  0, Dist =  0)
 
     # Final df containing the read (and potential non-read) individuals
-    Travelled.distance <- data.frame(Travelled.distance, non_read_babies)
+    Travelled.distance <- rbind(Travelled.distance, non_read_babies)
 
 
 
