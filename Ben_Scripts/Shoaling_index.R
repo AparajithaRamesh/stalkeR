@@ -31,7 +31,7 @@
 
 # Defining my variables
   df$Identifier <- as.integer(df$Identifier)
-  df$Time <- as.character(df$Time) #this needs to be changed while reading the file
+  df$Time <- as.character(df$Time) # this needs to be changed while reading the file
   df$Unit.number <- as.integer(df$Unit.number)
   df$Transponder.code <- as.character(df$Transponder.code)
   df$Actual_time <- dmy_hms(paste(df$Date,df$Time,sep=" "))
@@ -97,14 +97,14 @@
 
 # The chunk above isn't really finished. The thing is: not all individuals have been recorded by all antennas.
 # Specifically, ind. 0007A5C9A3 hasn't been recorded by antenna 3 and 4.
-  subset(df_list_ant[[4]], df_list_ant[[4]]$id == "0007A5C9A3") # Gives a 0x4 tibble
+  subset(df_list_ant[[3]], df_list_ant[[3]]$id == "0007A5C9A3") # Gives a 0x4 tibble
 # Therefore, if I run the code above for all individuals and all antennas, it crashes.
 # The chunk of code below enables me to work on a simplified version to try to solve it.
 
 
   DF <-
     with(
-      df_list_ant[[4]], df_list_ant[[4]][
+      df_list_ant[[3]], df_list_ant[[3]][
         apply(
 
             sapply(
@@ -123,3 +123,48 @@
 
 
 #############################
+# Aaaaand here is a loop version of the above
+
+
+  #########################
+
+
+  co_occurrences_per_ind <- list()
+  focal <- list()
+  nb.occ <- numeric()
+  Shoaling.dfs <- list()
+  for (x in 1:2){
+
+    for (a in 1:nb.individuals){
+
+      focal[[a]] <- subset(df_list_ant[[x]], id == individuals[a], drop = F)
+
+      for (i in 1:nrow(focal[[a]])){
+
+        # A list. Each df corresponds to the co-occurring reads for a single read of the focal individuals
+        list_co_occurrences[[i]] <- subset(df_list_ant[[x]],
+                                           abs(difftime(df_list_ant[[x]]$time, focal[[a]]$time[i], units = "s")) <= 3, drop = F)
+
+      } # end of time window loop
+
+      # I obtain a dataframe with all the reads co-occurring with the focal individuals at a given antenna
+      # NB: The reads from the focal ind are included too
+      co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
+
+      # I remove the reads from the focal individual
+      co_occurrences_per_ind[[a]] <- subset(co_occurrences_per_ind[[a]], id != individuals[a], drop = F)
+      nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
+    } # end of individuals loop
+
+    # Number of co-occurrent reads per individual for each antenna
+    Shoaling.dfs[[x]] <- data.frame(nb.occ, individuals, df_list_ant[[x]]$antenna[1])
+
+  } # end of antenna loop
+
+  Shoaling.df <- bind_rows(Shoaling.dfs)
+  names(Shoaling.df)[3] <- "antenna"
+  Shoaling.df <- spread(Shoaling.df, antenna, nb.occ)
+
+
+
+
