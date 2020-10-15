@@ -133,17 +133,19 @@
   focal <- list()
   nb.occ <- numeric()
   Shoaling.dfs <- list()
-  for (x in 1:2){
+  for (x in 1:4){
 
     for (a in 1:nb.individuals){
 
       focal[[a]] <- subset(df_list_ant[[x]], id == individuals[a], drop = F)
 
+      if (nrow(focal[[a]] !=0 ))
+
       for (i in 1:nrow(focal[[a]])){
 
         # A list. Each df corresponds to the co-occurring reads for a single read of the focal individuals
         list_co_occurrences[[i]] <- subset(df_list_ant[[x]],
-                                           abs(difftime(df_list_ant[[x]]$time, focal[[a]]$time[i], units = "s")) <= 3, drop = F)
+                                           abs(difftime(df_list_ant[[x]]$time, focal[[a]]$time[i], units = "s")) <= 1, drop = F)
 
       } # end of time window loop
 
@@ -164,6 +166,7 @@
   Shoaling.df <- bind_rows(Shoaling.dfs)
   names(Shoaling.df)[3] <- "antenna"
   Shoaling.df <- spread(Shoaling.df, antenna, nb.occ)
+
 
 
 
