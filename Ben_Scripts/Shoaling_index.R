@@ -1,7 +1,4 @@
-# Script to get number of indivuals co-occurring within a certain time window
-# Possible things to look at:
-# 1. Total number of individuals read within this time window
-# 2. Number of times at least one individuals was read within time window
+# Script to get number of friends co-occurring within a certain time window
 
 
 # Packages
@@ -44,7 +41,7 @@
 
 
 
-## 2. OBTAIN INDIVIDUALS CO-OCCURRING WITH OTHERS WITHIN A CERTAIN TIME WINDOW
+## 2. OBTAIN FRIENDS CO-OCCURRING WITHIN A CERTAIN TIME WINDOW
 # I define my objects
   time.window <- 2 # Time window in seconds
   nb.antennas <- length(df_list_ant) # Number of antennas considered
@@ -58,10 +55,9 @@
   nb.occ <- numeric()
   nb.ind <- numeric()
   nb.ind.list <- list()
-  nb.ind.list2 <- list()
   Shoaling.dfs <- list()
 
-  for (x in 1:4){                    # Antenna loop
+  for (x in 1:nb.antennas){                    # Antenna loop
 
     for (a in 1:nb.individuals){     # Individuals loop
 
@@ -69,7 +65,7 @@
         focal[[a]] <- subset(df_list_ant[[x]], id == individuals[a])
       # If individuals have been read by an antenna, run the loop below
         if (nrow(focal[[a]] != 0)){
-        for (i in 1:17){             # Time window loop
+        for (i in 1:nb.individuals){             # Time window loop
 
 
       # A list. Each df corresponds to the co-occurring reads for a single read of the focal individuals
@@ -124,57 +120,4 @@
           panel.background = element_rect(fill = "#f7f5f5"),
           aspect.ratio = .4) +
     ylim(0, 3)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  #############################################
-  # Alternative way - using apply/sapply. Cleaner but I don't really understand. Also, it doesn't run properly.
-  # See https://stackoverflow.com/questions/18689748/subsetting-based-on-co-occurrence-within-a-time-window
-  # Define list.ind. This list will contain dataframes, one per individual. In these dataframes, each row will
-  # be one read of a co-occurring individual.
-  list.ind <- list()
-
-  # Loop sorting the data individual by individual
-  for (a in 1:13){
-
-    # Loop sorting the data antenna by antenna
-    for (i in 1:nb.antennas){
-
-      # The whole part just below is still confusing to me
-      co.occurent.ind[[i]] <- with(df_list_ant[[i]], df_list_ant[[i]][
-        apply(
-
-          sapply(time[id == individuals[a]],
-                 function(x) abs(difftime(time, x, units = "s")) <= time.window ),
-
-          1, any)
-        ,]
-      )
-
-      # Remove the rows with the focal individuals. I only keep the individuals co-occuring with the focal fish.
-      co.occurent.ind[[i]] <-  subset(co.occurent.ind[[i]], id != individuals[a])
-      # A list of dataframe (one dataframe per individual). Each row = one co-ocurrent individual.
-      list.ind[[a]] <- bind_rows(co.occurent.ind)
-      # I indicate for each row which one is the focal individual
-      list.ind[[a]] <- data.frame(list.ind[[a]], Focal.ind = individuals[a])
-
-      # I obtain the number of individuals recorded with the focal subjects within a certain time window
-      Shoaling.df[a,] <- data.frame(individuals[a], nrow(list.ind[[a]]))
-
-    } # end the antenna loop
-  } # end of individual loop
 
