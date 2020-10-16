@@ -44,13 +44,9 @@
 
 
 
-
-############################
-
-
 ## 2. OBTAIN INDIVIDUALS CO-OCCURRING WITH OTHERS WITHIN A CERTAIN TIME WINDOW
 # I define my objects
-  time.window <- 5 # Time window in seconds
+  time.window <- 2 # Time window in seconds
   nb.antennas <- length(df_list_ant) # Number of antennas considered
   individuals <- unique(new_dataset$id) # A character vector containing all the recorded invididuals
   nb.individuals <- length(individuals) # Number of individuals
@@ -60,6 +56,9 @@
   list_co_occurrences <- list()
   co_occurrences_per_ind <- list()
   nb.occ <- numeric()
+  nb.ind <- numeric()
+  nb.ind.list <- list()
+  nb.ind.list2 <- list()
   Shoaling.dfs <- list()
 
   for (x in 1:4){                    # Antenna loop
@@ -89,7 +88,10 @@
       # Remove the repeats. I end up with a list. Each df contains all the reads (from non-focal individuals) within the time window
         co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
 
-      # Number of co-occurrences per focal individual
+      # List of list. This part of code isn't ready yet.
+      # nb.ind.list[[x]] <- co_occurrences_per_ind
+
+      # I want to know the number of co-occurrent _reads_ per focal individual (regardless of identity of co-occurent fish)
         nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
 
       } # end of individuals loop
@@ -103,7 +105,7 @@
   Shoaling.df <- bind_rows(Shoaling.dfs)
 
 # Rename column 3
-  names(Shoaling.df)[,3] <- "antenna"
+  names(Shoaling.df)[3] <- "antenna"
 
 # Spread the table horizontally. Each column for one antenna
   Shoaling.df <- spread(Shoaling.df, antenna, nb.occ)
@@ -112,9 +114,16 @@
   Shoaling.df$tot <- rowSums(Shoaling.df[,-1])
 
 
-
-
-
+  ggplot(data=Shoaling.df, aes(tot)) +
+    geom_histogram(binwidth = 3,
+      aes(),
+      fill="#6f7b96",
+      alpha = .8) +
+    labs(x="Number of co-occurrent reads", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"),
+          aspect.ratio = .4) +
+    ylim(0, 3)
 
 
 
@@ -133,7 +142,7 @@
 
 
   #############################################
-  # Alternative way - using apply/sapply. Cleaner but I don't really understand
+  # Alternative way - using apply/sapply. Cleaner but I don't really understand. Also, it doesn't run properly.
   # See https://stackoverflow.com/questions/18689748/subsetting-based-on-co-occurrence-within-a-time-window
   # Define list.ind. This list will contain dataframes, one per individual. In these dataframes, each row will
   # be one read of a co-occurring individual.
