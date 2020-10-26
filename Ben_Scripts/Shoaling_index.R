@@ -111,7 +111,7 @@
 
 
   ggplot(data=Shoaling.df, aes(tot)) +
-    geom_histogram(binwidth = 3,
+    geom_histogram(
       aes(),
       fill="#6f7b96",
       alpha = .8) +
