@@ -5,13 +5,14 @@
   library(dplyr)
 
 # I define my objects
-  days <- c("Mon", "Tue", "Wed", "Thur")
+  days_test <- c("Mon", "Tue", "Wed", "Thur")
+  days_week <- c("Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun")
   tests <- c("Shelter", "Exploration_box", "Top", "Bottom")
   nb_of_weeks <- 7
   nb_of_treatment_days <- 28
   
 
-## 1. Loop to randomly decide which test is performed which day of the week
+## 1. I randomly decide which test is performed which day of the week
   df <- list()
   for (i in 1:nb_of_weeks){
     df[[i]] <- sample(tests)
@@ -19,7 +20,7 @@
 
 # I bind my list of vectors, and rename my columns
   df <- as.data.frame(do.call(rbind, df))
-  names(df) <- sample(days)
+  names(df) <- sample(days_test)
 
 
 ## 2. Loop to randomly decide which ponds are tested in the morning and afternoon every day
@@ -41,3 +42,22 @@
 # My final data table, containing the ponds that are being tested in the morning
 # and in the afternoon for every of the 28 testing days.
   time <- cbind(morning, afternoon)
+ 
+  
+  
+   
+# 3. Randomly pick two days a week we create a physical disturbance in the ponds
+    random_days <- list()
+    for (i in 1:nb_of_weeks){
+    random_days[[i]] <- sample(days_week, 2)
+    }
+    
+  # I bind my list of vectors
+    random_days <- as.data.frame(do.call(rbind, random_days))
+   
+   
+   
+   
+   
+   
+  
