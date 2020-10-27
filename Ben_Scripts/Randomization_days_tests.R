@@ -52,7 +52,7 @@
     random_days[[i]] <- sample(days_week, 2)
     }
     
-  # I bind my list of vectors
+ # I bind my list of vectors
     random_days <- as.data.frame(do.call(rbind, random_days))
    
    
