@@ -102,16 +102,16 @@ duration_threshold <- 5
   DF <- split(DF, f = DF$antenna)
   DF <- DF[[3]]
   
-  gap_threshold <- 1
-  event_duration <- 3
   
-  nb.events <- function(DF, gap_threshold, event_duration){
+  nb.events <- function(DF){
   # If an individual was read several times during the same second, I only keep one read (the first).
   DF <- subset(DF, !duplicated(time))
   
   # I create the 'gap' column. In every row, the time gap between the focal read/row and the previous one is computed.
   DF$gap <- c(NA, with(DF, time[-1] - time[-nrow(DF)]))
   
+  # I define the size of the time gap (in sec) to separate two different READING SERIES.
+  gap_threshold <- 1
   
   # I create a new column (i.e. over_threshold) indicating if the observed gap is bigger (TRUE) or
   # or smaller (FALSE) than the gap_threshold
@@ -130,13 +130,14 @@ duration_threshold <- 5
   # I define my objects
     events <- c()
     time <- c()
+    event_duration <- 3
   
 # For each reading series, I extract (i) the number of events, (ii) the duration spent sitting on the antenna.
   for(i in 1:length(DF2)){
   # I round up to the next unit
     events[i] <- ceiling(nrow(DF2[[i]])/event_duration)
   # I calculate the duration of each reading series
-    time[i] <- difftime(tail(DF2[[i]]$time,1)  , DF2[[i]]$time[1], units = "s")
+    time[i] <- difftime(tail(DF2[[10]]$time,1)  , DF2[[10]]$time[1], units = "s")
   }
 # I sum the number of events and duration of all the reading series
     nb_events <- sum(events)
@@ -146,18 +147,17 @@ duration_threshold <- 5
 # the duration spent at this antenna, the number of 'crossing events'.
   result <- data.frame(id = DF$id[1], 
               antenna = DF$antenna[1],
-              reading_series = max(DF$reading_series)+1, 
+              reading_ser = max(DF$reading_series)+1, 
               duration = tot_time,
-              nb_events = nb_events)
+              nb_ev = nb_events)
   
   return(result)
   }
 
-  
-  DF <- df_list[[7]]
+  DF <- df_list[[9]]
   DF <- split(DF, f = DF$antenna)
-  DF <- DF[[4]]
-  nb.events(DF, 1, 3)
+  DF <- DF[[3]]
+  nb.events(DF)
   
   
   
