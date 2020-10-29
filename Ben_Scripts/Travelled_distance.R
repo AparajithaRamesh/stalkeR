@@ -25,7 +25,7 @@
     # Distances between antennas
     pond.width   <- 1
     pond.length  <- 1.1
-    pond.diagonal<- 1.5
+    pond.diagonal<- 1.25
 
     # Sequence of antenna changes corresponding to the distances above
     
@@ -189,11 +189,13 @@
     # We can see that as expected, the correlation between nb of crosses and distance is strong
     plot(Travelled.distance$Changes, Travelled.distance$Dist)
     
-    
+
     ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = Replicate)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
-      geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4)) +
-      scale_fill_brewer(palette="Blues") + theme_classic() 
-      #geom_dotplot(binaxis='y', stackdir='center', dotsize=0.5, 
-      #             position=position_dodge(0.8), alpha = 0.5, fill = replicate)
-   
+      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
+      scale_fill_brewer(palette="Blues") + 
+      theme_classic() + 
+      stat_summary(fun.data=mean_sdl, fun.args = list(mult = 1), 
+                   geom = "pointrange", color="#414c61", 
+                   position = position_dodge(width = 0.4))
+    
