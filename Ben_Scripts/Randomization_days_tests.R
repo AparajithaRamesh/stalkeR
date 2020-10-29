@@ -29,7 +29,8 @@
   morning <- list()
   afternoon <- list()
   for (i in 1:nb_of_treatment_days){
-    morning[[i]] <- c(sample(c(1,2,3,4), 2), sample(c(5,6,7,8), 2))
+    morning[[i]] <- c(sample(c(1,4), 1), sample(c(2,3), 1),
+                      sample(c(5,8), 1), sample(c(6,7), 1))
     afternoon[[i]] <- setdiff(c(1,2,3,4,5,6,7,8), morning[[i]])
   }
 
@@ -42,7 +43,9 @@
 # My final data table, containing the ponds that are being tested in the morning
 # and in the afternoon for every of the 28 testing days.
   time <- cbind(morning, afternoon)
- 
+  time$Morning <- paste(time$M1, time$M2, time$M3, time$M4)
+  time$Afternoon <- paste(time$A1, time$A2, time$A3, time$A4)
+  time <- time[,-c(1:8)]
   
   
    
