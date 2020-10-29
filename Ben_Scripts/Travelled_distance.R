@@ -28,10 +28,6 @@
     seq.length <- c('1113', '1311', '1214', '1412')
     seq.diag   <- c('1114', '1411', '1213', '1312')
 
-    # I build my function
-    trav.dist <- function(df,
-                          pond.width, pond.length, pond.diagonal,
-                          seq.width, seq.length, seq.diag){
 
 ## 2. DATA MANIPULATION
     # Naming my columns
@@ -53,6 +49,10 @@
     new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
     names(new_dataset) <- c("Identifier", "time", "antenna", "id")
 
+    trav.dist <- function(new_dataset,
+                          pond.width, pond.length, pond.diagonal,
+                          seq.width, seq.length, seq.diag){
+    
     # I split my dataframe into a list of dataframes (one object per individual)
     df_list <- split(new_dataset, f = new_dataset$id)
 
