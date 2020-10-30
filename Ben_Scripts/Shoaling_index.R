@@ -33,8 +33,8 @@
   df$Actual_time <- dmy_hms(paste(df$Date,df$Time,sep=" "))
 
 # I make a new df with a subset of the variables of interest here
-  new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
-  names(new_dataset) <- c("Identifier", "time", "antenna", "id")
+  new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
+  names(new_dataset) <- c("time", "antenna", "id")
 
 # A list of dataframe. Each dataframe corresponds to one antenna.
   df_list_ant <- split(new_dataset, f = new_dataset$antenna)
@@ -57,6 +57,10 @@
   nb.ind.list <- list()
   Shoaling.dfs <- list()
 
+  
+# 1. I subset all FRIENDS READS (i.e. for each individual, all the reads from conspecifics co-occurring at an antenna)  
+  
+  
   for (x in 1:nb.antennas){                      # Antenna loop
     
     for (a in 1:nb.individuals){                 # Individuals loop
@@ -72,6 +76,9 @@
           list_co_occurrences[[i]] <- subset(df_list_ant[[x]],
                                              abs(difftime(df_list_ant[[x]]$time, focal[[a]]$time[i], units = "s")) <= time.window)
           
+          
+          # I remove the reads from the focal individual
+          list_co_occurrences[[i]] <- subset(list_co_occurrences[[i]], id != individuals[a])
         }} # End of time window loop and 'if'
       
   
@@ -80,14 +87,9 @@
       # NB: The reads from the focal ind are included too
         co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
 
-      # I remove the reads from the focal individual
-        co_occurrences_per_ind[[a]] <- subset(co_occurrences_per_ind[[a]], id != individuals[a])
-
-      # Remove the repeats. I end up with a list. Each df contains all the reads (from non-focal individuals) within the time window
+      # Remove the repeats. I end up with a list. Each df contains all the friends reads for a focal ind, within the time window
         co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
 
-      # List of list. This part of code isn't ready yet.
-      # nb.ind.list[[x]] <- co_occurrences_per_ind
 
       # I want to know the number of _ friends reads_ per focal individual (regardless of identity of friend)
         nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
@@ -122,4 +124,60 @@
           panel.background = element_rect(fill = "#f7f5f5"),
           aspect.ratio = .4) +
     ylim(0, 3)
+  
+  
+  
+  
+  
+  # 2. I subset all FOCAL READS (i.e. I subset reads from the focal individual, 
+  # when they co-occur with reads from at least one conspecific)
+  
+# Define the lists and vectors used in the loops below
+  focal <- list()
+  list_co_occurrences <- list()
+  co_occurrences_per_ind <- list()
+  nb.occ <- numeric()
+  nb.ind <- numeric()
+  nb.ind.list <- list()
+  Shoaling.dfs <- list()
+  output1 <- list()
 
+  for (x in 1:nb.antennas){                      # Antenna loop
+  
+  for (a in 1:nb.individuals){                 # Individuals loop
+  
+  # Each df of the list = all reads of one ind. at one antenna
+  focal[[a]] <- subset(df_list_ant[[x]], id == individuals[a])
+  
+  # If individuals have been read by an antenna, run the loop below
+  if (nrow(focal[[a]] != 0)){
+    for (i in 1:nrow(df_list_ant[[x]])){             # Time window loop
+      
+      
+      # A list where each df corresponds to the reads of the focal individual during which at 
+      # least one conspecific was read at the same time
+      list_co_occurrences[[i]] <- subset(focal[[a]],
+                                         abs(difftime(df_list_ant[[x]]$time[i], focal[[a]]$time, units = "s")) <= time.window)
+      
+    }} # End of time window loop and 'if'
+  
+  
+  
+  # I obtain a dataframe with all the reads that occurred in presence of at least one conspecific
+  co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
+  
+  # Remove the repeats.
+  co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
+  
+  
+  # I want to know the number of _reads_
+  nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
+
+  
+  } # end of individuals loop
+    
+    # Number of reads per individual for each antenna
+    # Shoaling.dfs[[x]] <- data.frame(nb.occ, individuals, df_list_ant[[x]]$antenna[1])
+    
+  }# end of antenna loop
+  
