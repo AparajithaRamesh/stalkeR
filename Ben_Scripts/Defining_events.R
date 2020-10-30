@@ -105,6 +105,8 @@
   return(result)
   }
 
+
+
 # Let's summarise - the function above (nb.events.ant) had, as an input, a dataframe containing all the reads for one
 # individual at one antenna, and outputs the number of reading series, duration spent sititng in the antenna, and number
 # of crossing events. This is only for ONE individual and for ONE antenna.
