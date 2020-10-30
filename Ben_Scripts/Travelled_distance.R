@@ -11,6 +11,7 @@
     library(data.table)
     library(patchwork)
     library(stringr)
+    library(tidyverse)
 
 
 ## 1. DATA IMPORT AND DEFINING MY OBJECTS
@@ -59,7 +60,9 @@
                     "Transponder.code", "Weight", "Input.status",
                     "Output.status", "Event", "GPS.coordinates")
 
-
+    
+  
+    
 
     # Defining my variables
     df$Identifier <- as.integer(df$Identifier)
@@ -99,6 +102,17 @@
     length(unique(new_dataset$id))
     
     
+    # I assign every individual to a group (Morning/Afternoon)
+    x = as.POSIXct(strptime(c("090000","123000","190000"),"%H%M%S"),"UTC")
+    date(x) <- new_dataset$time[1]
+    
+    new_dataset$time_of_day <- case_when(
+      between(new_dataset$time,x[1],x[2]) ~"Morning",
+      between(new_dataset$time,x[2],x[3]) ~"Afternoon")
+    
+    
+    time_of_day <- unique(new_dataset[,c('id','time_of_day')])
+
     
     trav.dist <- function(new_dataset){
     
@@ -175,15 +189,8 @@
     
     # I assign every individual to its pond and treatment category
     Travelled.distance <- merge(Travelled.distance, list_fish[c(2,8,9, 10)], by = "id")
-
+    Travelled.distance <- merge(Travelled.distance, time_of_day, by = "id")
   
-    # I check if individuals might have not been recorded at all by the antennas
-    non_read_babies <- setdiff(df$`Transponder code`, Travelled.distance$id)
-    non_read_babies <- data.frame(id = non_read_babies, Changes =  0, Dist =  0)
-
-    # Final df containing the read (and potential non-read) individuals
-    Travelled.distance <- rbind(Travelled.distance, non_read_babies)
-
 
 
     # We can see that as expected, the correlation between nb of crosses and distance is strong
@@ -195,7 +202,17 @@
       #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
       scale_fill_brewer(palette="Blues") + 
       theme_classic() + 
-      stat_summary(fun.data=mean_sdl, fun.args = list(mult = 1), 
+      stat_summary(fun.data=mean_sdl, 
+                   fun.args = list(mult = 1), # I show 1 SD
                    geom = "pointrange", color="#414c61", 
                    position = position_dodge(width = 0.4))
+    
+    
+    # I check if individuals might have not been recorded at all by the antennas
+    non_read_babies <- setdiff(df$`Transponder code`, Travelled.distance$id)
+    non_read_babies <- data.frame(id = non_read_babies, Changes =  0, Dist =  0)
+    
+    # Final df containing the read (and potential non-read) individuals
+    Travelled.distance <- rbind(Travelled.distance, non_read_babies)
+    
     
