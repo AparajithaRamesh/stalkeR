@@ -200,12 +200,21 @@
     ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = Replicate)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
-      scale_fill_brewer(palette="Blues") + 
-      theme_classic() + 
+      scale_fill_brewer(palette="Blues") +
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
                    geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4))
+                   position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_line(colour = "#e6e6e6"), 
+      axis.ticks.y = element_blank(), 
+      axis.ticks.x = element_blank(), 
+      panel.background = element_blank(),
+      axis.line.y = element_line(color = "black")) +
+      labs(y = "Distance", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
     
     
     # I check if individuals might have not been recorded at all by the antennas
