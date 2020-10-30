@@ -12,6 +12,7 @@
     library(patchwork)
     library(stringr)
     library(tidyverse)
+    library(readxl)
 
 
 ## 1. DATA IMPORT AND DEFINING MY OBJECTS
@@ -225,3 +226,67 @@
     Travelled.distance <- rbind(Travelled.distance, non_read_babies)
     
     
+    
+    
+    
+    ######################## Experimental plots  #######################################################
+    packages <- c("ggplot2", "dplyr", "lavaan", "plyr", "cowplot", "rmarkdown", 
+                  "readr", "caTools", "bitops")
+    if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+      install.packages(setdiff(packages, rownames(installed.packages())))  
+    }
+    
+    library(cowplot)
+    library(dplyr)
+    library(readr)
+    
+    source("R_rainclouds.R")
+    source("summarySE.R")
+    source("simulateData.R")
+    
+    Travelled.distance2 <- rbind(Travelled.distance, Travelled.distance)
+    Travelled.distance2$time <- c(rep(c(1), times = 200), rep(c(2), times = 200))
+    
+    sumrepdat <- summarySE(Travelled.distance2, measurevar = "Dist", groupvars=c("Treatment_seq", "time"))
+    
+    ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
+      geom_flat_violin(aes(fill = Treatment_seq, x = time), position = position_nudge(x = .1, y = 0), 
+                       adjust = 1.5, trim = FALSE, alpha = .5, 
+                       colour = NA)+ geom_point(aes(x = as.numeric(time)-.15, 
+                       y = Dist, colour = Treatment_seq), 
+                       position = position_jitter(width = .05), 
+                       size = .25, shape = 20) + 
+      geom_boxplot(aes(x = time, y = Dist, fill = Treatment_seq), 
+                       outlier.shape = NA, alpha = .5, width = .1, 
+                       colour = "black") +
+      geom_line(data = sumrepdat, aes(x = as.numeric(time) +.1, 
+                                      y =  Dist_mean, group = Treatment_seq, 
+                                      colour = Treatment_seq), linetype = 3) + 
+      geom_point(data = sumrepdat, aes(x = as.numeric(time) +.1, 
+                                       y =  Dist_mean, group = Treatment_seq, 
+                                       colour = Treatment_seq), shape = 18) + 
+      geom_errorbar(data = sumrepdat, aes(x = as.numeric(time)+.1, 
+                                       y =  Dist_mean, group = Treatment_seq, 
+                                       colour = Treatment_seq, ymin =  Dist_mean-se, 
+                                       ymax =  Dist_mean+se), width = .05) +
+      scale_colour_brewer(palette = "Dark2") + 
+      scale_fill_brewer(palette = "Dark2") + 
+      ggtitle("Figure R11: Repeated Measures - Factorial (Extended)")
+    
+    
+    
+    
+    
+    ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
+      geom_flat_violin(aes(fill = Treatment_seq), 
+                       position = position_nudge(x = .1, y = 0), 
+                       adjust = 1.5, trim = FALSE, alpha = .5, colour = NA) + 
+      geom_point(aes(x = as.numeric(time)-.15, y = Dist, colour = Treatment_seq), 
+                 position  = position_jitter(width = .05), 
+                 size = 1, shape = 20)+ 
+      geom_boxplot(aes(x = time, y = Dist, fill = Treatment_seq),outlier.shape = NA, 
+                   alpha = .5, width = .1, colour = "black")+ 
+      scale_colour_brewer(palette = "Dark2")+ 
+      scale_fill_brewer(palette = "Dark2")+ 
+      ggtitle("Figure R10: Repeated Measures Factorial Rainclouds") 
+                                                              
