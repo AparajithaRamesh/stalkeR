@@ -270,8 +270,8 @@
                                       colour = Treatment_seq), linetype = 1, size = 1.2) +
       #scale_colour_brewer(palette = "Dark1") + 
       #scale_fill_brewer(palette = "Dark1") +
-      scale_colour_manual(values=c("#b886af", "#995674", "#756eb8", "#91b7c7")) + 
-      scale_fill_manual(values=c("#b886af", "#995674", "#756eb8", "#91b7c7"))+
+      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#605ad6", "#b3d6e6")) + 
+      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#605ad6", "#b3d6e6"))+
       
       theme_cowplot() + 
       geom_line(aes(group = id, colour = Treatment_seq), linetype = 1,
