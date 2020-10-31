@@ -193,29 +193,6 @@
     Travelled.distance <- merge(Travelled.distance, time_of_day, by = "id")
   
 
-
-    # We can see that as expected, the correlation between nb of crosses and distance is strong
-    plot(Travelled.distance$Changes, Travelled.distance$Dist)
-    
-
-    ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = Replicate)) + 
-      geom_violin(position = position_dodge(width = 0.4)) + 
-      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
-      scale_fill_brewer(palette="Blues") +
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
-      # theme_bw() +
-      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor = element_line(colour = "#e6e6e6"), 
-      axis.ticks.y = element_blank(), 
-      axis.ticks.x = element_blank(), 
-      panel.background = element_blank(),
-      axis.line.y = element_line(color = "black")) +
-      labs(y = "Distance", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
     
     
     # I check if individuals might have not been recorded at all by the antennas
@@ -229,7 +206,43 @@
     
     
     
-    ######################## Experimental plots  #######################################################
+  ################################### PLOTS #######################################################
+
+    
+  # 1. Correlation between distance and number of changes
+    plot(Travelled.distance$Changes, Travelled.distance$Dist)
+    
+    
+    
+    
+    
+  # 2. Violin plots for differences between the 8 ponds within a week
+    ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = Replicate)) + 
+      geom_violin(position = position_dodge(width = 0.4)) + 
+      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
+      scale_fill_brewer(palette="Blues") +
+      stat_summary(fun.data=mean_sdl, 
+                   fun.args = list(mult = 1), # I show 1 SD
+                   geom = "pointrange", color="#414c61", 
+                   position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Distance", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+    
+    
+    
+    
+    
+    
+    
+  # 3. Raincloud plots to look at the difference across weeks among treatment sequences
     packages <- c("ggplot2", "dplyr", "lavaan", "plyr", "cowplot", "rmarkdown", 
                   "readr", "caTools", "bitops")
     if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
@@ -253,12 +266,16 @@
     
 
     
+    # General information about the plot
     ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
+      
+      # Layer 1 - The half-violins to show data point densities
       geom_flat_violin(aes(fill = Treatment_seq), 
                        position = position_nudge(x = .1, y = 0), 
                        adjust = 2, trim = FALSE, alpha = .6, 
                        colour = NA) + 
       
+      # Layer 2 - All the individual data points
       geom_point(aes(x = time,
                      group = id,
                      y = Dist, 
@@ -266,6 +283,7 @@
                      position = position_dodge(width = .1), 
                      size = 1, shape = 19, alpha = 0.4) + 
       
+      # Layer 3 - These individual datapoints are linked together by thin lines
       geom_line(aes(group = id
                 #,colour = Treatment_seq
                 ), linetype = 1,
@@ -273,26 +291,36 @@
                 colour = "grey",
                 position = position_dodge(width = .1)) +
 
-      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6")) + 
-      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6"))+
+
       
-      theme_cowplot() + 
+      # Layer 5 - A mean per treatment sequence
+      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
+                                       colour = Treatment_seq), shape = 19, size = 2) +
       
+      
+      # Layer 6 - A line linking these means
       geom_line(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
                                       colour = Treatment_seq), linetype = 1, size = 1) +
  
+      # Layer 6' - SE/SD bars
       #geom_errorbar(data = sumrepdat, aes( 
       #  y =  Dist_mean, group = Treatment_seq, 
       #  colour = Treatment_seq, ymin =  Dist_mean-sd, 
       #  ymax =  Dist_mean+se), width = 0.05, size = 1.2) +
       
-      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                       colour = Treatment_seq), shape = 19, size = 2)
       
-
+      # Define the colours 
+      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6")) + 
+      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6"))+
+      
+      # Define the theme
+      theme_cowplot()
 
     
-    # SPLIT VIOLIN
+    
+    
+    
+# 4. Violin split (still unfinished)
 
     
     ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq))+
@@ -302,9 +330,6 @@
       
       geom_split_violin(aes(colour = Treatment_seq), trim = FALSE, alpha = .5) 
       
-      
-
-    
     
     
     # geom_split_violin function
