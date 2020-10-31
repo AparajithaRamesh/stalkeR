@@ -256,34 +256,36 @@
     ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
       geom_flat_violin(aes(fill = Treatment_seq), 
                        position = position_nudge(x = .1, y = 0), 
-                       adjust = 1.5, trim = FALSE, alpha = .6, 
+                       adjust = 2, trim = FALSE, alpha = .6, 
                        colour = NA) + 
       geom_point(aes(x = time,
                      group = id,
                      y = Dist, colour = Treatment_seq), 
                      position = position_dodge(width = .1), 
-                     size = 1, shape = 19, alpha = 0.3) + 
+                     size = 1, shape = 19, alpha = 0.4) + 
       #geom_boxplot(aes(x = time, y = Dist, fill = Treatment_seq), 
       #                 outlier.shape = NA, alpha = .5, width = .1, 
       #                 colour = "black") +
-      geom_line(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                      colour = Treatment_seq), linetype = 1, size = 1.2) +
+
       #scale_colour_brewer(palette = "Dark1") + 
       #scale_fill_brewer(palette = "Dark1") +
-      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#605ad6", "#b3d6e6")) + 
-      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#605ad6", "#b3d6e6"))+
+      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6")) + 
+      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6"))+
       
       theme_cowplot() + 
       geom_line(aes(group = id, colour = Treatment_seq), linetype = 1,
                                 alpha = 0.1, size = 0.5, position = position_dodge(width = .1)) +
       
       
-      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                       colour = Treatment_seq), shape = 19, size = 2.5) + 
+      geom_line(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
+                                      colour = Treatment_seq), linetype = 1, size = 1.2) +
+ 
       geom_errorbar(data = sumrepdat, aes( 
         y =  Dist_mean, group = Treatment_seq, 
         colour = Treatment_seq, ymin =  Dist_mean-se, 
-        ymax =  Dist_mean+se), width = 0, size = 1.2)
+        ymax =  Dist_mean+se), width = 0, size = 1.2) +
+      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
+                                       colour = Treatment_seq), shape = 19, size = 2.5)
       
 
     ?geom_line()
