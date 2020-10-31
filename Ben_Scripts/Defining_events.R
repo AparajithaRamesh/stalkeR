@@ -1,5 +1,4 @@
-# In this script I will quantify the number of *crossing events* each individuals is making.
-# Trick from https://stackoverflow.com/questions/30516289/how-to-detect-a-gap-in-series-data-using-r
+# Some parts inspired from from https://stackoverflow.com/questions/30516289/how-to-detect-a-gap-in-series-data-using-r
 
 
 # Packages
