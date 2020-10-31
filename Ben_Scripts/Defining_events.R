@@ -53,12 +53,13 @@
   # Output = Number of reading series, duration spent sititng in the antenna, and number of 
   # crossing events for this individual at this antenna (one row dataframe).
   nb.events.ind.ant <- function(DF){
+    if (nrow(DF) != 0){
+      
 # If an individual was read several times during the same second, I only keep one read (the first).
   DF <- subset(DF, !duplicated(time))
   
 # I create the 'gap' column. In every row, the time gap between the focal read/row and the previous one is computed.
   DF$gap <- c(NA, with(DF, time[-1] - time[-nrow(DF)]))
-  
   
 # I create a new column (i.e. over_threshold) indicating if the observed gap is bigger (TRUE) or
 # or smaller (FALSE) than the gap_threshold
@@ -70,8 +71,6 @@
     
   }
   
-  
-  
   # I split my daraframe based on the number of reading series
     DF2 <- split(DF, f = DF$reading_series)
   
@@ -79,7 +78,6 @@
     events <- c()
     time <- c()
 
-  
 # For each reading series, I extract (i) the number of events, (ii) the duration spent sitting on the antenna.
   for(i in 1:length(DF2)){
   
@@ -107,12 +105,15 @@
               duration = tot_time,
               nb_ev = nb_events)
   
-  return(result)
+    
+  return(result)} # end of if
   }
 
   # Example to run function n°1:
-  # nb.events.ind.ant(subset(df_list[[1]], df_list[[1]]$antenna == 13))
+  nb.events.ind.ant(subset(df_list[[1]], df_list[[1]]$antenna == 13))
   
+  
+
   
   
   
@@ -130,19 +131,22 @@
                             gap_threshold, # A number representing the minimal time (in seconds) between two reading series
                             event_duration # A number representing the duration of a crossing event (in seconds).
                             ){
-  
+
 # I split the DF of my focal individual into a list of data frame. Each df for one antenna.    
   DF_ind <- split(DF_ind, f = DF_ind$antenna)
+  
+ 
   list <- list()
   
 # I obtain one output from the nb.events.ind.ant per antenna
-  for (i in 1:nb_antennas){
-    if (nrow(DF_ind[[i]]) != 0){
+    for (i in 1:length(DF_ind)){
+     if (nrow(DF_ind[[i]]) != 0){
      
     # I use the function written above to obtain the the number of reading series, the duration and 
     # the number of crossing events of the focal individuals for each antenna i.
     list[[i]] <- nb.events.ind.ant(DF_ind[[i]])
   } # end of for loop
+  } # end of i
   
   # I bind these outputs and reformat it
   DF3 <- bind_rows(list)
@@ -152,17 +156,17 @@
   DF3 <- data.frame(id = DF3$id[1], reading_ser = sum(DF3$reading_ser),
          duration = sum(DF3$duration), nb_ev = sum(DF3$nb_ev))
   
-  } # end of if
+  
   # I end up with a one-row-dataframe containing the number of reading series, the total duration and 
   # the number of crossing events for the focal individual. 
   return(DF3)
-  } # end of antenna loop
+  } # end of function loop
   
   
   # My final function.
-  nb.events.ind(df_list[[9]], gap_threshold = 1, event_duration = 3)
+  nb.events.ind(df_list[[4]], gap_threshold = 1, event_duration = 3)
   
-
+  nb.events.ind(df2[[8]], gap_threshold = 1, event_duration = 3)
   
   
   
