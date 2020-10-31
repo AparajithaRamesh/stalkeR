@@ -14,7 +14,9 @@
     library(tidyverse)
     library(readxl)
 
-
+  # Set working directory
+    setwd("/Users/benka/OneDrive/Documents/GitHub/RainCloudPlots/tutorial_R")
+    
 ## 1. DATA IMPORT AND DEFINING MY OBJECTS
     # Import data
     df1 <-  read_delim("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Oct 27/20201027.CSV", 
