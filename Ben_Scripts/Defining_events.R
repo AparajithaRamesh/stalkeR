@@ -11,7 +11,7 @@
   library(data.table)
   library(patchwork)
 
-## 1. Data import and manipulation
+## Data import and manipulation
 
   # Import data
   df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
@@ -47,7 +47,7 @@
   
   
   
-  # Function n°1
+ ## Function n°1
   # Input = A dataframe containing all the reads for one individual at one antenna.
   # Output = Number of reading series, duration spent sititng in the antenna, and number of 
   # crossing events for this individual at this antenna (one row dataframe).
@@ -117,7 +117,7 @@
   
   
   
-  # Function n°2
+ ## Function n°2
   # Input 1 = All the reads (at all antennas) for one individual (data frame)
   # Input 2 = The minimal duration for which two sequential reads belong two reading series. 
   # E.g., if 3 sec, then c(00:01, 00:02, 00:05, 00:06) represents one reading series, 
