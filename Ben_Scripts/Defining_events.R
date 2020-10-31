@@ -163,11 +163,9 @@
   } # end of function loop
   
   
-  # My final function.
+  # Example
   nb.events.ind(df_list[[4]], gap_threshold = 1, event_duration = 3)
   
-  nb.events.ind(df2[[8]], gap_threshold = 1, event_duration = 3)
-  
-  
+
   
   
