@@ -50,22 +50,26 @@
   nb.individuals <- length(individuals) # Number of individuals
 
 # Define the lists and vectors used in the loops below
-  focal <- list()
-  list_co_occurrences <- list()
-  co_occurrences_per_ind <- list()
-  nb.occ <- numeric()
-  nb.ind <- numeric()
-  nb.ind.list <- list()
-  Shoaling.dfs <- list()
+    focal <- list()
+    list_co_occurrences <- list()
+    co_occurrences_per_ind <- list()
+    nb.occ <- numeric()
+    nb.ind <- numeric()
+    nb.ind.list <- list()
+    Shoaling.dfs <- list()
 
-  
 
   
  
-  # 1. NEW APPROACH. FOCUSING ON FOCAL INDIVIDUALS. The code just works, but still not clean nor annotated.
+  # 1. here, for every individual, I will select the *accompanied reads*, i.e. the focal individual is read
+  # simultaneously than at least one other conspecific at a certain antenna. By simultaneously, I mean within
+  # a certain time-window, defined above (e.g., 2 sec).
   
   
-  # Here I have a function to get all the accompanied reads from afocal individual for one antenna
+  # Function n°1
+  # Input1 = All the reads at one antenna (data frame)
+  # Input2 = The reads of one focal individuals at the same antenna (data frame)
+  # Output = All the accompanied reads for the focal individual (data frame)
   reads_ind_ant <- function(antenna, focal){
     
     # If individuals have been read by an antenna, run the loop below
@@ -91,55 +95,66 @@
     
     return(co_occurrences_per_ind)}
   
-  # reads_ind_ant(df_list_ant[[2]], subset(df_list_ant[[2]], id =="0007A383F0"))
+  # Example to run the function n°1:
+  #reads_ind_ant(df_list_ant[[2]], subset(df_list_ant[[2]], id =="0007A383F0"))
   
   
   
   
   
   
-  # Function n°2. Input = all reads from one antenna. Output = list of df, where one df is accompanied reads for one individual,
-  # still for one antenna.
+  # Function n°2
+  # Input = All the reads at one antenna (data frame), as for function n°1.
+  # Output = All accompanied reads from all individuals at the antenna (data frame).
   reads_ant <- function(antenna.df){
+    # Define my list
     list <- list()
-    
+    # For every individual read at the focal antenna...
     for(i in 1:length(unique(antenna.df$id))){
-      
+      # ... I subset all accompanied reads (output of function n°1). Here, each dataframe = accompanied reads for one individual.
       list[[i]] <- reads_ind_ant(antenna.df, subset(antenna.df, id == unique(antenna.df$id)[i]))
       
     }
+    # From the list above, I make one dataframe containing all the accompanied reads from all individuals.
     list <- bind_rows(list)
     return(list)
   }
   
-
+  # Example to run the function n°2:
   # a <- reads_ant(df_list_ant[[1]])
   
   
   
   # Function n°3. 
-  # Input: list of df with all reads separated by antenna unit
-  # Output: list of list with everythinggggg
+  # Input = A list of dataframes, where each dataframe contains all the reads for one antenna.
+  # Output = A list of dataframes, where each dataframe contains all the accompanied reads for an individual.
   reads <- function(antenna){
-    
+    # Define my list
     list2 <- list()
+    # For every antenna...
     for(i in 1:nb.antennas){
-      list2[[i]] <- reads_ant(antenna[[i]])
+    # ... I wish to get the accompanied reads (output of my function n°2). I end up with a list of data frames
+    # where each dataframe corresponds to one antenna.
+        list2[[i]] <- reads_ant(antenna[[i]])
     }
+    # I actually want to separate my data based on individual identity, and not based on antenna.
+    list2 <- bind_rows(list2)
+    list2 <- split(list2, f = list2$id)
+    
     return(list2)
   }
   
+  
   df2 <- reads(df_list_ant)
-  df2 <- bind_rows(df2)
-  df2 <- df2  %>% distinct()
-  df2 <- split(df2, f = df2$id)
+
 
 
   
   
   
-  # 2. OLD APPROACH. I subset all FRIENDS READS (i.e. for each individual, all the reads from conspecifics co-occurring at an antenna)  
+  # 2. OLD APPROACH. The code below is (i) confusing, (ii) probably useless.
   
+
   
   for (x in 1:nb.antennas){                      # Antenna loop
     
