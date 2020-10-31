@@ -35,6 +35,7 @@
 # I make a new df with a subset of the variables of interest here
   new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
   names(new_dataset) <- c("time", "antenna", "id")
+  new_dataset <- new_dataset  %>% distinct()
 
 # A list of dataframe. Each dataframe corresponds to one antenna.
   df_list_ant <- split(new_dataset, f = new_dataset$antenna)
@@ -58,7 +59,86 @@
   Shoaling.dfs <- list()
 
   
-# 1. I subset all FRIENDS READS (i.e. for each individual, all the reads from conspecifics co-occurring at an antenna)  
+
+  
+ 
+  # 1. NEW APPROACH. FOCUSING ON FOCAL INDIVIDUALS. The code just works, but still not clean nor annotated.
+  
+  
+  # Here I have a function to get all the accompanied reads from afocal individual for one antenna
+  reads_ind_ant <- function(antenna, focal){
+    
+    # If individuals have been read by an antenna, run the loop below
+    
+    for (i in 1:nrow(antenna)){      # Time window loop
+      if (nrow(focal != 0)){
+        
+        antenna <- subset(antenna, id != focal$id[1])
+        
+        # A list. Each df corresponds to the friends reads for a single read of the focal individuals
+        list_co_occurrences[[i]] <- focal[abs(difftime(antenna$time[i], focal$time, units = "s")) <= time.window, ]
+        
+      }} # End of time window loop and 'if'
+    
+    
+    # I obtain a dataframe with all the reads that occurred in presence of at least one conspecific
+    co_occurrences_per_ind <- bind_rows(list_co_occurrences)
+    
+    # Remove the repeats.
+    co_occurrences_per_ind <- co_occurrences_per_ind  %>% distinct()
+    
+    co_occurrences_per_ind <- na.omit(co_occurrences_per_ind)
+    
+    return(co_occurrences_per_ind)}
+  
+  # reads_ind_ant(df_list_ant[[2]], subset(df_list_ant[[2]], id =="0007A383F0"))
+  
+  
+  
+  
+  
+  
+  # Function n°2. Input = all reads from one antenna. Output = list of df, where one df is accompanied reads for one individual,
+  # still for one antenna.
+  reads_ant <- function(antenna.df){
+    list <- list()
+    
+    for(i in 1:length(unique(antenna.df$id))){
+      
+      list[[i]] <- reads_ind_ant(antenna.df, subset(antenna.df, id == unique(antenna.df$id)[i]))
+      
+    }
+    list <- bind_rows(list)
+    return(list)
+  }
+  
+
+  # a <- reads_ant(df_list_ant[[1]])
+  
+  
+  
+  # Function n°3. 
+  # Input: list of df with all reads separated by antenna unit
+  # Output: list of list with everythinggggg
+  reads <- function(antenna){
+    
+    list2 <- list()
+    for(i in 1:nb.antennas){
+      list2[[i]] <- reads_ant(antenna[[i]])
+    }
+    return(list2)
+  }
+  
+  df2 <- reads(df_list_ant)
+  df2 <- bind_rows(df2)
+  df2 <- df2  %>% distinct()
+  df2 <- split(df2, f = df2$id)
+
+
+  
+  
+  
+  # 2. OLD APPROACH. I subset all FRIENDS READS (i.e. for each individual, all the reads from conspecifics co-occurring at an antenna)  
   
   
   for (x in 1:nb.antennas){                      # Antenna loop
@@ -81,38 +161,38 @@
           list_co_occurrences[[i]] <- subset(list_co_occurrences[[i]], id != individuals[a])
         }} # End of time window loop and 'if'
       
-  
-
+      
+      
       # I obtain a dataframe with all the friends reads
-        co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
-
+      co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
+      
       # Remove the repeats. I end up with a list. Each df contains all the friends reads for a focal ind, within the time window
-        co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
-
-
+      co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
+      
+      
       # I want to know the number of _ friends reads_ per focal individual (regardless of identity of friend)
-        nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
-
-      } # end of individuals loop
-
-      # Number of friends reads per individual for each antenna
-        Shoaling.dfs[[x]] <- data.frame(nb.occ, individuals, df_list_ant[[x]]$antenna[1])
-
+      nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
+      
+    } # end of individuals loop
+    
+    # Number of friends reads per individual for each antenna
+    Shoaling.dfs[[x]] <- data.frame(nb.occ, individuals, df_list_ant[[x]]$antenna[1])
+    
   } # end of antenna loop
-
-# I bind the rows of the list.
+  
+  # I bind the rows of the list.
   Shoaling.df <- bind_rows(Shoaling.dfs)
-
-# Rename column 3
+  
+  # Rename column 3
   names(Shoaling.df)[3] <- "antenna"
-
-# Spread the table horizontally. Each column for one antenna
+  
+  # Spread the table horizontally. Each column for one antenna
   Shoaling.df <- spread(Shoaling.df, antenna, nb.occ)
-
-# I create my sociality index
+  
+  # I create my sociality index
   Shoaling.df$tot <- rowSums(Shoaling.df[,-1])
-
-
+  
+  
   ggplot(data=Shoaling.df, aes(tot)) +
     geom_histogram(
       aes(),
@@ -127,60 +207,3 @@
   
   
   
-  
- 
-  # FOCUSING ON FOCAL INDIVIDUALS. The code just works, but still not clean nor annotated.
-  
-  
-  # Here I have a function to get all the accompanied reads from afocal individual for one antenna
-  reads_ind_ant <- function(antenna, focal){
-    
-    # If individuals have been read by an antenna, run the loop below
-    
-    for (i in 1:nrow(antenna)){      # Time window loop
-      if (nrow(focal != 0)){
-        
-        # A list. Each df corresponds to the friends reads for a single read of the focal individuals
-        list_co_occurrences[[i]] <- focal[abs(difftime(antenna$time[i], focal$time, units = "s")) <= time.window, ]
-        
-      }} # End of time window loop and 'if'
-    
-    
-    # I obtain a dataframe with all the reads that occurred in presence of at least one conspecific
-    co_occurrences_per_ind <- bind_rows(list_co_occurrences)
-    
-    # Remove the repeats.
-    co_occurrences_per_ind <- co_occurrences_per_ind  %>% distinct()
-    
-    return(co_occurrences_per_ind)}
-  
-  #reads_ind_ant(df_list_ant[[3]], subset(df_list_ant[[3]], id =="0007A39A35"))
-  
-  
-  
-  
-  # Function n°2. Input = all reads from one antenna. Output = list of df, where one df is accompanied reads for one individual,
-  # still for one antenna.
-  reads_ant <- function(antenna.df){
-    list <- list()
-    
-    for(i in 1:length(unique(antenna.df$id))){
-      
-      list[[i]] <- reads_ind_ant(antenna.df, subset(antenna.df, id == unique(antenna.df$id)))
-    }
-    return(list)
-  }
-  
-  reads_ant(df_list_ant[[2]])
-  
-  
-  # Function n°3. 
-  # Input: list of df with all reads separated by antenna unit
-  # Output: list of list with everythinggggg
-  reads <- function(){
-    list <- list()
-    for(i in 1:nb.antennas){
-      list[[i]] <- reads_ant(df_list_ant[[i]])
-    }
-    return(list)
-  }
