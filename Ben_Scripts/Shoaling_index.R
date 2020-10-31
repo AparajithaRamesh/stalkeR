@@ -148,9 +148,15 @@
   df2 <- reads(df_list_ant)
 
 
-
   
+  # Experimental part with the duration script. Not ready yet
+  for (i in 1:length(df2)){
+    list3 <- list()
+    list3[[i]] <- nb.events.ind(df2[[i]], gap_threshold = 1, event_duration = 3)
+    
+  }
   
+  nb.events.ind(df2[[1]], gap_threshold = 1, event_duration = 3)
   
   # 2. OLD APPROACH. The code below is (i) confusing, (ii) probably useless.
   

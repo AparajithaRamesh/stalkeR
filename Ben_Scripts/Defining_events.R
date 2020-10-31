@@ -31,8 +31,8 @@
   df$Actual_time <- dmy_hms(paste(df$Date,df$Time,sep=" "))
   
 # I make a new df with a subset of the variables of interest here
-  new_dataset<-subset(df, select=c(Identifier, Actual_time, Unit.number, Transponder.code))
-  names(new_dataset) <- c("Identifier", "time", "antenna", "id")
+  new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
+  names(new_dataset) <- c("time", "antenna", "id")
   
 # I split my dataframe into a list of dataframes (one object per individual)
   df_list <- split(new_dataset, f = new_dataset$id)
@@ -48,7 +48,10 @@
   
   
   
-  
+  # Function n°1
+  # Input = A dataframe containing all the reads for one individual at one antenna.
+  # Output = Number of reading series, duration spent sititng in the antenna, and number of 
+  # crossing events for this individual at this antenna (one row dataframe).
   nb.events.ind.ant <- function(DF){
 # If an individual was read several times during the same second, I only keep one read (the first).
   DF <- subset(DF, !duplicated(time))
@@ -64,6 +67,7 @@
 # I assign every read to a reading series (that is, a group of uninturrepted reads) based on the 'over_threshold' column
   for (a in 1:nrow(DF)){
     DF$reading_series[a] <- nrow(filter(DF[1:a,], over_thresh == "TRUE")) + 1
+    
   }
   
   
@@ -85,8 +89,9 @@
   # Events are define rounding up to the unit above (if an event is 3s, 2s = 1 event, 4s = 2 events, 7s = 3 events, etc.)
     events[i] <- ceiling(nrow(DF2[[i]])/event_duration)
   
-    # I also calculate the duration of each reading series
-    time[i] <- difftime(tail(DF2[[i]]$time,1)  , DF2[[i]]$time[1], units = "s")
+    # I also calculate the duration of each reading series. When only one read = 1 sec.
+    # If a reading series starts at 00:00 and ends at 00:03, it counts as 4 seconds and not 3.
+    time[i] <- (difftime(tail(DF2[[i]]$time,1), DF2[[i]]$time[1], units = "s") + 1)
   }
     
 # I sum the number of events and duration of all the reading series (what I obtain oreviously is a vector, with
@@ -105,17 +110,22 @@
   return(result)
   }
 
-
-
-# Let's summarise - the function above (nb.events.ant) had, as an input, a dataframe containing all the reads for one
-# individual at one antenna, and outputs the number of reading series, duration spent sititng in the antenna, and number
-# of crossing events. This is only for ONE individual and for ONE antenna.
-
-#DF <- subset(df_list[[1]], df_list[[1]]$antenna == 13)
-#  nb.events.ind.ant(DF)
+  # Example to run function n°1:
+  # nb.events.ind.ant(subset(df_list[[1]], df_list[[1]]$antenna == 13))
   
-# Here, I will use the function above, but generalise it to obtain a similar output but for all the antennas that the individuals 
-# has been through.
+  
+  
+  
+  
+  # Function n°2
+  # Input 1 = All the reads (at all antennas) for one individual (data frame)
+  # Input 2 = The minimal duration for which two sequential reads belong two reading series. 
+  # E.g., if 3 sec, then c(00:01, 00:02, 00:05, 00:06) represents one reading series, 
+  # but c(00:01, 00:02, 00:07, 00:08) represents two.
+  # Input 3 = the crossing event duration. Not sure I'll keep this part.
+  # Output = Number of reading series, duration spent sititng in the antenna, and number of 
+  # crossing events for this individual at ALL antennas (one row dataframe).
+  
   nb.events.ind <- function(DF_ind,        # A dataframe containing all the reads for a focal individual
                             gap_threshold, # A number representing the minimal time (in seconds) between two reading series
                             event_duration # A number representing the duration of a crossing event (in seconds).
