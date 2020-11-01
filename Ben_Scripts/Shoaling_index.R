@@ -1,4 +1,7 @@
-# Script to get number of friends co-occurring within a certain time window
+# Script to get the number of reading series and duration spent in presence of a conspecific, for every fish.
+
+#############################################################################################################    
+# A. Packages, data import and manipulation   
 
 
 # Packages
@@ -14,7 +17,6 @@
   library(readxl)
 
 
-## 1. DATA IMPORT AND MANIPULATION
 # Import data
   df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
 
@@ -71,7 +73,7 @@
     
   
 #############################################################################################################    
-    
+# B. Function n°1 - obtain accompanied reads for a focal individual at one antenna                            
     
     
     
@@ -121,7 +123,7 @@
     
     
 #############################################################################################################      
-  
+# C. Function n°2 - obtain accompanied reads for all individual at one antenna       
     
     
   
@@ -151,7 +153,7 @@
     
     
 #############################################################################################################      
-  
+# D. Function n°3 - obtain accompanied reads for all individual at all antennas   
     
     
   # Function n°3. 
@@ -182,7 +184,7 @@
     
     
 #############################################################################################################        
-      
+# E. I obtain the number of accompanied reading series and duration for all individuals.
 
 
     
