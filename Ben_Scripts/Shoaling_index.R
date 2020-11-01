@@ -189,7 +189,7 @@
 
     
   
-  # Here, I will use a funtion written in the Defining_events script to obtain, from the list of reads,
+  # Here, I will use a funtion written in the Duration_and_reading_series script to obtain, from the list of reads,
   # the duration read at antennas, and the number of reading series.
   
   # I first define two lists
