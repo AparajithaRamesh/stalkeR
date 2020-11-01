@@ -11,6 +11,7 @@
   library(data.table)
   library(patchwork)
   library(stringr)
+  library(readxl)
 
 
 ## 1. DATA IMPORT AND MANIPULATION
@@ -36,10 +37,20 @@
   new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
   names(new_dataset) <- c("time", "antenna", "id")
   new_dataset <- new_dataset  %>% distinct()
-
-# A list of dataframe. Each dataframe corresponds to one antenna.
+  
+# I assign every individual to a group (Morning/Afternoon)
+  x = as.POSIXct(strptime(c("090000","123000","190000"),"%H%M%S"),"UTC")
+  date(x) <- new_dataset$time[1]
+  
+  new_dataset$time_of_day <- case_when(
+    between(new_dataset$time,x[1],x[2]) ~"Morning",
+    between(new_dataset$time,x[2],x[3]) ~"Afternoon")
+  
+  
+  
+# I separate my dataframe based on (i) antenna and (ii) individuals
   df_list_ant <- split(new_dataset, f = new_dataset$antenna)
-
+  df_list_ind <- split(new_dataset, f = new_dataset$id)
 
 
 ## 2. OBTAIN FRIENDS CO-OCCURRING WITHIN A CERTAIN TIME WINDOW
@@ -61,11 +72,13 @@
 
   
  
-  # 1. here, for every individual, I will select the *accompanied reads*, i.e. the focal individual is read
-  # simultaneously than at least one other conspecific at a certain antenna. By simultaneously, I mean within
+  # Here, for every individual, I will select the *accompanied reads*, i.e. when the focal individual is read
+  # simultaneously with at least one other conspecific at a certain antenna. By simultaneously, I mean within
   # a certain time-window, defined above (e.g., 2 sec).
   
   
+#############################################################################################################    
+    
   # Function n°1
   # Input1 = All the reads at one antenna (data frame)
   # Input2 = The reads of one focal individuals at the same antenna (data frame)
@@ -77,10 +90,17 @@
     for (i in 1:nrow(antenna)){      # Time window loop
       if (nrow(focal != 0)){
         
-        antenna <- subset(antenna, id != focal$id[1])
+         # I define my antenna dataframe. 
+         # First, it contains all the individuals read at this antenna except the focal individual.
+         antenna <- subset(antenna, id != focal$id[1])
+        
+        # Second, I remove the individuals that have been read at this antenna in another pond (i.e. during 
+        # another part of the day) to make the computation more efficient.
+        antenna <- subset(antenna, time_of_day == focal$time_of_day[1])
         
         # A list. Each df corresponds to the friends reads for a single read of the focal individuals
-        list_co_occurrences[[i]] <- focal[abs(difftime(antenna$time[i], focal$time, units = "s")) <= time.window, ]
+        list_co_occurrences[[i]] <- focal[abs(difftime(antenna$time[i], 
+                                                       focal$time, units = "s")) <= time.window, ]
         
       }} # End of time window loop and 'if'
     
@@ -100,7 +120,7 @@
   
   
   
-  
+#############################################################################################################      
   
   
   # Function n°2
@@ -111,7 +131,8 @@
     list <- list()
     # For every individual read at the focal antenna...
     for(i in 1:length(unique(antenna.df$id))){
-      # ... I subset all accompanied reads (output of function n°1). Here, each dataframe = accompanied reads for one individual.
+      # ... I subset all accompanied reads (output of function n°1). Here, each dataframe = accompanied reads 
+      # for one individual.
       list[[i]] <- reads_ind_ant(antenna.df, subset(antenna.df, id == unique(antenna.df$id)[i]))
       
     }
@@ -121,9 +142,10 @@
   }
   
   # Example to run the function n°2:
-  # a <- reads_ant(df_list_ant[[1]])
+  # b <- reads_ant(df_list_ant[[1]]) 
   
-  
+
+#############################################################################################################      
   
   # Function n°3. 
   # Input = A list of dataframes, where each dataframe contains all the reads for one antenna.
@@ -143,100 +165,44 @@
     
     return(list2)
   }
-  
-  
+
+#############################################################################################################        
+      
+  # I run function n°3 end up with a list of dataframes, where each dataframe contains all the 
+  # accompanied reads for an individual.
   df2 <- reads(df_list_ant)
 
 
   
-  # A fusion with the 'Defining_events' script.
-  list3 <- list()
+  # Here, I will use a funtion written in the Defining_events script to obtain, from the list of reads,
+  # the duration read at antennas, and the number of reading series.
+  
+  # I first define two lists
+  accompanied_series <- list()
+  non_accompanied_series <- list()
+  
+  # A. For every individual that has been read accompanied...
   for (i in 1:length(df2)){
-    
-    list3[[i]] <- nb.events.ind(df2[[i]], gap_threshold = 1, event_duration = 3)
-    
+    # I want to obtain the number of accompanied reading series and the time spent accompanied at antennas.
+    accompanied_series[[i]] <- nb.series.ind(df2[[i]], gap_threshold = 1)
   }
   
-  
- a <- bind_rows(list3)
- 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  # 2. OLD APPROACH. The code below is (i) confusing, (ii) probably useless.
-  
+  # B. Then, for every individual that has been read (even the lonely ones, actually)...
+  for (i in 1:length(df_list_ind)){
+    # I want to obtain the number of reading series and the time spent read by antennas.
+    non_accompanied_series[[i]] <- nb.series.ind(df_list_ind[[i]], gap_threshold = 1)
+    
+  }
 
-  
-  for (x in 1:nb.antennas){                      # Antenna loop
+    # I transform my two lists as two dataframes. 
+    accompanied_series_df <- bind_rows(accompanied_series)
+    non_accompanied_series_df <- bind_rows(non_accompanied_series)
     
-    for (a in 1:nb.individuals){                 # Individuals loop
-      
-      # Each df = reads of one ind. at one antenna
-      focal[[a]] <- subset(df_list_ant[[x]], id == individuals[a])
-      # If individuals have been read by an antenna, run the loop below
-      if (nrow(focal[[a]] != 0)){
-        for (i in 1:nrow(focal[[a]])){             # Time window loop
-          
-          
-          # A list. Each df corresponds to the friends reads for a single read of the focal individuals
-          list_co_occurrences[[i]] <- subset(df_list_ant[[x]],
-                                             abs(difftime(df_list_ant[[x]]$time, focal[[a]]$time[i], units = "s")) <= time.window)
-          
-          
-          # I remove the reads from the focal individual
-          list_co_occurrences[[i]] <- subset(list_co_occurrences[[i]], id != individuals[a])
-        }} # End of time window loop and 'if'
-      
-      
-      
-      # I obtain a dataframe with all the friends reads
-      co_occurrences_per_ind[[a]] <- bind_rows(list_co_occurrences)
-      
-      # Remove the repeats. I end up with a list. Each df contains all the friends reads for a focal ind, within the time window
-      co_occurrences_per_ind[[a]] <- co_occurrences_per_ind[[a]]  %>% distinct()
-      
-      
-      # I want to know the number of _ friends reads_ per focal individual (regardless of identity of friend)
-      nb.occ[a] <- c(nrow(co_occurrences_per_ind[[a]]))
-      
-    } # end of individuals loop
+    # I merge them and rename the columns
+    DF <- merge(accompanied_series_df, non_accompanied_series_df, by = 'id')
+    names(DF) <- c("id", "acc_read_series", "acc_duration", "tot_read_series", "tot_duration")
+
     
-    # Number of friends reads per individual for each antenna
-    Shoaling.dfs[[x]] <- data.frame(nb.occ, individuals, df_list_ant[[x]]$antenna[1])
-    
-  } # end of antenna loop
-  
-  # I bind the rows of the list.
-  Shoaling.df <- bind_rows(Shoaling.dfs)
-  
-  # Rename column 3
-  names(Shoaling.df)[3] <- "antenna"
-  
-  # Spread the table horizontally. Each column for one antenna
-  Shoaling.df <- spread(Shoaling.df, antenna, nb.occ)
-  
-  # I create my sociality index
-  Shoaling.df$tot <- rowSums(Shoaling.df[,-1])
-  
-  
-  ggplot(data=Shoaling.df, aes(tot)) +
-    geom_histogram(
-      aes(),
-      fill="#6f7b96",
-      alpha = .8) +
-    labs(x="Number of co-occurrent reads", y="Count") +
-    theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5"),
-          aspect.ratio = .4) +
-    ylim(0, 3)
-  
   
   
   
