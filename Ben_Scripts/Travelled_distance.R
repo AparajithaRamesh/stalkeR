@@ -267,6 +267,8 @@
     Travelled.distance2$time <- c(rep(c("W1"), times = 200), rep(c("W2"), times = 200), rep(c("W3"), times = 200))
     
 
+
+    sumrepdat <- summarySE(Travelled.distance2, measurevar = "Dist", groupvars=c("Treatment_seq", "time"))    
     
     # General information about the plot
     ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
@@ -295,14 +297,14 @@
 
 
       
-      # Layer 5 - A mean per treatment sequence
-      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                       colour = Treatment_seq), shape = 19, size = 2) +
-      
-      
-      # Layer 6 - A line linking these means
+
+      # Layer 5 - A line linking these means
       geom_line(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
                                       colour = Treatment_seq), linetype = 1, size = 1) +
+      
+      # Layer 6 - A mean per treatment sequence
+      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
+                                       colour = Treatment_seq), shape = 19, size = 2) +
  
       # Layer 6' - SE/SD bars
       #geom_errorbar(data = sumrepdat, aes( 

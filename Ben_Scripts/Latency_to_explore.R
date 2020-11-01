@@ -7,6 +7,7 @@
   library(readr)
   library(data.table)
   library(patchwork)
+  library(plotly)
 
   
 ## 1. DATA IMPORT AND MANIPULATION
@@ -235,6 +236,5 @@
 
 
 (a + b)
-
 
 
