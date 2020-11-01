@@ -76,8 +76,13 @@
   # simultaneously with at least one other conspecific at a certain antenna. By simultaneously, I mean within
   # a certain time-window, defined above (e.g., 2 sec).
   
+    
+    
   
 #############################################################################################################    
+    
+    
+    
     
   # Function n°1
   # Input1 = All the reads at one antenna (data frame)
@@ -120,8 +125,12 @@
   
   
   
+    
+    
 #############################################################################################################      
   
+    
+    
   
   # Function n°2
   # Input = All the reads at one antenna (data frame), as for function n°1.
@@ -145,8 +154,13 @@
   # b <- reads_ant(df_list_ant[[1]]) 
   
 
+    
+    
+    
 #############################################################################################################      
   
+    
+    
   # Function n°3. 
   # Input = A list of dataframes, where each dataframe contains all the reads for one antenna.
   # Output = A list of dataframes, where each dataframe contains all the accompanied reads for an individual.
@@ -166,13 +180,19 @@
     return(list2)
   }
 
+    # I run function n°3 end up with a list of dataframes, where each dataframe contains all the 
+    # accompanied reads for an individual.
+    df2 <- reads(df_list_ant)
+    
+    
+    
+    
+    
 #############################################################################################################        
       
-  # I run function n°3 end up with a list of dataframes, where each dataframe contains all the 
-  # accompanied reads for an individual.
-  df2 <- reads(df_list_ant)
 
 
+    
   
   # Here, I will use a funtion written in the Defining_events script to obtain, from the list of reads,
   # the duration read at antennas, and the number of reading series.
