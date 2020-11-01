@@ -53,27 +53,18 @@
   df_list_ind <- split(new_dataset, f = new_dataset$id)
 
 
-## 2. OBTAIN FRIENDS CO-OCCURRING WITHIN A CERTAIN TIME WINDOW
 # I define my objects
   time.window <- 2 # Time window in seconds
   nb.antennas <- length(df_list_ant) # Number of antennas considered
   individuals <- unique(new_dataset$id) # A character vector containing all the recorded invididuals
   nb.individuals <- length(individuals) # Number of individuals
 
-# Define the lists and vectors used in the loops below
-    focal <- list()
-    list_co_occurrences <- list()
-    co_occurrences_per_ind <- list()
-    nb.occ <- numeric()
-    nb.ind <- numeric()
-    nb.ind.list <- list()
-    Shoaling.dfs <- list()
 
 
   
  
-  # Here, for every individual, I will select the *accompanied reads*, i.e. when the focal individual is read
-  # simultaneously with at least one other conspecific at a certain antenna. By simultaneously, I mean within
+  # Below, for every individual, I will select the *accompanied reads*, i.e. when the focal individual is read
+  # simultaneously with at least one conspecific at a certain antenna. By simultaneously, I mean within
   # a certain time-window, defined above (e.g., 2 sec).
   
     
@@ -90,6 +81,8 @@
   # Output = All the accompanied reads for the focal individual (data frame)
   reads_ind_ant <- function(antenna, focal){
     
+    # I define a list
+    list_co_occurrences <- list()
     # If individuals have been read by an antenna, run the loop below
     
     for (i in 1:nrow(antenna)){      # Time window loop
