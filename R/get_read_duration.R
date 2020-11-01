@@ -4,7 +4,7 @@
 #' @param pit_data A dataframe: data that you get from the PIT antenna
 #' @param test_details Dataframe containing the details of the test including the columns "test_ID","Start_time_exp","End_time_exp", "Start_time_pond","End_time_pond"
 #'
-#' @return a datafrme with 5 columns containing tag_ID, test_id, cross, antenna, duration at the antenna
+#' @return a datafrme with 4 columns containing id, antenna, reading_ser,duration
 #'
 #' @description pit_data is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
 #'   This function is for getting time an individual spent at any antenna - hiding, taking shelter, crossing antenna etc
