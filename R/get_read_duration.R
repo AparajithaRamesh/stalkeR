@@ -1,5 +1,4 @@
 #' Get read duration
-#' Duration of a read in antenna
 #'
 #' @param pit_data A dataframe: data that you get from the PIT antenna
 #' @param test_details Dataframe containing the details of the test including the columns "test_ID","Start_time_exp","End_time_exp", "Start_time_pond","End_time_pond"

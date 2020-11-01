@@ -2,8 +2,7 @@
 % Please edit documentation in R/get_read_duration.R
 \name{get_read_duration}
 \alias{get_read_duration}
-\title{Get read duration
-Duration of a read in antenna}
+\title{Get read duration}
 \usage{
 get_read_duration(pit_data, test_details)
 }
@@ -13,7 +12,7 @@ get_read_duration(pit_data, test_details)
 \item{test_details}{Dataframe containing the details of the test including the columns "test_ID","Start_time_exp","End_time_exp", "Start_time_pond","End_time_pond"}
 }
 \value{
-a datafrme with 5 columns containing tag_ID, test_id, cross, antenna, duration at the antenna
+a datafrme with 4 columns containing id, antenna, reading_ser,duration
 }
 \description{
 pit_data is the data you get directly from the PIT tag readers. It can be for one or multiple tests.
