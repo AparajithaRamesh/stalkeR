@@ -153,7 +153,7 @@
     
     
 #############################################################################################################      
-# D. Function n°3 - obtain accompanied reads for all individual at all antennas   
+# D. Function n°3 - obtain accompanied reads for all individuals at all antennas   
     
     
   # Function n°3. 
