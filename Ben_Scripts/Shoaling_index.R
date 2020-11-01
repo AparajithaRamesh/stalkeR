@@ -123,7 +123,7 @@
     
     
 #############################################################################################################      
-# C. Function n°2 - obtain accompanied reads for all individual at one antenna       
+# C. Function n°2 - obtain accompanied reads for all individuals at one antenna       
     
     
   
