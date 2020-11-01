@@ -27,8 +27,8 @@ get_read_duration<-function(pit_data,
   # define my objects
   nb_antennas <- length(unique(pit_data$antenna))  # Number of antennas
   nb_individuals <- length(unique(pit_data$id))    # Number of individuals
-  gap_threshold <- 1                                  # The size of the time gap (in sec) to separate two different READING SERIES.
-  event_duration <- 3                                 # The duration of one event
+  gap_threshold <- 1                               # The size of the time gap (in sec) to separate two different READING SERIES.
+  event_duration <- 3                              # The duration of one event
 
   ##PRE-REQUISITE FUNCTION - should I incorporate in new fn?
   nb.series.ind.ant <- function(DF){
@@ -45,7 +45,7 @@ get_read_duration<-function(pit_data,
 
       # I assign every read to a reading series (that is, a group of uninturrepted reads) based on the 'over_threshold' column
       for (a in 1:nrow(DF)){
-        DF$reading_series[a] <- nrow(filter(DF[1:a,], over_thresh == "TRUE")) + 1
+        DF$reading_series[a] <- nrow(dplyr::filter(DF[1:a,], over_thresh == "TRUE")) + 1
 
       }
 
@@ -91,13 +91,13 @@ get_read_duration<-function(pit_data,
 
     #get my first focal individual
     focal_ind_dataset<-subset(df_list[[i]])
-    focal_ind<-focal_ind_dataset$antenna[1]
+    focal_ind<-focal_ind_dataset$id[1]
 
     #individual dataframe should not have 0 rows, as we are only getting data from the PIT antenna
     assertthat::assert_that(nrow(focal_ind_dataset) != 0)
 
     #get number of antenna the focal individual has been read at
-    n_ant<-focal_ind_dataset%>%distinct(antenna)
+    n_ant<-focal_ind_dataset%>%dplyr::distinct(antenna)
 
     ##second loop through all the antenna
     for (j in 1:nrow(n_ant)){
