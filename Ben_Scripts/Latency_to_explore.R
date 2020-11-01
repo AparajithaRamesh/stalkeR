@@ -30,12 +30,23 @@
   # I make a new df with a subset of the variables of interest here
     new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
     names(new_dataset) <- c("time", "antenna", "id")
+  
+  # I remove repeats
+    new_dataset <- new_dataset  %>% distinct()
 
   # I rename my antennas with a standardised notation across ponds (see scheme above)
     new_dataset[new_dataset == 11 | new_dataset == 21 | new_dataset == 31 | new_dataset == 41] <- 1
     new_dataset[new_dataset == 12 | new_dataset == 22 | new_dataset == 32 | new_dataset == 42] <- 2
     new_dataset[new_dataset == 13 | new_dataset == 23 | new_dataset == 33 | new_dataset == 43] <- 3
     new_dataset[new_dataset == 14 | new_dataset == 24 | new_dataset == 35 | new_dataset == 44] <- 4
+    
+  # I assign every individual to a group (Morning/Afternoon)
+    x = as.POSIXct(strptime(c("090000","123000","190000"),"%H%M%S"),"UTC")
+    date(x) <- new_dataset$time[1]
+    
+    new_dataset$time_of_day <- case_when(
+      between(new_dataset$time,x[1],x[2]) ~"Morning",
+      between(new_dataset$time,x[2],x[3]) ~"Afternoon")
     
     
     
@@ -44,7 +55,7 @@
     lat.expl <- function(df, pattern1, pattern2, initial_time){
     
   # I split my dataframe into a list of dataframes (one object per individual)
-   df_list <- split(new_dataset, f = new_dataset$id)
+   df_list <- split(df, f = new_dataset$id)
 
 
 
@@ -64,7 +75,6 @@
       antenna             <- c(df_list[[i]]$antenna[1], df_list[[i]]$antenna[changes])
       time             <- c(df_list[[i]]$time[1], df_list[[i]]$time[changes])
       id               <- c(df_list[[i]]$id[1], df_list[[i]]$id[changes])
-      Identifier       <- c(df_list[[i]]$Identifier[1], df_list[[i]]$Identifier[changes])
       df_list_red[[i]] <- data.frame(antenna, time, id)
     }
 
@@ -134,19 +144,30 @@
 }
 
 
-# 3. I indicate the crossing sequences (a -> d and d -> a) and starting time
-  p11.14 = c(1, 2, 3, 4)
-  P14.11 = c(4, 3, 2, 1)
-  t11.30 <- as.POSIXct("2020-10-27 12:00:00 UTC", tz="UTC")
+# 3. I indicate the crossing sequences (a -> d and d -> a)
+  p1.4 = c(1, 2, 3, 4)
+  P4.1 = c(4, 3, 2, 1)
 
-# I create my final df given a dataset and the two crossing sequences
-  final_df <- lat.expl(df, p11.14, P14.11, t11.30)
+# I define my starting times
+  start_morning = as.POSIXct(strptime(c("090000"),"%H%M%S"),"UTC")
+  date(start_morning) <- new_dataset$time[1]
+  
+  start_afternoon = as.POSIXct(strptime(c("123000"),"%H%M%S"),"UTC")
+  date(start_afternoon) <- new_dataset$time[1]
+  
+
+# I run my functions for the morning and the afternoon
+  final_df_morning <- lat.expl(subset(new_dataset, time_of_day == "Morning"), p1.4, P4.1, start_morning)
+  final_df_afternoon <- lat.expl(subset(new_dataset, time_of_day == "Afternoon"), p1.4, P4.1, start_afternoon)
+
+# I obtain my final dataset with the first crossing sequence for every individual and at what time it happened
+  final_df <- rbind(final_df_morning, final_df_afternoon)
 
 # I obtain the individuals that did not cross at all during the duration of the test
   non_expl_babies <- setdiff(df$`Transponder.code`, final_df$id)
   
 
-## PLOTTING
+## 3. PLOTTING
   ggplot(data=final_df, aes(time_since_start)) +
     geom_histogram(aes(),
                    bins = 6,
