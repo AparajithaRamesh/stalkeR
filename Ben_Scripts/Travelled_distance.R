@@ -289,10 +289,10 @@
       
       # Layer 3 - These individual datapoints are linked together by thin lines
       geom_line(aes(group = id
-                #,colour = Treatment_seq
+                ,colour = Treatment_seq
                 ), linetype = 1,
                 alpha = 0.1, size = 0.5, 
-                colour = "grey",
+                #colour = "grey",
                 position = position_dodge(width = .1)) +
 
 
