@@ -423,7 +423,7 @@ EB_Lat_2 <- na.omit(EB_Lat_2)
 
 ```{r, message = FALSE}
 
-    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = Expl_index, fill = time_of_day)) + 
+    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
       scale_fill_brewer(palette="Blues") +
@@ -439,12 +439,12 @@ EB_Lat_2 <- na.omit(EB_Lat_2)
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Exploration tendency", x =" ") +
+      labs(y = "Latency to cross the exploration box", x =" ") +
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
 
 
 
-    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = Expl_index)) + 
+    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start)) + 
       geom_violin(fill = "#b4d3db") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -458,7 +458,7 @@ EB_Lat_2 <- na.omit(EB_Lat_2)
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Exploration tendency", x =" ") +
+      labs(y = "Latency to cross the exploration box", x =" ") +
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
 ```
 
