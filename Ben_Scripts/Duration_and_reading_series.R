@@ -40,10 +40,8 @@
 
 
 # I define my objects
-  nb_antennas <- length(unique(new_dataset$antenna))  # Number of antennas
-  nb_individuals <- length(unique(new_dataset$id))    # Number of individuals
-  gap_threshold <- 1                                  # The size of the time gap (in sec) to separate two different READING SERIES.
-  event_duration <- 3                                 # The duration of one event
+  gap_threshold <- 1            # The size of the time gap (in sec) to separate two different READING SERIES.
+  event_duration <- 3           # The duration of one event
   
   
   

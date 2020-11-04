@@ -1,6 +1,7 @@
 ---
 title: "Behavioural tests"
-output: html_notebook
+output:
+  html_notebook: default
 ---
 
 This notebook contains chunks of R script computing indices for five different behaviours:
@@ -20,7 +21,6 @@ I first import the packages I will use in in the notebook.
 ```{r, results="hide", message = FALSE}
 
 # Packages
-
   library(dplyr)
   library(tidyr)
   library(tibble)
@@ -51,7 +51,8 @@ df_bottom <- read_delim("Data/Week 1/20201103.CSV",
 #df_top <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Shelters data
-#df_shelter <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
+df_shelter <- read_delim("Data/Week 1/20201104.CSV", 
+     ";", escape_double = FALSE, trim_ws = TRUE)
 
 # List of fish
   list_fish <- read_excel("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Ben_PITtag_final_grouped_FINAL.xlsx", 
@@ -73,6 +74,8 @@ I create the **clean.data** *function* to clean my data. This function does the 
 ![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
 
 ![Figure 2 - Location of the antennas for the *top* and the *EB* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide9.png)
+
+
 
 ```{r, message = FALSE}
 clean.data <- function(df){
@@ -149,6 +152,34 @@ clean.data <- function(df){
 ```
 
 
+Next, I make a small function to obtain, for each clean data frame, then umber of individuals in the pond.
+
+```{r}
+
+Nb.ind <- function(clean_df){
+# I separate my dataset per Pond
+ponds <- split(clean_df, f = clean_df$Pond)
+
+# I deine a vector
+ponds_df <- c()
+# For each pond...
+for (i in 1:length(ponds)){
+  # ... I want to obtain the number of individuals.
+  ponds_df[i] <- length(unique(ponds[[i]]$id))
+  
+} # end of loop
+
+# I make a data frame with the loop output
+ponds_df <- data.frame(Pond = c(1:8), Nb = ponds_df)
+
+return(ponds_df)
+} # end of function
+
+```
+
+
+
+
 ---
 
 ## 2. Latency to explore the box
@@ -158,7 +189,9 @@ I first run the **clean.data** function on the EB data frame, then split it per 
 
 ```{r, message = FALSE}
   EB_clean_df <- clean.data(df_EB)
-  
+  print(EB_clean_df)  
+  Nb.ind(EB_clean_df)
+
 # I split my dataframe into a list of dataframes (one object per individual)
    EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
 
@@ -487,10 +520,10 @@ Next, I can apply the function above to all individuals. I then add a column con
   
 # I add a new column with the time to cross the box since the start of the test
 # For the morning
-  EB_Lat_2_morning <- mutate(subset(df3, time_of_day == "Morning"), 
+  EB_Lat_2_morning <- mutate(subset(EB_Lat_2, time_of_day == "Morning"), 
                            time_since_start = difftime(Ant2, start_morning, units='m'))
 # For the afternoon
-  EB_Lat_2_afternoon <- mutate(subset(df3, time_of_day == "Afternoon"), 
+  EB_Lat_2_afternoon <- mutate(subset(EB_Lat_2, time_of_day == "Afternoon"), 
                              time_since_start = difftime(Ant2, start_afternoon, units='m'))
 
   
@@ -577,9 +610,11 @@ The plots below show the distribution of latency scores per pond and per treatme
 I first run the **clean.data** function on the bottom antenna data frame. 
 
 ```{r, message = FALSE}
-bottom_clean_df <- clean.data(df_bottom)
-print(bottom_clean_df)
-length(unique(bottom_clean_df$id))
+
+  bottom_clean_df <- clean.data(df_bottom)
+  print(bottom_clean_df)
+  Nb.ind(bottom_clean_df)
+  
 ```
 
 
@@ -764,7 +799,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
 
 
 ```{r, message = FALSE}
-  # 2. Violin plots for differences between the 8 ponds within a week
+  # Violin plots for differences between the 8 ponds within a week
       ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       
@@ -895,12 +930,112 @@ I change my working directory to have access to the R files from this GitHub rep
 
 ```
 
+
+## 4. Tendency to hide
+### 4.1 Data manipulation
+
+I first run the **clean.data** function on the Shelter data frame, then split it per individual (same as above). I also look at my number of individuals per pond. 
+
 ```{r, message = FALSE}
+  Shelter_clean_df <- clean.data(df_shelter)
+  print(Shelter_clean_df)
+  Nb.ind(Shelter_clean_df)
+  
+# I split my dataframe into a list of dataframes (one object per individual)
+   Shelter_list_df_id <- split(Shelter_clean_df, f = Shelter_clean_df$id)
+
+   
+```
+
+### 4.2 Duration spent at each antenna
+
+Next, I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
+
+```{r, message = FALSE}
+Shelter_variables <- merge(list_fish[,c(2, 8, 9)], 
+                      unique(Shelter_clean_df[,c(4,5)]), by = "Pond")
+
+
+Shelter_variables <- Shelter_variables[!duplicated(Shelter_variables[,c('id')]),]
 
 ```
 
+
 ```{r, message = FALSE}
 
+nreads <- c()
+ids <- character()
+for (i in 1:length(Shelter_list_df_id)){
+ids[i] <- Shelter_list_df_id[[i]]$id[1]
+nreads[i] <- nrow(Shelter_list_df_id[[i]])}
+
+Shelter_nreads <- data.frame(id = ids, nb = nreads)
+
+
+```
+
+### 4.3 Plotting
+
+First, I will, for every individual, indicate to what pond and treatment it is associated with.
+
+```{r, message = FALSE}
+    
+
+# I assign every individual to its pond and treatment category
+    Shelter_nreads <- merge(Shelter_variables, Shelter_nreads, by = "id", all = T)
+
+
+```
+
+
+```{r}
+hist(Shelter_nreads$nb/60)
+```
+
+
+
+```{r, message = FALSE}
+  # Violin plots for differences between the 8 ponds within a week
+      ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = nb/60, fill = time_of_day)) + 
+      geom_violin(position = position_dodge(width = 0.4)) + 
+      
+      #geom_boxplot(width=.1, outlier.colour=NA, 
+      #             position = position_dodge(width = 0.4), colour = "black") +
+      
+      scale_fill_brewer(palette="Blues") +
+      
+      stat_summary(fun.data=mean_sdl, 
+                   fun.args = list(mult = 1), # I show 1 SD
+                   geom = "pointrange", color="#414c61", 
+                   position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Travelled distance (meters)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+
+
+    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = nb/60)) + 
+      geom_violin(fill = "#b4d3db") + 
+      stat_summary(fun.data=mean_sdl, 
+                   fun.args = list(mult = 1), # I show 1 SD
+                   geom = "pointrange", color="#414c61", 
+                   position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Time spent hiding (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
 ```
 
 ```{r, message = FALSE}
