@@ -3,17 +3,19 @@ title: "Behavioural tests"
 output: html_notebook
 ---
 
-This notebook contains chunks computing indiced for a set of behaviours:
+This notebook contains chunks of R script computing indices for five different behaviours:
 
 - Travelled distance
 - Tendency to spend time at the top of the pond
 - Latency to cross an exploration box
 - Tendency to hide
 - Shoaling tendency
-There is no behavioural test for the latter behavioural index, but the metric is retrieved from the data of the other tests.
+
+There is no behavioural test for the last index, but the metric is retrieved from the data collected for the four other tests. This notebook is so far built to compute the indices for one week of treatment, from the four weekly datasets.
 
 ## 1. Packages, data import and basic data manipulation
 
+I first import the packages I will use in in the notebook.
 
 ```{r, results="hide", message = FALSE}
 # Packages
@@ -31,22 +33,27 @@ There is no behavioural test for the latter behavioural index, but the metric is
   library(plotly)
 ```
 
-I import the four dataset we get every week, one for each behavioural test. I also import the list of all the fishes.
+I import the four dataset we get every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (i.e. PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
 
 ```{r, message = FALSE}
 
-# Data import
+# Exploration box data
 df_EB <- read_delim("Data/Week 1/20201102.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
+# Bottom antennas data
 df_bottom <- read_delim("Data/Week 1/20201103.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
+# Top antennas data
 #df_top <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
 
+# Shelters data
 #df_shelter <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
-list_fish <- read_excel("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Ben_PITtag_final_grouped_FINAL.xlsx", 
-                        sheet = "Sheet1")
+
+# List of fish
+  list_fish <- read_excel("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Ben_PITtag_final_grouped_FINAL.xlsx", 
+                          sheet = "Sheet1")
 
 ```
 
@@ -57,13 +64,13 @@ I create the **clean.data** *function* to clean my data. This function does the 
 - It subsets a few columns of interest from the raw data (i.e. time, antenna, id)
 - It keeps only one read per individual and per second for a given antenna (i.e. remove repeats)
 - I assign every individual to a category named *time of the day*, indicating if it was tested during the morning or during the afternoon.
-- I rename the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2).
-- I remove the ghost reads, and the reads coming from antenna tests, to only keep the fish reads in the ponds.
-- I assign each individual to its *pond number* and *treatment sequence*.
+- It renames the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2).
+- It removes the ghost reads, and the reads coming from antenna tests, to only keep the fish reads in the ponds.
+- It assigns each individual to its *pond number* and *treatment sequence*.
 
-![Figure 1](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
+![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
 
-![Figure 2](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide9.png)
+![Figure 2 - Location of the antennas for the *top* and the *EB* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide9.png)
 
 ```{r, message = FALSE}
 clean.data <- function(df){
@@ -102,14 +109,19 @@ clean.data <- function(df){
   
   
 # I rename my antennas with a standardised notation across ponds (see scheme above)
-    new_dataset[new_dataset == 11 | new_dataset == 21 | new_dataset == 31 | new_dataset == 41] <- 1
-    new_dataset[new_dataset == 12 | new_dataset == 22 | new_dataset == 32 | new_dataset == 42] <- 2
-    new_dataset[new_dataset == 13 | new_dataset == 23 | new_dataset == 33 | new_dataset == 43] <- 3
-    new_dataset[new_dataset == 14 | new_dataset == 24 | new_dataset == 35 | new_dataset == 34 | 
+    new_dataset[new_dataset == 11 | new_dataset == 21 | 
+                  new_dataset == 31 | new_dataset == 41] <- 1
+    new_dataset[new_dataset == 12 | new_dataset == 22 | 
+                  new_dataset == 32 | new_dataset == 42] <- 2
+    new_dataset[new_dataset == 13 | new_dataset == 23 | 
+                  new_dataset == 33 | new_dataset == 43] <- 3
+    new_dataset[new_dataset == 14 | new_dataset == 24 | 
+                  new_dataset == 35 | new_dataset == 34 | 
                 new_dataset == 44] <- 4
     
 
-  # Now, I will remove all the reads that do not come from the fish present in the ponds (e.g. ghost reads, test reads)
+  # Now, I will remove all the reads that do not come from the fish present 
+  # in the ponds (e.g. ghost reads, test reads)
     list_fish <- read_excel("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Ben_PITtag_final_grouped_FINAL.xlsx", 
                             sheet = "Sheet1")
 
@@ -150,10 +162,11 @@ I first run the **clean.data** function on the EB data frame, then split it per 
 
 ```
 
-Next, I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day.
+Next, I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
 
 ```{r, message = FALSE}
-EB_variables <- merge(list_fish[,c(2, 8, 9)], unique(EB_clean_df[,c(4,5)]), by = "Pond")
+EB_variables <- merge(list_fish[,c(2, 8, 9)], 
+                      unique(EB_clean_df[,c(4,5)]), by = "Pond")
 length(unique(EB_variables$id))
 
 EB_variables <- EB_variables[!duplicated(EB_variables[,c('id')]),]
@@ -182,7 +195,6 @@ I then define the crossing sequences and starting times.
 Next, I want to keep the reads corresponding to antenna changes. For each individual, if an invidiual has been read at the antenna the following way - 1, 1, 1, 2, 2, 3 -, we only keep the first reads for each sequence at the same antenna. The output is, for the example above: 1, 2, 3. 
 
 
-
 ```{r, message = FALSE}
   
 
@@ -190,7 +202,10 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
     df_list_red <- list()
     nb_ind <- length(EB_list_df_id) # number of individuals that have been read by the antennas
 
-  # I obtain the output vectors and the associated time
+    
+    
+  # For each individual, I want to obtain the reads corresponding to an antenna change and the
+  # corresponding antenna number, time and fish id.
     for (i in 1:nb_ind) {
       EB_list_df_id[[i]] <- EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
       changes          <- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
@@ -201,6 +216,8 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
     }
 
 
+    
+    
   # I bind the rows of the list (i.e. make it a dataframe, as it initially was)
     EB_Changes <- bind_rows(df_list_red)
     EB_Changes <- as.data.frame(EB_Changes)
@@ -223,15 +240,17 @@ Next, I want to obtain the latency between the time the box was introduced into 
 - Output: The first box cross for all individuals (data frame). A column is also computing how long since the box has been introduced the individuals have taken to enter the box.
     
     
-    ```{r, message = FALSE}
+```{r, message = FALSE}
     
     
 # 1. I create the 'lat.expl' function for 'Latency to explore'.
     # From the cleaned data frame, it outputs all the individual full crossings.
     lat.expl <- function(df, pattern1, pattern2, initial_time){
     
+      
+      
   ## 2. IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
-  # I stole the next piece of code from someone way smarter than me (see R Stack Overflow 41130912).
+  # I stole the next piece of code from someone way smarter than me (R Stack Overflow 41130912).
   # First, I keep reads when individuals go through the box the following way: 1 -> 2 -> 3 -> 4
     len_pattern = 4
     df_abcd <- df %>% arrange(id, time) %>% group_by(id) %>%
@@ -260,19 +279,23 @@ Next, I want to obtain the latency between the time the box was introduced into 
     select(-ab) %>% spread(antenna, time)
 
 
+    
+    
   # I rename the columns of the two dataframes I created
-  names(df_abcd) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", "Ant1", "Ant2", "Ant3", "Ant4")
-  names(df_dcba) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", "Ant1", "Ant2", "Ant3", "Ant4")
+  names(df_abcd) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", 
+                      "Ant1", "Ant2", "Ant3", "Ant4")
+  names(df_dcba) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", 
+                      "Ant1", "Ant2", "Ant3", "Ant4")
 
+  
   # I obtain a dataframe in which each row represents one individual full crossing
   df3 <- rbind(df_abcd, df_dcba)
 
+  
   # I keep individuals with the smallest 'arrival' (i.e. Ant2) value.
   df3 <- df3 %>%
     group_by(id) %>%
     slice(which.min(Ant2))
-
-
 
 
   ## 3. CALCULATE LATENCY TIME
@@ -289,33 +312,71 @@ Next, I want to obtain the latency between the time the box was introduced into 
 ```
 
 
-I run my function.
+I run my function for each half-day, as the starting time will differ. Then, I merge them together.
 
-```{r}
+```{r, message = FALSE}
+
+
 # I run my functions for the morning and the afternoon
-  EB_Lat_Morning <- lat.expl(subset(EB_Changes, time_of_day == "Morning"), p1.4, p4.1, start_morning)
-  EB_Lat_Afternoon <- lat.expl(subset(EB_Changes, time_of_day == "Afternoon"), p1.4, p4.1, start_afternoon)
+  EB_Lat_Morning <- lat.expl(subset(EB_Changes, time_of_day == "Morning"), 
+                             p1.4, p4.1, start_morning)
+  EB_Lat_Afternoon <- lat.expl(subset(EB_Changes, time_of_day == "Afternoon"), 
+                               p1.4, p4.1, start_afternoon)
 
-# I obtain my final dataset with the first crossing sequence for every individual and at what time it happened
+  
+
+# I obtain my final dataset with the first crossing sequence for every
+# individual and at what time it happened
   EB_Lat <- rbind(EB_Lat_Morning, EB_Lat_Afternoon)
   
-  EB_Lat_final <- merge(EB_Lat[c(1,6:10)], EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], by = 'id', all = T)
+  
+```
+
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a dataplot handy for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+
+
+```{r, message = FALSE}
+
+
+finalise.EB <- function(EB_Lat, EB_variables) {
+# I add the environemntal variables
+  EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
+                        EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
+                        by = 'id', all = T)
 
   
-  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
-  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
-  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", "time_since_start", "time_of_day", "Expl_index")]
   
+# I assign the maximal values to all the fish that never crossed the box.
+  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
+
+  
+  
+# I create an exploration index, for which a low value means that individuals never 
+# explored the box, and a high value means that individuals explored it early.
+  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
+
+  
+  
+# I only keep the variables of interest for plotting.
+  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", 
+                                 "time_since_start", "time_of_day", "Expl_index")]
+  
+  return(EB_Lat_final)}
+
+
+# I run the function
+  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
+
 ```
 
 ---
 
 ### 2.3.2 Method 2 - the long but understandible fashion
 
-Here is an alternative version of the chunk above. It is less elegant, yet (a lot?) more understandible.
+Here is an alternative version of the chunk above. It is less elegant, yet more understandible.
 First, I build a function which has, as:
 
-- Inout = Dataframe containing the antenna changes for one individual
+- Input = A dataframe containing the antenna changes for one individual
 - Output = The first full cross of the exploration box, or an empty dataframe if the individual hasn't fully crossed the box.
 
 ```{r, message = FALSE}
@@ -335,6 +396,8 @@ first.cross <- function(df){
   # crossing between antenna 1 and antenna 4
   rowstarts_1234  <- unlist(gregexpr("1234", paste(df$antenna, collapse="")))
   
+  
+  
   # If the individual has crossed the box from antenna 1 to antenna 4.
   if (rowstarts_1234[1] != -1){
   
@@ -342,8 +405,11 @@ first.cross <- function(df){
     first_cross_1234 <- df[sort(c(outer(rowstarts_1234[1], (0:3), "+"))), ]
     first_cross_1234 <- first_cross_1234 %>% spread(antenna,time)
     first_cross_1234 <- as.data.frame(first_cross_1234)
-    names(first_cross_1234) <- c("id", "time_of_day", "Pond", "Treatment_seq", "Ant1", "Ant2", "Ant3", "Ant4")
+    names(first_cross_1234) <- c("id", "time_of_day", "Pond", "Treatment_seq", 
+                                 "Ant1", "Ant2", "Ant3", "Ant4")
     }
+  
+  
   
   # On the other hand, if the individual has crossed the box from antenna 1 to antenna 4.
   if (rowstarts_1234[1] == -1){first_cross_1234 <- 
@@ -351,18 +417,26 @@ first.cross <- function(df){
     first_cross_4321 <- 
     tibble( )}
  
+  
+  
   # Same as above but between antenna 4 and antenna 1. 
     rowstarts_4321  <- unlist(gregexpr("4321", paste(df$antenna, collapse="")))
   if (rowstarts_4321[1] != -1){
   first_cross_4321 <- df[sort(c(outer(rowstarts_4321[1], (0:3), "+"))), ]
   first_cross_4321 <- first_cross_4321 %>% spread(antenna,time)
   first_cross_4321 <- as.data.frame(first_cross_4321)
-  names(first_cross_4321) <- c("id", "time_of_day", "Pond", "Treatment_seq", "Ant1", "Ant2", "Ant3", "Ant4")}
+  
+  
+  names(first_cross_4321) <- c("id", "time_of_day", "Pond", "Treatment_seq", 
+                               "Ant1", "Ant2", "Ant3", "Ant4")}
   if (rowstarts_4321[1] == -1){first_cross_4321 <- 
     tibble( )}
   
+    
   # I rbind my two tibbles.
   first_cross <- rbind(first_cross_1234, first_cross_4321)
+  
+  
   
   
   # If the individual did at least one full cross...
@@ -370,6 +444,7 @@ first.cross <- function(df){
   # Then, I subset its first full cross.
     first_cross <- first_cross[order(first_cross$Ant2),]
     first_cross <- first_cross[1,]}
+  
   
   # On the other hand, if the individual hasn't fully crossed the box...
   if(dim(first_cross)[1] == 0){
@@ -383,28 +458,48 @@ first.cross <- function(df){
 
 ```
 
-
+Next, I can apply the function above to all individuals
 
 ```{r, message = FALSE}
 
-EB_changes_list <- split(EB_Changes, f = EB_Changes$id)
+# I split my data frame per individual
+  EB_changes_list <- split(EB_Changes, f = EB_Changes$id)
 
-first_crosses <- list()
-for(i in 1:length(EB_changes_list)){
+
+# I define a list
+  first_crosses <- list()
+
   
-  first_crosses[[i]] <- first.cross(EB_changes_list[[i]])
-}
-EB_Lat_2 <- bind_rows(first_crosses)
+# For each individual...
+  for(i in 1:length(EB_changes_list)){
+    # I want to obtain the first full cross of the box, using the function defined above.
+    first_crosses[[i]] <- first.cross(EB_changes_list[[i]])
+  }
+  
+  
+# I bind the dataframes of my list together to obtain a dataframe containing
+# The first cross of all individuals that crossed the box.
+  EB_Lat_2 <- bind_rows(first_crosses)
 
 
+  
 # I add a new column with the time to cross the box since the start of the test
-EB_Lat_2_morning <- mutate(subset(df3, time_of_day == "Morning"), time_since_start = difftime(Ant2, start_morning, units='m'))
-EB_Lat_2_afternoon <- mutate(subset(df3, time_of_day == "Afternoon"), time_since_start = difftime(Ant2, start_afternoon, units='m'))
-EB_Lat_2 <- rbind(EB_Lat_2_morning, EB_Lat_2_afternoon)
-EB_Lat_2$time_since_start <- as.numeric(EB_Lat_2$time_since_start)
+# For the morning
+  EB_Lat_2_morning <- mutate(subset(df3, time_of_day == "Morning"), 
+                           time_since_start = difftime(Ant2, start_morning, units='m'))
+# For the afternoon
+  EB_Lat_2_afternoon <- mutate(subset(df3, time_of_day == "Afternoon"), 
+                             time_since_start = difftime(Ant2, start_afternoon, units='m'))
 
-# I remove the rows with NAs (i.e. individuals that did not cross the box entirely)
-EB_Lat_2 <- na.omit(EB_Lat_2)
+  
+# I bind the two, and transform my column (in minutes) as numerical
+  EB_Lat_2 <- rbind(EB_Lat_2_morning, EB_Lat_2_afternoon)
+  EB_Lat_2$time_since_start <- as.numeric(EB_Lat_2$time_since_start)
+
+  
+# I run the finalise.EB function defined above to clean my output
+  EB_Lat_final_2 <- finalise.EB(EB_Lat_2, EB_variables)
+
 ```
 
 
@@ -425,7 +520,7 @@ EB_Lat_2 <- na.omit(EB_Lat_2)
 
     ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
-      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
+      geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
       scale_fill_brewer(palette="Blues") +
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -463,9 +558,6 @@ EB_Lat_2 <- na.omit(EB_Lat_2)
 ```
 
 
-```{r, message = FALSE}
-
-```
 
 
 
