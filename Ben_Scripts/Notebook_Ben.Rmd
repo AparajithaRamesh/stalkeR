@@ -18,7 +18,9 @@ There is no behavioural test for the last index, but the metric is retrieved fro
 I first import the packages I will use in in the notebook.
 
 ```{r, results="hide", message = FALSE}
+
 # Packages
+
   library(dplyr)
   library(tidyr)
   library(tibble)
@@ -376,7 +378,7 @@ finalise.EB <- function(EB_Lat, EB_variables) {
 Here is an alternative version of the chunk above. It is less elegant, yet more understandible.
 First, I build a function which has, as:
 
-- Input = A dataframe containing the antenna changes for one individual
+- Input = A dataframe containing the antenna change reads for one individual
 - Output = The first full cross of the exploration box, or an empty dataframe if the individual hasn't fully crossed the box.
 
 ```{r, message = FALSE}
@@ -458,7 +460,7 @@ first.cross <- function(df){
 
 ```
 
-Next, I can apply the function above to all individuals
+Next, I can apply the function above to all individuals. I then add a column containing the latency to fully explore the box. Finally, I use the finalise.EB function to clean up the output and to obtain a plottable dataframe. 
 
 ```{r, message = FALSE}
 
@@ -502,9 +504,13 @@ Next, I can apply the function above to all individuals
 
 ```
 
+---
+
+The histogram below shows the distribution of latencies to explore the box. All fish that did not entirely cross the box received the maximal score.
 
 ```{r, message = FALSE}
-  ggplot(data=EB_Lat_final, aes(Expl_index)) +
+  
+ggplot(data = EB_Lat_final, aes(time_since_start)) +
     geom_histogram(aes(),
                    bins = 6,
                    fill="#6f7b96",
@@ -512,8 +518,11 @@ Next, I can apply the function above to all individuals
     labs(x="Latency to explore the box (minutes)", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5"))
+    
+    
 ```
 
+The plots below show the distribution of latency scores per pond and per treatment sequence. 
 
 
 ```{r, message = FALSE}
@@ -575,16 +584,18 @@ length(unique(bottom_clean_df$id))
 
 
 I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day.
-```{r, message = FALSE}
-bottom_variable <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
-length(unique(bottom_variable$id))
 
-bottom_variable <- bottom_variable[!duplicated(bottom_variable[,c('id')]),]
+```{r, message = FALSE}
+  bottom_variable <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
+  
+  length(unique(bottom_variable$id))
+  
+  bottom_variable <- bottom_variable[!duplicated(bottom_variable[,c('id')]),]
 
 ```
 
 
-Then, I split it based on (i) antenna and (ii) individuals, as two list of data frames.
+Then, I split it based on (i) antenna and (ii) individuals, as two lists of data frames.
 
 ```{r, message = FALSE}
 # I split my dataframe into a list of dataframes (one object per individual)
@@ -634,9 +645,9 @@ I define the distances between the different antennas, and the sequence of cross
 
 ### 3.2 Function computing the travelled distance per individual
 
-First, I repeated reads at a single antenna, and obtain the antenna changes. For each individual, I reduce the sequence of reads at the different antennas (e.g., 1, 1, 1, 2, 2, 3) in a way that I only keep one read in a repeated sequence (e.g., 1, 2, 3).
+First, I remove repeated reads at a single antenna, and obtain the antenna changes. In other words, for each individual, I reduce the sequence of reads (e.g., reads at antennas 1, 1, 1, 2, 2, 3) in a way that I only keep one read in a repeated sequence at the same antenna (e.g., reads at antennas 1, 2, 3).
 
-Second, I compute the travelled distance between these antennas, at every change, and sum them up.
+Second, I compute the travelled distance between these antennas, for every change, and sum them up. At the end, I will obtain the minimal total distance that a fish has travelled between the antennas during 2:30 hours.
 
 
 ```{r, message = FALSE}
