@@ -101,41 +101,6 @@ I run my function for each half-day, as the starting time will differ. Then, I m
   
 ```
 
-I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a dataplot handy for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
 
-
-```{r, message = FALSE}
-
-
-finalise.EB <- function(EB_Lat, EB_variables) {
-# I add the environemntal variables
-  EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
-                        EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
-                        by = 'id', all = T)
-
-  
-  
-# I assign the maximal values to all the fish that never crossed the box.
-  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
-
-  
-  
-# I create an exploration index, for which a low value means that individuals never 
-# explored the box, and a high value means that individuals explored it early.
-  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
-
-  
-  
-# I only keep the variables of interest for plotting.
-  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", 
-                                 "time_since_start", "time_of_day", "Expl_index")]
-  
-  return(EB_Lat_final)}
-
-
-# I run the function
-  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
-
-```
 
 ---

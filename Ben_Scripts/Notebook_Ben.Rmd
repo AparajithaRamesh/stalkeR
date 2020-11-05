@@ -1,8 +1,8 @@
 ---
 title: "Behavioural tests"
 output:
-  html_notebook: 
-    dev: CairoPNG
+  html_notebook: default
+  pdf_document: default
 ---
 
 This notebook contains chunks of R script computing indices for five different behaviours:
@@ -175,7 +175,7 @@ Nb.ind <- function(clean_df){
 
 # I make a data frame with the loop output
   ponds_df <- data.frame(Pond = c(1:8), Nb = ponds_df)
-
+  ponds_df[9,] <- c("Tot", sum(ponds_df$Nb))
     return(ponds_df)
   } # end of function
 
@@ -310,8 +310,6 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
 ---
     
 ### 2.3 Latency to cross the box
-### 2.3.1 Method 1 - the elegant and intricate fashion
-  
 
 I build a function which has, as:
 
@@ -319,15 +317,6 @@ I build a function which has, as:
 - Output = The first full cross of the exploration box, or an empty dataframe if the individual hasn't fully crossed the box.
 
 ```{r, message = FALSE}
-
-# Packages
-# Input data examples
-#df <- subset(EB_Changes, id == "0007A03565") # No complete crosses
-#df <- subset(EB_Changes, id == "0007A678A5") # Complete crosses
-#df <- df3[[35]]
-
-
-
 
 first.cross <- function(df){
   
@@ -397,7 +386,7 @@ first.cross <- function(df){
 
 ```
 
-Next, I can apply the function above to all individuals. I then add a column containing the latency to fully explore the box. Finally, I use the finalise.EB function to clean up the output and to obtain a plottable dataframe. 
+Next, I can apply the function above to all individuals. I then add a column containing the latency to fully explore the box. 
 
 ```{r, message = FALSE}
 
@@ -435,11 +424,54 @@ Next, I can apply the function above to all individuals. I then add a column con
   EB_Lat <- rbind(EB_Lat_morning, EB_Lat_afternoon)
   EB_Lat$time_since_start <- as.numeric(EB_Lat$time_since_start)
 
+
+
+```
+
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a data set handy for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+
+
+```{r, message = FALSE}
+
+
+finalise.EB <- function(EB_Lat, EB_variables) {
+# I add the environemntal variables
+  EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
+                        EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
+                        by = 'id', all = T)
+
   
-# I run the finalise. EB function defined above to clean my output
+  
+# I assign the maximal values to all the fish that never crossed the box.
+  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
+
+  
+  
+# I create an exploration index, for which a low value means that individuals never 
+# explored the box, and a high value means that individuals explored it early.
+  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
+
+  
+  
+# I only keep the variables of interest for plotting.
+  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", 
+                                 "time_since_start", "time_of_day", "Expl_index")]
+  
+  return(EB_Lat_final)}
+
+
+# I run the function
   EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
 
 ```
+
+I use the finalise.EB function to clean up the output and to obtain a plottable dataframe.
+
+```{r}
+# I run the finalise. EB function defined above to clean my output
+  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
+```
+
 
 ---
 
@@ -698,7 +730,18 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 # I assign every individual to its pond and treatment category
     Travelled.distance <- merge(bottom_variable, Travelled.distance, by = "id", all = T)
 
+```
 
+
+```{r}
+ggplot(data = Travelled.distance, aes(Dist)) +
+    geom_histogram(aes(),
+                   bins = 8,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Travelled distance", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"))
 ```
 
 
@@ -893,31 +936,41 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 
 # I assign every individual to its pond and treatment category
     Shelter_nreads <- merge(Shelter_variables, Shelter_nreads, by = "id", all = T)
+    Shelter_nreads[is.na(Shelter_nreads)] <- 0    
+    Shelter_nreads$duration_min <- Shelter_nreads$nb/60
 
 
 ```
 
 
 ```{r}
-hist(Shelter_nreads$nb/60)
+ggplot(data = Shelter_nreads, aes(duration_min)) +
+    geom_histogram(aes(),
+                   bins = 6,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Duration spent hiding", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"))
 ```
 
 
 
-```{r message=FALSE}
-  # Violin plots for differences between the 8 ponds within a week
-      ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = nb/60, fill = time_of_day)) + 
-      geom_violin(position = position_dodge(width = 0.4)) + 
+```{r}
+ 
+ # Violin plots for differences between the 8 ponds within a week
+ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min, fill = time_of_day)) + 
+      geom_violin(position = position_dodge(width = 0.4)) +
       
       #geom_boxplot(width=.1, outlier.colour=NA, 
       #             position = position_dodge(width = 0.4), colour = "black") +
       
       scale_fill_brewer(palette="Blues") +
       
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
+      #stat_summary(fun.data=mean_sdl, 
+      #             fun.args = list(mult = 1), # I show 1 SD
+      #             geom = "pointrange", color="#414c61", 
+      #             position = position_dodge(width = 0.4)) +
       # theme_bw() +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
@@ -927,15 +980,15 @@ hist(Shelter_nreads$nb/60)
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Travelled distance (meters)", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0))
 
-
-    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = nb/60)) + 
+    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min)) +
       geom_violin(fill = "#b4d3db") + 
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
+      geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
+      #stat_summary(fun.data=mean_sdl, 
+      #             fun.args = list(mult = 1), # I show 1 SD
+      #             geom = "pointrange", color="#414c61", 
+      #             position = position_dodge(width = 0.4)) +
       # theme_bw() +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
@@ -945,7 +998,8 @@ hist(Shelter_nreads$nb/60)
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent hiding (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0))
+    
 ```
 
 ## 5. Time spent at the top of the water column
@@ -970,9 +1024,11 @@ I can first look at the individuals that were never read during the whole week. 
 
 
 ```{r, message = FALSE}
-missing_ind_df <- Reduce(intersect, list(missing_EB,
-                       missing_bottom,
-                       missing_shelter))
+missing_ind_df <- Reduce(intersect, list(missing_EB$missing_id,
+                       missing_bottom$missing_id,
+                       missing_shelter$missing_id))
+missing_ind_df <- data.frame(id = missing_ind_df)
+missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
 print(missing_ind_df)
 ```
 
