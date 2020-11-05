@@ -159,11 +159,11 @@
   # Function n°3. 
   # Input = A list of dataframes, where each dataframe contains all the reads for one antenna.
   # Output = A list of dataframes, where each dataframe contains all the accompanied reads for an individual.
-  reads <- function(antenna){
+  reads <- function(antenna, time.window){
     # Define my list
     list2 <- list()
     # For every antenna...
-    for(i in 1:nb.antennas){
+    for(i in 1:length(antenna)){
     # ... I wish to get the accompanied reads (output of my function n°2). I end up with a list of data frames
     # where each dataframe corresponds to one antenna.
         list2[[i]] <- reads_ant(antenna[[i]])
@@ -180,6 +180,7 @@
     df2 <- reads(df_list_ant)
     
     
+    reads(bottom_list_df_ant, time.window = 2)
     
     
     

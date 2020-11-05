@@ -1,0 +1,141 @@
+---
+title: "Notebook trash bin"
+output: html_notebook
+---
+
+Next, I want to obtain the latency between the time the box was introduced into the pond and the moment each individual fully explored it. I create the *lat.expl* function, which has, as an:
+
+- Inout: The reads corresponding to antenna changes for all individuals (data frame). Details in the chunk just above.
+- Output: The first box cross for all individuals (data frame). A column is also computing how long since the box has been introduced the individuals have taken to enter the box.
+    
+    
+```{r, message = FALSE}
+    
+    
+# 1. I create the 'lat.expl' function for 'Latency to explore'.
+    # From the cleaned data frame, it outputs all the individual full crossings.
+    lat.expl <- function(df, pattern1, pattern2, initial_time){
+    
+      
+      
+  ## 2. IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
+  # I stole the next piece of code from someone way smarter than me (R Stack Overflow 41130912).
+  # First, I keep reads when individuals go through the box the following way: 1 -> 2 -> 3 -> 4
+    len_pattern = 4
+    df_abcd <- df %>% arrange(id, time) %>% group_by(id) %>%
+    # check multiple lags condition
+    mutate(ab = Reduce("&", Map("==", shift(antenna, n = 0:(len_pattern - 1), type = "lead"), pattern1)),
+    g = cumsum(ab)) %>%
+    # use reduce or to subset sequence rows having the same length as the pattern
+    filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
+    # make unique names
+    group_by(g, add = TRUE) %>% mutate(antenna = paste(antenna, 1:n(), sep = "_")) %>%
+    # pivoting the table to wide format
+    select(-ab) %>% spread(antenna, time)
+
+
+
+  # Second, I keep reads when individuals go through the box the other way around: 4 -> 3 -> 2 -> 1
+    df_dcba <- df %>% arrange(id, time) %>% group_by(id) %>%
+    # check multiple lags condition
+    mutate(ab = Reduce("&", Map("==", shift(antenna, n = 0:(len_pattern - 1), type = "lead"), pattern2)),
+    g = cumsum(ab)) %>%
+    # use reduce to subset sequence rows having the same length as the pattern
+    filter(Reduce("|", shift(ab, n = 0:(len_pattern - 1), type = "lag"))) %>%
+    # make unique names
+    group_by(g, add = TRUE) %>% mutate(antenna = paste(antenna, 1:n(), sep = "_")) %>%
+    # pivoting the table to wide format
+    select(-ab) %>% spread(antenna, time)
+
+
+    
+    
+  # I rename the columns of the two dataframes I created
+  names(df_abcd) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", 
+                      "Ant1", "Ant2", "Ant3", "Ant4")
+  names(df_dcba) <- c("id", "time_of_day", "Pond", "Treatment_seq", "g", 
+                      "Ant1", "Ant2", "Ant3", "Ant4")
+
+  
+  # I obtain a dataframe in which each row represents one individual full crossing
+  df3 <- rbind(df_abcd, df_dcba)
+
+  
+  # I keep individuals with the smallest 'arrival' (i.e. Ant2) value.
+  df3 <- df3 %>%
+    group_by(id) %>%
+    slice(which.min(Ant2))
+
+
+  ## 3. CALCULATE LATENCY TIME
+  # I add a new column with the time to cross the box since the start of the test
+  df3 <- mutate(df3, time_since_start = difftime(Ant2, initial_time, units='mins'))
+  df3$time_since_start <- as.numeric(df3$time_since_start)
+
+
+
+
+  return(df3)
+}
+
+```
+
+
+I run my function for each half-day, as the starting time will differ. Then, I merge them together.
+
+```{r, message = FALSE}
+
+
+# I run my functions for the morning and the afternoon
+  EB_Lat_Morning <- lat.expl(subset(EB_Changes, time_of_day == "Morning"), 
+                             p1.4, p4.1, start_morning)
+  EB_Lat_Afternoon <- lat.expl(subset(EB_Changes, time_of_day == "Afternoon"), 
+                               p1.4, p4.1, start_afternoon)
+
+  
+
+# I obtain my final dataset with the first crossing sequence for every
+# individual and at what time it happened
+  EB_Lat <- rbind(EB_Lat_Morning, EB_Lat_Afternoon)
+  
+  
+```
+
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a dataplot handy for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+
+
+```{r, message = FALSE}
+
+
+finalise.EB <- function(EB_Lat, EB_variables) {
+# I add the environemntal variables
+  EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
+                        EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
+                        by = 'id', all = T)
+
+  
+  
+# I assign the maximal values to all the fish that never crossed the box.
+  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
+
+  
+  
+# I create an exploration index, for which a low value means that individuals never 
+# explored the box, and a high value means that individuals explored it early.
+  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
+
+  
+  
+# I only keep the variables of interest for plotting.
+  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", 
+                                 "time_since_start", "time_of_day", "Expl_index")]
+  
+  return(EB_Lat_final)}
+
+
+# I run the function
+  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
+
+```
+
+---
