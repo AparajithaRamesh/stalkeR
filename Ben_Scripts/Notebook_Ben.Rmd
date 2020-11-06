@@ -483,12 +483,12 @@ The histogram below shows the distribution of latencies to explore the box. All 
   
 ggplot(data = EB_Lat_final, aes(time_since_start)) +
     geom_histogram(aes(),
-                   bins = 15,
+                   bins = 20,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Latency to explore the box (minutes)", y="Count") +
     theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5"))
+          panel.background = element_rect(fill = "#f7f5f5")) + ggtitle("Latency to explore")
     
     
 ```
@@ -515,7 +515,7 @@ The plots below show the distribution of latency scores per pond and per treatme
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Latency to cross the exploration box", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Latency to explore")
 
 windows.options(antialias = "cleartype")
 
@@ -534,7 +534,7 @@ windows.options(antialias = "cleartype")
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Latency to cross the exploration box", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Latency to explore")
 ```
 
 
@@ -735,12 +735,12 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 ```{r}
 ggplot(data = Travelled.distance, aes(Dist)) +
     geom_histogram(aes(),
-                   bins = 15,
+                   bins = 50,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Travelled distance", y="Count") +
     theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5"))
+          panel.background = element_rect(fill = "#f7f5f5")) + ggtitle("Distance")
 ```
 
 
@@ -770,7 +770,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Travelled distance (meters)", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Distance")
 
 
     ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist)) + 
@@ -788,7 +788,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Travelled distance (meters)", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Distance")
 ```
 
 
@@ -864,7 +864,7 @@ ggplot(data = Shelter_nreads, aes(duration_shelter)) +
                    colour = "white") +
     labs(x="Duration spent hiding", y="Count") +
     theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5"))
+          panel.background = element_rect(fill = "#f7f5f5"))  + ggtitle("Hiding")
 ```
 
 
@@ -893,7 +893,7 @@ ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter, fill 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent hiding (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0))
+      scale_y_continuous(expand = c(0, 0))  + ggtitle("Hiding")
 
     ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter)) +
       geom_violin(fill = "#e4e3e8") + 
@@ -911,7 +911,7 @@ ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter, fill 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent hiding (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0))
+      scale_y_continuous(expand = c(0, 0))  + ggtitle("Hiding")
     
 ```
 
@@ -990,7 +990,7 @@ ggplot(data = Top_nreads, aes(duration_top)) +
                    colour = "white") +
     labs(x="Duration spent at the top", y="Count") +
     theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5"))
+          panel.background = element_rect(fill = "#f7f5f5")) + ggtitle("Top")
 ```
 
 
@@ -1037,7 +1037,7 @@ ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top, fill = time_o
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent at the top (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0))
+      scale_y_continuous(expand = c(0, 0)) + ggtitle("Top")
     
 ```
 
@@ -1109,12 +1109,8 @@ DO NOT READ BELOW. I REALISED ALL OF IT WAS INCORRECT. It will hopefully be fixe
 
 
 
-
-
-
 shoaling.index.pond <- function(clean_df_pond, df_variables){
   
-
   # I split my data frame into a list of dataframes (one object per individual)
   # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
   clean_df_2 <- split(clean_df_pond, f = clean_df_pond$antenna)
@@ -1124,7 +1120,8 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
   
   # For each antenna...
   for (i in 1:length(clean_df_2)){
-    
+    if (nrow(clean_df_2[[i]] != 0)){
+        
     # I subset all the time points for which more than 1 individuals were read at one antenna
     accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
     
@@ -1132,7 +1129,8 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
     accompanied_reads[[i]] <- accompanied_reads[[i]] %>% group_by(id) %>% add_tally()
     # I remove duplicated rows
     accompanied_reads[[i]] <- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c('id')]),]
-  }
+    }
+    }
   
   
   # I bind the rows of the list of dataframes
@@ -1170,19 +1168,25 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
 
 
 shoaling.index <- function(clean_df, variables_df){
-
-  
+  #clean_df <- Top_clean_df
+  #variables_df <- Top_variables
   variables_per_pond <- list()
   clean_df_list <- list()
+  
   for (i in 1:8){
-    
     clean_df_list[[i]] <- subset(clean_df, Pond == i)
     variables_per_pond[[i]] <- subset(variables_df, Pond == i)
-    
+    if (nrow(clean_df_list[[i]]) != 0){
     
     list[[i]] <- shoaling.index.pond(clean_df_list[[i]], variables_per_pond[[i]])  
+    } 
     
+    if (nrow(clean_df_list[[i]]) == 0){
+    
+    list[[i]] <- data.frame(variables_per_pond[[i]], tot_reads = 0, tot_acc_reads = 0)
+    } 
   }
+  
   Shoaling_index <- bind_rows(list)
   Shoaling_index$shoaling <- Shoaling_index$tot_acc_reads/Shoaling_index$tot_reads
   Shoaling_index[is.na(Shoaling_index)] <- 0
@@ -1191,7 +1195,6 @@ shoaling.index <- function(clean_df, variables_df){
   
   return(Shoaling_index)
   }
-  
   
 
 
@@ -1205,66 +1208,12 @@ shoaling.index <- function(clean_df, variables_df){
 
 I write a function that computes the number of reads (i.e. ~ number of seconds, see *clean.data* function) each individuals spends accompanied, that is, read during the same second at the same antenna in presence of at least one conspecific. 
 
+
+TEXT TO BE MODIFIED
 Input: A *cleaned* data frame containing all the reads for one day.
 Output: A data frame containing all the fish that have been read in presence of a conspecific, and their corresponding: (i) number of accompanied reads, (ii) total number of reads, (iii) proportion of the time they spend in presence of a conspecific. The individuals that haven't been read in presence of a conspecific are not in the data frame.
 
-```{r, message = FALSE}
-shoaling.index <- function(clean_df, df_variables){
 
-  
-  
-# I split my data frame into a list of dataframes (one object per individual)
-  # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
-  clean_df_2 <- split(clean_df, f = clean_df$antenna)
-
-# I define a list
-  accompanied_reads <- list()
-  
-    # For each antenna...
-    for (i in 1:length(clean_df_2)){
-     
-      # I subset all the time points for which more than 1 individuals were read at one antenna
-      accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
-  
-      # I count the number of accompanied reads per individual
-      accompanied_reads[[i]] <- accompanied_reads[[i]] %>% group_by(id) %>% add_tally()
-      # I remove duplicated rows
-      accompanied_reads[[i]] <- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c('id')]),]
-    }
-  
-  
-  # I bind the rows of the list of dataframes
-    accompanied_reads <- bind_rows(accompanied_reads)
-  
-    # I keep the total number of accompanied reads in all antennas
-    accompanied_reads <- accompanied_reads %>%
-      group_by(id) %>%
-      mutate(tot_acc_reads = sum(n))
-
-    
-    
-  # I remove the 'n' column, useless now
-    accompanied_reads <- accompanied_reads[,- c(7)]
-  # I remove duplicated rows
-    accompanied_reads <- accompanied_reads[!duplicated(accompanied_reads[,c('id')]),]
-  
-  # Now, I want to take into account the total number of reads of each individual as well
-    clean_df <- clean_df %>% group_by(id) %>% add_tally()
-    clean_df <- clean_df[!duplicated(clean_df[,c('id')]),]
-    clean_df <- merge(EB_variables, clean_df[c("id", "n")], by = "id", all = T)
-    clean_df[is.na(clean_df)] <- 0
-    
-  # I add them to the data frame with the accompanied reads
-    accompanied_reads <- merge(clean_df[c("id", "Pond", "time_of_day", "Treatment_seq", "n")], 
-                               accompanied_reads[c("id", "tot_acc_reads")], by = "id", all = T) 
-    names(accompanied_reads)[5] <- "tot_reads"
-    accompanied_reads[is.na(accompanied_reads)] <- 0
-    accompanied_reads$shoaling <- accompanied_reads$tot_acc_reads/accompanied_reads$tot_reads
-    return(accompanied_reads)
-    
-  } # end of function
-
-```
 
 
 
@@ -1286,8 +1235,8 @@ a <- ggplot(data = shoaling_EB, aes(shoaling)) +
     labs(x="Proportion of a time with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,1)) +
-  ylim(c(0,50)) + ggtitle("EB")
+  xlim(c(0,0.6)) +
+  ylim(c(0,65)) + ggtitle("EB")
 
 b <- ggplot(data = shoaling_bottom, aes(shoaling)) +
     geom_histogram(aes(),
@@ -1297,8 +1246,8 @@ b <- ggplot(data = shoaling_bottom, aes(shoaling)) +
     labs(x="Proportion of a time with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,1)) +
-  ylim(c(0,50)) + ggtitle("Bottom")
+  xlim(c(0,0.6)) +
+  ylim(c(0,65)) + ggtitle("Bottom")
 
 c <- ggplot(data = Shoaling_top, aes(shoaling)) +
     geom_histogram(aes(),
@@ -1308,8 +1257,8 @@ c <- ggplot(data = Shoaling_top, aes(shoaling)) +
     labs(x="Proportion of a time with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,1)) +
-  ylim(c(0,50)) + ggtitle("Top")
+  xlim(c(0,0.6)) +
+  ylim(c(0,65)) + ggtitle("Top")
 
 d <- ggplot(data = shoaling_shelters, aes(shoaling)) +
     geom_histogram(aes(),
@@ -1319,8 +1268,8 @@ d <- ggplot(data = shoaling_shelters, aes(shoaling)) +
     labs(x="Proportion of a time with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,1)) +
-  ylim(c(0,50)) + ggtitle("Shelter")
+  xlim(c(0,0.6)) +
+  ylim(c(0,65)) + ggtitle("Shelter")
 
 ((a + b) / (c + d))
 ```
@@ -1360,7 +1309,7 @@ A <- ggplot(data = Shoaling_tot, aes(SHOALING)) +
     labs(x="Proportion of a time spent with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,1)) +
+  xlim(c(0,0.35)) +
   ylim(c(0,50)) + ggtitle("Shoaling tendency across tests")
 
 print(A)
@@ -1370,7 +1319,7 @@ print(A)
 
 
 ```{r}
-    ggplot(data = Shoaling_tot, aes(x = Treatment_seq, y = SHOALING)) +
+    plot <- ggplot(data = Shoaling_tot, aes(x = Treatment_seq, y = SHOALING)) +
       geom_violin(fill = "#e4e3e8") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -1384,8 +1333,10 @@ print(A)
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Latency to cross the exploration box", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+      labs(y = "Proportion of time with conspecific", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Shoaling")
+
+print(plot)
 ```
 
 

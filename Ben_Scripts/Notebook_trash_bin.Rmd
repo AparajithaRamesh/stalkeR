@@ -103,4 +103,68 @@ I run my function for each half-day, as the starting time will differ. Then, I m
 
 
 
+
+
+
+
 ---
+
+
+
+```{r, message = FALSE}
+shoaling.index <- function(clean_df, df_variables){
+
+  
+  
+# I split my data frame into a list of dataframes (one object per individual)
+  # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
+  clean_df_2 <- split(clean_df, f = clean_df$antenna)
+
+# I define a list
+  accompanied_reads <- list()
+  
+    # For each antenna...
+    for (i in 1:length(clean_df_2)){
+     
+      # I subset all the time points for which more than 1 individuals were read at one antenna
+      accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
+  
+      # I count the number of accompanied reads per individual
+      accompanied_reads[[i]] <- accompanied_reads[[i]] %>% group_by(id) %>% add_tally()
+      # I remove duplicated rows
+      accompanied_reads[[i]] <- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c('id')]),]
+    }
+  
+  
+  # I bind the rows of the list of dataframes
+    accompanied_reads <- bind_rows(accompanied_reads)
+  
+    # I keep the total number of accompanied reads in all antennas
+    accompanied_reads <- accompanied_reads %>%
+      group_by(id) %>%
+      mutate(tot_acc_reads = sum(n))
+
+    
+    
+  # I remove the 'n' column, useless now
+    accompanied_reads <- accompanied_reads[,- c(7)]
+  # I remove duplicated rows
+    accompanied_reads <- accompanied_reads[!duplicated(accompanied_reads[,c('id')]),]
+  
+  # Now, I want to take into account the total number of reads of each individual as well
+    clean_df <- clean_df %>% group_by(id) %>% add_tally()
+    clean_df <- clean_df[!duplicated(clean_df[,c('id')]),]
+    clean_df <- merge(EB_variables, clean_df[c("id", "n")], by = "id", all = T)
+    clean_df[is.na(clean_df)] <- 0
+    
+  # I add them to the data frame with the accompanied reads
+    accompanied_reads <- merge(clean_df[c("id", "Pond", "time_of_day", "Treatment_seq", "n")], 
+                               accompanied_reads[c("id", "tot_acc_reads")], by = "id", all = T) 
+    names(accompanied_reads)[5] <- "tot_reads"
+    accompanied_reads[is.na(accompanied_reads)] <- 0
+    accompanied_reads$shoaling <- accompanied_reads$tot_acc_reads/accompanied_reads$tot_reads
+    return(accompanied_reads)
+    
+  } # end of function
+
+```
