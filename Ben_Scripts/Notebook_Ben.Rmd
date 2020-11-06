@@ -483,7 +483,7 @@ The histogram below shows the distribution of latencies to explore the box. All 
   
 ggplot(data = EB_Lat_final, aes(time_since_start)) +
     geom_histogram(aes(),
-                   bins = 6,
+                   bins = 15,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Latency to explore the box (minutes)", y="Count") +
