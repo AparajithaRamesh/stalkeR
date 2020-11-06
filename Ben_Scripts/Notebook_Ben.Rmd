@@ -576,8 +576,6 @@ Then, I split it based on (i) antenna and (ii) individuals, as two lists of data
 # I split my dataframe into a list of dataframes (one object per individual)
     bottom_list_df_ind <- split(bottom_clean_df, f = bottom_clean_df$id)
 
-# I split my dataframe into a list of dataframes (one object per individual)
-    bottom_list_df_ant <- split(bottom_clean_df, f = bottom_clean_df$antenna)
 ```
 
 
@@ -1103,6 +1101,104 @@ ggplot(data = week1, aes(x = duration_shelter, y = duration_top)) +
 ## 6. Shoaling index
 
 
+DO NOT READ BELOW. I REALISED ALL OF IT WAS INCORRECT. It will hopefully be fixed soon.
+
+
+```{r}
+
+
+
+
+
+shoaling.index.pond <- function(clean_df_pond, variables_pond){
+  
+
+  # I split my data frame into a list of dataframes (one object per individual)
+  # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
+  clean_df_2 <- split(clean_df_pond, f = clean_df_pond$antenna)
+  
+  # I define a list
+  accompanied_reads <- list()
+  
+  # For each antenna...
+  for (i in 1:length(clean_df_2)){
+    
+    # I subset all the time points for which more than 1 individuals were read at one antenna
+    accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
+    
+    # I count the number of accompanied reads per individual
+    accompanied_reads[[i]] <- accompanied_reads[[i]] %>% group_by(id) %>% add_tally()
+    # I remove duplicated rows
+    accompanied_reads[[i]] <- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c('id')]),]
+  }
+  
+  
+  # I bind the rows of the list of dataframes
+  accompanied_reads <- bind_rows(accompanied_reads)
+  
+  # I keep the total number of accompanied reads in all antennas
+  accompanied_reads <- accompanied_reads %>%
+    group_by(id) %>%
+    mutate(tot_acc_reads = sum(n))
+  
+  
+  
+  # I remove the 'n' column, useless now
+  accompanied_reads <- accompanied_reads[,- c(7)]
+  # I remove duplicated rows
+  accompanied_reads <- accompanied_reads[!duplicated(accompanied_reads[,c('id')]),]
+  
+  # Now, I want to take into account the total number of reads of each individual as well
+  clean_df_pond <- clean_df_pond %>% group_by(id) %>% add_tally()
+  clean_df_pond <- clean_df_pond[!duplicated(clean_df_pond[,c('id')]),]
+  clean_df_pond <- merge(df_variables, clean_df_pond[c("id", "n")], by = "id", all = T)
+  clean_df_pond[is.na(clean_df_pond)] <- 0
+  
+  # I add them to the data frame with the accompanied reads
+  accompanied_reads <- merge(clean_df_pond[c("id", "Pond", "time_of_day", "Treatment_seq", "n")], 
+                             accompanied_reads[c("id", "tot_acc_reads")], by = "id", all = T) 
+  names(accompanied_reads)[5] <- "tot_reads"
+  accompanied_reads[is.na(accompanied_reads)] <- 0
+  return(accompanied_reads)
+  
+} # end of function
+
+
+
+
+
+  
+
+  variables_per_pond <- list()
+  clean_df_list <- list()
+  for (i in 1:8){
+    
+    variables_per_pond[[i]] <- subset(Bottom_variables, Pond == i)
+    clean_df_list[[i]] <- subset(bottom_clean_df, Pond == i)
+    
+    list[[i]] <- shoaling.index.pond(clean_df_list[[i]], variables_per_pond[[i]])  
+    
+  }
+  Shoaling_index <- bind_rows(list)
+  Shoaling_index$shoaling <- Shoaling_index$tot_acc_reads/Shoaling_index$tot_reads
+  Shoaling_index[is.na(Shoaling_index)] <- 0
+  
+  hist(Shoaling_index$shoaling)
+  
+
+shoaling.index.pond(subset(bottom_clean_df, Pond == 8), subset(Bottom_variables, Pond == 8))
+
+
+
+
+
+```
+
+
+
+
+
+
 I write a function that computes the number of reads (i.e. ~ number of seconds, see *clean.data* function) each individuals spends accompanied, that is, read during the same second at the same antenna in presence of at least one conspecific. 
 
 Input: A *cleaned* data frame containing all the reads for one day.
@@ -1114,6 +1210,7 @@ shoaling.index <- function(clean_df, df_variables){
   
   
 # I split my data frame into a list of dataframes (one object per individual)
+  # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
   clean_df_2 <- split(clean_df, f = clean_df$antenna)
 
 # I define a list
@@ -1122,7 +1219,7 @@ shoaling.index <- function(clean_df, df_variables){
     # For each antenna...
     for (i in 1:length(clean_df_2)){
      
-      # I subset all the time points for which more than 1 individuals were read at one antenne
+      # I subset all the time points for which more than 1 individuals were read at one antenna
       accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
   
       # I count the number of accompanied reads per individual
