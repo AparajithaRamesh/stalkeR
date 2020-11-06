@@ -1110,7 +1110,9 @@ DO NOT READ BELOW. I REALISED ALL OF IT WAS INCORRECT. It will hopefully be fixe
 
 
 
-shoaling.index.pond <- function(clean_df_pond, variables_pond){
+
+
+shoaling.index.pond <- function(clean_df_pond, df_variables){
   
 
   # I split my data frame into a list of dataframes (one object per individual)
@@ -1167,14 +1169,16 @@ shoaling.index.pond <- function(clean_df_pond, variables_pond){
 
 
 
-  
+shoaling.index <- function(clean_df, variables_df){
 
+  
   variables_per_pond <- list()
   clean_df_list <- list()
   for (i in 1:8){
     
-    variables_per_pond[[i]] <- subset(Bottom_variables, Pond == i)
-    clean_df_list[[i]] <- subset(bottom_clean_df, Pond == i)
+    clean_df_list[[i]] <- subset(clean_df, Pond == i)
+    variables_per_pond[[i]] <- subset(variables_df, Pond == i)
+    
     
     list[[i]] <- shoaling.index.pond(clean_df_list[[i]], variables_per_pond[[i]])  
     
@@ -1183,12 +1187,12 @@ shoaling.index.pond <- function(clean_df_pond, variables_pond){
   Shoaling_index$shoaling <- Shoaling_index$tot_acc_reads/Shoaling_index$tot_reads
   Shoaling_index[is.na(Shoaling_index)] <- 0
   
-  hist(Shoaling_index$shoaling)
   
-
-shoaling.index.pond(subset(bottom_clean_df, Pond == 8), subset(Bottom_variables, Pond == 8))
-
-
+  
+  return(Shoaling_index)
+  }
+  
+  
 
 
 
