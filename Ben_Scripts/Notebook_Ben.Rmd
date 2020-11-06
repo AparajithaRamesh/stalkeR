@@ -22,7 +22,7 @@ I first import the packages I will use in in the notebook.
 ```{r, results="hide", message = FALSE}
 
 # Packages
-  library(dplyr)
+  library(dplyr)  
   library(tidyr)
   library(tibble)
   library(lubridate)
@@ -36,6 +36,7 @@ I first import the packages I will use in in the notebook.
   library(plotly)
   library(qdapTools)
   library(arsenal)
+  library(cowplot)
 ```
 
 I import the four dataset we get every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (i.e. PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
@@ -51,7 +52,8 @@ bottom_df <- read_delim("Data/Week 1/20201103.CSV",
      ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Top antennas data
-#top_df <- read_delim("20201008.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
+top_df <- read_delim("Data/Week 1/20201105.CSV", 
+     ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Shelters data
 shelter_df <- read_delim("Data/Week 1/20201104.CSV", 
@@ -518,7 +520,7 @@ The plots below show the distribution of latency scores per pond and per treatme
 windows.options(antialias = "cleartype")
 
     ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start)) + 
-      geom_violin(fill = "#b4d3db") + 
+      geom_violin(fill = "#e4e3e8") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
                    geom = "pointrange", color="#414c61", 
@@ -560,11 +562,10 @@ I first clean my data set, and look how many fish are missing and what their ide
 I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day.
 
 ```{r, message = FALSE}
-  bottom_variable <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
+  Bottom_variables <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
   
-  length(unique(bottom_variable$id))
-  
-  bottom_variable <- bottom_variable[!duplicated(bottom_variable[,c('id')]),]
+
+  Bottom_variables <- Bottom_variables[!duplicated(Bottom_variables[,c('id')]),]
 
 ```
 
@@ -728,7 +729,7 @@ First, I will, for every individual, indicate to what pond and treatment it is a
     
 
 # I assign every individual to its pond and treatment category
-    Travelled.distance <- merge(bottom_variable, Travelled.distance, by = "id", all = T)
+    Travelled.distance <- merge(Bottom_variables, Travelled.distance, by = "id", all = T)
 
 ```
 
@@ -736,7 +737,7 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 ```{r}
 ggplot(data = Travelled.distance, aes(Dist)) +
     geom_histogram(aes(),
-                   bins = 8,
+                   bins = 15,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Travelled distance", y="Count") +
@@ -775,7 +776,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
 
 
     ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist)) + 
-      geom_violin(fill = "#b4d3db") + 
+      geom_violin(fill = "#e4e3e8") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
                    geom = "pointrange", color="#414c61", 
@@ -792,93 +793,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
 ```
 
-Below, I will also make a Raincloud plot to see how these scores change over time. No more distinction is made here between the two replicates (morning/afternoon) for visibility reasons.
 
-I first import a few additional packages
-
-```{r, message = FALSE}
-    library(caTools)
-    library(bitops)
-    library(cowplot)
-    library(dplyr)
-    library(readr)
-    library(grid)
-```
-
-I change my working directory to have access to the R files from this GitHub repository: https://github.com/RainCloudPlots/RainCloudPlots/tree/master/tutorial_R. 
-
-```{r, message = FALSE}
-  # Set working directory
-    setwd("/Users/benka/OneDrive/Documents/GitHub/RainCloudPlots/tutorial_R")
-
-
-    source("R_rainclouds.R")
-    source("summarySE.R")
-    source("simulateData.R")
-```
-
-```{r, message = FALSE}
- 
-    # This is fake data
-    Travelled.distance2 <- rbind(Travelled.distance, Travelled.distance, Travelled.distance)
-    Travelled.distance2$Dist <- c(Travelled.distance$Dist, Travelled.distance$Dist/2, Travelled.distance$Dist/3)
-    Travelled.distance2$time <- c(rep(c("W1"), times = 100), rep(c("W2"), times = 100), rep(c("W3"), times = 100))
-    
-
-    # Summary statistics
-    sumrepdat <- summarySE(Travelled.distance2, measurevar = "Dist", groupvars=c("Treatment_seq", "time"))    
-    
-    # General information about the plot
-    ggplot(Travelled.distance2, aes(x = time, y = Dist, fill = Treatment_seq)) + 
-      
-      # Layer 1 - The half-violins to show densities
-      geom_flat_violin(aes(fill = Treatment_seq), 
-                       position = position_nudge(x = .1, y = 0), 
-                       adjust = 2, trim = FALSE, alpha = .6, 
-                       colour = NA) + 
-      
-      # Layer 2 - All the individual data points
-      geom_point(aes(x = time,
-                     group = id,
-                     y = Dist, 
-                     colour = Treatment_seq), 
-                     position = position_dodge(width = .1), 
-                     size = 1, shape = 19, alpha = 0.4) + 
-      
-      # Layer 3 - These individual data points are linked together by thin lines
-      geom_line(aes(group = id
-                ,colour = Treatment_seq
-                ), linetype = 1,
-                alpha = 0.1, size = 0.5, 
-                #colour = "gray",
-                position = position_dodge(width = .1)) +
-
-
-      
-
-      # Layer 5 - A line linking these means
-      geom_line(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                      colour = Treatment_seq), linetype = 1, size = 1) +
-      
-      # Layer 6 - A mean per treatment sequence
-      geom_point(data = sumrepdat, aes(y =  Dist_mean, group = Treatment_seq, 
-                                       colour = Treatment_seq), shape = 19, size = 2) +
- 
-      # Layer 6' - SE/SD bars
-      #geom_errorbar(data = sumrepdat, aes( 
-      #  y =  Dist_mean, group = Treatment_seq, 
-      #  colour = Treatment_seq, ymin =  Dist_mean-sd, 
-      #  ymax =  Dist_mean+se), width = 0.05, size = 1.2) +
-      
-      
-      # Define the colours 
-      scale_colour_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6")) + 
-      scale_fill_manual(values=c("#eb676e", "#f7bd6a", "#6e67b5", "#b3d6e6"))+
-      
-      # Define the theme
-      theme_cowplot()
-
-```
 
 
 ## 4. Tendency to hide
@@ -937,16 +852,16 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 # I assign every individual to its pond and treatment category
     Shelter_nreads <- merge(Shelter_variables, Shelter_nreads, by = "id", all = T)
     Shelter_nreads[is.na(Shelter_nreads)] <- 0    
-    Shelter_nreads$duration_min <- Shelter_nreads$nb/60
+    Shelter_nreads$duration_shelter <- Shelter_nreads$nb/60
 
 
 ```
 
 
 ```{r}
-ggplot(data = Shelter_nreads, aes(duration_min)) +
+ggplot(data = Shelter_nreads, aes(duration_shelter)) +
     geom_histogram(aes(),
-                   bins = 6,
+                   bins = 20,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Duration spent hiding", y="Count") +
@@ -959,7 +874,7 @@ ggplot(data = Shelter_nreads, aes(duration_min)) +
 ```{r}
  
  # Violin plots for differences between the 8 ponds within a week
-ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min, fill = time_of_day)) + 
+ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) +
       
       #geom_boxplot(width=.1, outlier.colour=NA, 
@@ -979,11 +894,11 @@ ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min, fill = ti
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Travelled distance (meters)", x =" ") +
+      labs(y = "Time spent hiding (minutes)", x =" ") +
       scale_y_continuous(expand = c(0, 0))
 
-    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min)) +
-      geom_violin(fill = "#b4d3db") + 
+    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter)) +
+      geom_violin(fill = "#e4e3e8") + 
       geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
       #stat_summary(fun.data=mean_sdl, 
       #             fun.args = list(mult = 1), # I show 1 SD
@@ -1004,6 +919,129 @@ ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_min, fill = ti
 
 ## 5. Time spent at the top of the water column
 
+### 5.1 Data manipulation
+
+I first clean my data and check who's missing.
+
+```{r, message = FALSE}
+  Top_clean_df <- clean.data(top_df)
+  print(Top_clean_df)
+  Nb.ind(Top_clean_df)
+  
+  missing_top <- miss.ind(Top_clean_df)
+  print(missing_top)
+  
+# I split my dataframe into a list of dataframes (one object per individual)
+   Top_list_df_id <- split(Top_clean_df, f = Top_clean_df$id)
+
+   
+```
+
+### 5.2 Duration spent at each antenna
+
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
+
+```{r, message = FALSE}
+Top_shedule <- data.frame(Pond = c(4, 2, 5, 6, 1, 3, 7, 8),
+                          time_of_day = c("Morning",  "Morning", "Morning", "Morning",
+                                          "Afternoon", "Afternoon", "Afternoon", "Afternoon"))
+
+Top_variables <- merge(list_fish[,c(2, 8, 9)], 
+                      Top_shedule, by = "Pond")
+
+
+Top_variables <- Top_variables[!duplicated(Top_variables[,c('id')]),]
+
+```
+
+
+```{r, message = FALSE}
+
+nreads <- c()
+ids <- character()
+for (i in 1:length(Top_list_df_id)){
+ids[i] <- Top_list_df_id[[i]]$id[1]
+nreads[i] <- nrow(Top_list_df_id[[i]])}
+
+Top_nreads <- data.frame(id = ids, nb = nreads)
+
+
+```
+
+### 4.3 Plotting
+
+First, I will, for every individual, indicate to what pond and treatment it is associated with.
+
+```{r, message = FALSE}
+    
+
+# I assign every individual to its pond and treatment category
+    Top_nreads <- merge(Top_nreads, Top_variables, by = "id", all = T)
+    Top_nreads[is.na(Top_nreads)] <- 0    
+    Top_nreads$duration_top <- Top_nreads$nb/60
+
+
+```
+
+
+```{r}
+ggplot(data = Top_nreads, aes(duration_top)) +
+    geom_histogram(aes(),
+                   bins = 15,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Duration spent at the top", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"))
+```
+
+
+
+```{r}
+ 
+ # Violin plots for differences between the 8 ponds within a week
+ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top, fill = time_of_day)) + 
+      geom_violin(position = position_dodge(width = 0.4)) +
+      
+      #geom_boxplot(width=.1, outlier.colour=NA, 
+      #             position = position_dodge(width = 0.4), colour = "black") +
+      
+      scale_fill_brewer(palette="Blues") +
+      
+      #stat_summary(fun.data=mean_sdl, 
+      #             fun.args = list(mult = 1), # I show 1 SD
+      #             geom = "pointrange", color="#414c61", 
+      #             position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Time spent at the top", x =" ") +
+      scale_y_continuous(expand = c(0, 0))
+
+    ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top)) +
+      geom_violin(fill = "#e4e3e8") + 
+      geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
+      #stat_summary(fun.data=mean_sdl, 
+      #             fun.args = list(mult = 1), # I show 1 SD
+      #             geom = "pointrange", color="#414c61", 
+      #             position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Time spent at the top (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0))
+    
+```
 
 ```{r, message = FALSE}
 
@@ -1026,13 +1064,228 @@ I can first look at the individuals that were never read during the whole week. 
 ```{r, message = FALSE}
 missing_ind_df <- Reduce(intersect, list(missing_EB$missing_id,
                        missing_bottom$missing_id,
-                       missing_shelter$missing_id))
+                       missing_shelter$missing_id,
+                       missing_top$missing_id))
 missing_ind_df <- data.frame(id = missing_ind_df)
 missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
 print(missing_ind_df)
 ```
 
+
 ```{r, message = FALSE}
+EB_Lat_final
+Travelled.distance
+Shelter_nreads
+Top_nreads
+
+week1 <- merge(EB_Lat_final[c("id", "Treatment_seq", "Pond", "time_since_start")],
+      Travelled.distance[c("id", "Dist")],
+      by = "id", all = T)
+
+week1 <- merge(week1, 
+      Shelter_nreads[c("id", "duration_shelter")], by = "id", all = T)
+
+
+week1 <- merge(week1, 
+      Top_nreads[c("id", "duration_top")], by = "id", all = T)
+
+
 
 ```
+
+```{r, message = FALSE}
+ggplot(data = week1, aes(x = duration_shelter, y = duration_top)) +
+  geom_point(alpha = 0.5) + theme_cowplot()
+  #coord_cartesian(xlim = c(0, 100))
+  #geom_smooth(colour = "gray")
+```
+
+## 6. Shoaling index
+
+
+I write a function that computes the number of reads (i.e. ~ number of seconds, see *clean.data* function) each individuals spends accompanied, that is, read during the same second at the same antenna in presence of at least one conspecific. 
+
+Input: A *cleaned* data frame containing all the reads for one day.
+Output: A data frame containing all the fish that have been read in presence of a conspecific, and their corresponding: (i) number of accompanied reads, (ii) total number of reads, (iii) proportion of the time they spend in presence of a conspecific. The individuals that haven't been read in presence of a conspecific are not in the data frame.
+
+```{r, message = FALSE}
+shoaling.index <- function(clean_df, df_variables){
+
+  
+  
+# I split my data frame into a list of dataframes (one object per individual)
+  clean_df_2 <- split(clean_df, f = clean_df$antenna)
+
+# I define a list
+  accompanied_reads <- list()
+  
+    # For each antenna...
+    for (i in 1:length(clean_df_2)){
+     
+      # I subset all the time points for which more than 1 individuals were read at one antenne
+      accompanied_reads[[i]] <-  clean_df_2[[i]] %>% group_by(time) %>% filter(n() > 1)
+  
+      # I count the number of accompanied reads per individual
+      accompanied_reads[[i]] <- accompanied_reads[[i]] %>% group_by(id) %>% add_tally()
+      # I remove duplicated rows
+      accompanied_reads[[i]] <- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c('id')]),]
+    }
+  
+  
+  # I bind the rows of the list of dataframes
+    accompanied_reads <- bind_rows(accompanied_reads)
+  
+    # I keep the total number of accompanied reads in all antennas
+    accompanied_reads <- accompanied_reads %>%
+      group_by(id) %>%
+      mutate(tot_acc_reads = sum(n))
+
+    
+    
+  # I remove the 'n' column, useless now
+    accompanied_reads <- accompanied_reads[,- c(7)]
+  # I remove duplicated rows
+    accompanied_reads <- accompanied_reads[!duplicated(accompanied_reads[,c('id')]),]
+  
+  # Now, I want to take into account the total number of reads of each individual as well
+    clean_df <- clean_df %>% group_by(id) %>% add_tally()
+    clean_df <- clean_df[!duplicated(clean_df[,c('id')]),]
+    clean_df <- merge(EB_variables, clean_df[c("id", "n")], by = "id", all = T)
+    clean_df[is.na(clean_df)] <- 0
+    
+  # I add them to the data frame with the accompanied reads
+    accompanied_reads <- merge(clean_df[c("id", "Pond", "time_of_day", "Treatment_seq", "n")], 
+                               accompanied_reads[c("id", "tot_acc_reads")], by = "id", all = T) 
+    names(accompanied_reads)[5] <- "tot_reads"
+    accompanied_reads[is.na(accompanied_reads)] <- 0
+    accompanied_reads$shoaling <- accompanied_reads$tot_acc_reads/accompanied_reads$tot_reads
+    return(accompanied_reads)
+    
+  } # end of function
+
+```
+
+
+
+```{r, message = FALSE}
+
+shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
+shoaling_bottom <- shoaling.index(bottom_clean_df, Bottom_variables)
+Shoaling_top <- shoaling.index(Top_clean_df, Top_variables)
+shoaling_shelters <- shoaling.index(Shelter_clean_df, Shelter_variables)
+
+
+
+
+a <- ggplot(data = shoaling_EB, aes(shoaling)) +
+    geom_histogram(aes(),
+                   bins = 20,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Proportion of a time with at least one conspecific", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5")) +
+  xlim(c(0,1)) +
+  ylim(c(0,50)) + ggtitle("EB")
+
+b <- ggplot(data = shoaling_bottom, aes(shoaling)) +
+    geom_histogram(aes(),
+                   bins = 20,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Proportion of a time with at least one conspecific", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5")) +
+  xlim(c(0,1)) +
+  ylim(c(0,50)) + ggtitle("Bottom")
+
+c <- ggplot(data = Shoaling_top, aes(shoaling)) +
+    geom_histogram(aes(),
+                   bins = 20,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Proportion of a time with at least one conspecific", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5")) +
+  xlim(c(0,1)) +
+  ylim(c(0,50)) + ggtitle("Top")
+
+d <- ggplot(data = shoaling_shelters, aes(shoaling)) +
+    geom_histogram(aes(),
+                   bins = 20,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Proportion of a time with at least one conspecific", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5")) +
+  xlim(c(0,1)) +
+  ylim(c(0,50)) + ggtitle("Shelter")
+
+((a + b) / (c + d))
+```
+
+
+
+
+
+```{r}
+Shoaling_tot <- cbind(shoaling_EB[c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads", "tot_acc_reads")],
+                       shoaling_bottom[c("tot_reads", "tot_acc_reads")],
+                       Shoaling_top[c("tot_reads", "tot_acc_reads")],
+                       shoaling_shelters[c("tot_reads", "tot_acc_reads")])
+
+
+names(Shoaling_tot) <- c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads_EB", "acc_reads_EB",
+                         "tot_reads_bottom", "acc_reads_bottom",
+                         "tot_reads_top", "acc_reads_top",
+                         "tot_reads_shelters", "acc_reads_shelters")
+
+Shoaling_tot$ACC_READS <- Shoaling_tot$acc_reads_EB + Shoaling_tot$acc_reads_bottom + 
+                              Shoaling_tot$acc_reads_top + Shoaling_tot$acc_reads_shelters
+
+Shoaling_tot$TOT_READS <- Shoaling_tot$tot_reads_EB + Shoaling_tot$tot_reads_bottom + 
+                              Shoaling_tot$tot_reads_top + Shoaling_tot$tot_reads_shelters
+
+
+Shoaling_tot$SHOALING <- Shoaling_tot$ACC_READS/Shoaling_tot$TOT_READS
+  
+  
+  
+A <- ggplot(data = Shoaling_tot, aes(SHOALING)) +
+    geom_histogram(aes(),
+                   bins = 20,
+                   fill="#6f7b96",
+                   colour = "white") +
+    labs(x="Proportion of a time spent with at least one conspecific", y="Count") +
+    theme(axis.ticks.x = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5")) +
+  xlim(c(0,1)) +
+  ylim(c(0,50)) + ggtitle("Shoaling tendency across tests")
+
+print(A)
+
+```
+
+
+
+```{r}
+    ggplot(data = Shoaling_tot, aes(x = Treatment_seq, y = SHOALING)) +
+      geom_violin(fill = "#e4e3e8") + 
+      stat_summary(fun.data=mean_sdl, 
+                   fun.args = list(mult = 1), # I show 1 SD
+                   geom = "pointrange", color="#414c61", 
+                   position = position_dodge(width = 0.4)) +
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Latency to cross the exploration box", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA))
+```
+
+
 
