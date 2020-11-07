@@ -1112,54 +1112,8 @@ ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top, fill = time_o
 ```
 
 
-## 6. Summary of the week
+## 5. Shoaling index
 
-I can first look at the individuals that were never read during the whole week. These individuals potentially died, or lost their tag.
-
-
-```{r, message = FALSE}
-missing_ind_df <- Reduce(intersect, list(EB_missing$missing_id,
-                       bottom_missing$missing_id,
-                       shelter_missing$missing_id,
-                       top_missing$missing_id))
-missing_ind_df <- data.frame(id = missing_ind_df)
-missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
-print(missing_ind_df)
-```
-
-
-```{r, message = FALSE}
-EB_output
-bottom_output
-shelter_output
-top_output
-
-week1 <- merge(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
-      bottom_output[c("id", "Dist")],
-      by = "id", all = T)
-
-week1 <- merge(week1, 
-      shelter_output[c("id", "duration_shelter")], by = "id", all = T)
-
-
-week1 <- merge(week1, 
-      top_output[c("id", "duration_top")], by = "id", all = T)
-
-
-
-```
-
-```{r, message = FALSE}
-ggplot(data = week1, aes(x = duration_shelter, y = duration_top)) +
-  geom_point(alpha = 0.5) + theme_cowplot()
-  #coord_cartesian(xlim = c(0, 100))
-  #geom_smooth(colour = "gray")
-```
-
-## 6. Shoaling index
-
-
-DO NOT READ BELOW. I REALISED ALL OF IT WAS INCORRECT. It will hopefully be fixed soon.
 
 
 ```{r}
@@ -1407,6 +1361,51 @@ print(plot)
 ```
 
 
+
+
+## 6. Summary of the week
+
+I can first look at the individuals that were never read during the whole week. These individuals potentially died, or lost their tag.
+
+
+```{r, message = FALSE}
+missing_ind_df <- Reduce(intersect, list(EB_missing$missing_id,
+                       bottom_missing$missing_id,
+                       shelter_missing$missing_id,
+                       top_missing$missing_id))
+missing_ind_df <- data.frame(id = missing_ind_df)
+missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
+print(missing_ind_df)
+```
+
+
+```{r, message = FALSE}
+EB_output
+bottom_output
+shelter_output
+top_output
+
+week1 <- merge(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
+      bottom_output[c("id", "Dist")],
+      by = "id", all = T)
+
+week1 <- merge(week1, 
+      shelter_output[c("id", "duration_shelter")], by = "id", all = T)
+
+
+week1 <- merge(week1, 
+      top_output[c("id", "duration_top")], by = "id", all = T)
+
+
+
+```
+
+```{r, message = FALSE}
+ggplot(data = week1, aes(x = duration_shelter, y = duration_top)) +
+  geom_point(alpha = 0.5) + theme_cowplot()
+  #coord_cartesian(xlim = c(0, 100))
+  #geom_smooth(colour = "gray")
+```
 
 
 
