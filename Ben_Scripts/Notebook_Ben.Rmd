@@ -536,12 +536,12 @@ The plots below show the distribution of latency scores per pond and per treatme
 
     ggplot(data = EB_output, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
-      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
+      
+      #geom_boxplot(width=.1, outlier.alpha = 0.1, 
+      #             position = position_dodge(width = 0.4), colour = "black") +
+      
       scale_fill_brewer(palette="Blues") +
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
+      
       # theme_bw() +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
@@ -550,18 +550,13 @@ The plots below show the distribution of latency scores per pond and per treatme
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Latency to cross the exploration box", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Latency to explore")
+      labs(y = "Latency to explore the box (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("EB")
 
-windows.options(antialias = "cleartype")
 
     ggplot(data = EB_output, aes(x = Treatment_seq, y = time_since_start)) + 
       geom_violin(fill = "#e4e3e8") + 
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
-      # theme_bw() +
+      geom_boxplot(fill = "white", width = 0.07, outlier.alpha = 0.3) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_line(colour = "#e6e6e6"), 
@@ -569,8 +564,8 @@ windows.options(antialias = "cleartype")
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Latency to cross the exploration box", x =" ") +
-      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Latency to explore")
+      labs(y = "Latency to explore the box (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("EB")
 ```
 
 
@@ -789,15 +784,11 @@ Violin plots (with mean and SD) showing all treatment sequences and the time of 
       ggplot(data = bottom_output, aes(x = Treatment_seq, y = Dist, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       
-      geom_boxplot(width=.1, outlier.colour=NA, 
+      geom_boxplot(width=.1, outlier.alpha = 0.1, 
                    position = position_dodge(width = 0.4), colour = "black") +
       
       scale_fill_brewer(palette="Blues") +
       
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
       # theme_bw() +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
@@ -812,11 +803,7 @@ Violin plots (with mean and SD) showing all treatment sequences and the time of 
 
     ggplot(data = bottom_output, aes(x = Treatment_seq, y = Dist)) + 
       geom_violin(fill = "#e4e3e8") + 
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
-      # theme_bw() +
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_line(colour = "#e6e6e6"), 
@@ -924,17 +911,13 @@ ggplot(data = shelter_output, aes(duration_shelter)) +
  
  # Violin plots for differences between the 8 ponds within a week
 ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill = time_of_day)) + 
-      geom_violin(position = position_dodge(width = 0.4)) +
+      geom_violin(position = position_dodge(width = 0.4)) + 
       
-      #geom_boxplot(width=.1, outlier.colour=NA, 
-      #             position = position_dodge(width = 0.4), colour = "black") +
+      geom_boxplot(width=.1, outlier.alpha = 0.1, 
+                   position = position_dodge(width = 0.4), colour = "black") +
       
       scale_fill_brewer(palette="Blues") +
       
-      #stat_summary(fun.data=mean_sdl, 
-      #             fun.args = list(mult = 1), # I show 1 SD
-      #             geom = "pointrange", color="#414c61", 
-      #             position = position_dodge(width = 0.4)) +
       # theme_bw() +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
@@ -943,17 +926,14 @@ ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill 
             axis.ticks.x = element_blank(), 
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
-      labs(y = "Time spent hiding (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0))  + ggtitle("Hiding")
+      labs(y = "Time spent hidin (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Hiding")
+
+
 
     ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter)) +
       geom_violin(fill = "#e4e3e8") + 
-      geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
-      #stat_summary(fun.data=mean_sdl, 
-      #             fun.args = list(mult = 1), # I show 1 SD
-      #             geom = "pointrange", color="#414c61", 
-      #             position = position_dodge(width = 0.4)) +
-      # theme_bw() +
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_line(colour = "#e6e6e6"), 
@@ -963,6 +943,7 @@ ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill 
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent hiding (minutes)", x =" ") +
       scale_y_continuous(expand = c(0, 0))  + ggtitle("Hiding")
+    
     
 ```
 
@@ -1068,37 +1049,10 @@ ggplot(data = top_output, aes(duration_top)) +
 ```{r}
  
  # Violin plots for differences between the 8 ponds within a week
-ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top, fill = time_of_day)) + 
-      geom_violin(position = position_dodge(width = 0.4)) +
-      
-      #geom_boxplot(width=.1, outlier.colour=NA, 
-      #             position = position_dodge(width = 0.4), colour = "black") +
-      
-      scale_fill_brewer(palette="Blues") +
-      
-      #stat_summary(fun.data=mean_sdl, 
-      #             fun.args = list(mult = 1), # I show 1 SD
-      #             geom = "pointrange", color="#414c61", 
-      #             position = position_dodge(width = 0.4)) +
-      # theme_bw() +
-      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
-            panel.grid.major.x = element_blank(),
-            panel.grid.minor = element_line(colour = "#e6e6e6"), 
-            axis.ticks.y = element_blank(), 
-            axis.ticks.x = element_blank(), 
-            panel.background = element_blank(),
-            axis.line.y = element_line(color = "black")) +
-      labs(y = "Time spent at the top", x =" ") +
-      scale_y_continuous(expand = c(0, 0))
 
     ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top)) +
       geom_violin(fill = "#e4e3e8") + 
-      geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
-      #stat_summary(fun.data=mean_sdl, 
-      #             fun.args = list(mult = 1), # I show 1 SD
-      #             geom = "pointrange", color="#414c61", 
-      #             position = position_dodge(width = 0.4)) +
-      # theme_bw() +
+      #geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_line(colour = "#e6e6e6"), 
@@ -1107,7 +1061,7 @@ ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top, fill = time_o
             panel.background = element_blank(),
             axis.line.y = element_line(color = "black")) +
       labs(y = "Time spent at the top (minutes)", x =" ") +
-      scale_y_continuous(expand = c(0, 0)) + ggtitle("Top")
+      scale_y_continuous(expand = c(0, 0))  + ggtitle("Top")
     
 ```
 
@@ -1342,11 +1296,7 @@ print(A)
 ```{r}
     plot <- ggplot(data = Shoaling_tot, aes(x = Treatment_seq, y = SHOALING)) +
       geom_violin(fill = "#e4e3e8") + 
-      stat_summary(fun.data=mean_sdl, 
-                   fun.args = list(mult = 1), # I show 1 SD
-                   geom = "pointrange", color="#414c61", 
-                   position = position_dodge(width = 0.4)) +
-      # theme_bw() +
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_line(colour = "#e6e6e6"), 
