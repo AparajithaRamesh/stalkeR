@@ -89,24 +89,17 @@ I create the **clean.data** *function*. This function does the following things:
 ```{r, message = FALSE}
 clean.data <- function(df){
 
-# Naming my columns
-  names(df) <- c( "Identifier", "Date", "Time",
-                  "Unit.number", "Antenna.number", "Transponder.type",
-                  "Transponder.code", "Weight", "Input.status",
-                  "Output.status", "Event", "GPS.coordinates")
-
-
 # Defining my variables
   df$Identifier <- as.integer(df$Identifier)
   df$Time <- as.character(df$Time)
-  df$Unit.number <- as.integer(df$Unit.number)
-  df$Transponder.code <- as.character(df$Transponder.code)
+  df$Unit.number <- as.integer(df$`Unit number`)
+  df$Transponder.code <- as.character(df$`Transponder code`)
   df$Actual_time <- dmy_hms(paste(df$Date,df$Time,sep=" "))
 
   
   
 # I make a new data frame with a subset of the variables of interest here
-  new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
+  new_dataset<-subset(df, select=c(Actual_time, `Unit number`, `Transponder code`))
   names(new_dataset) <- c("time", "antenna", "id")
   new_dataset <- new_dataset  %>% distinct()
  
@@ -134,9 +127,8 @@ clean.data <- function(df){
                 new_dataset == 44] <- 4
     
 
-# I remove all the reads that do not come from the fish present 
-# in the ponds (e.g. ghost reads, test reads).
-# I first identify the reads that do not  come from the ponds
+# I remove all the reads that do not come from the fish present in the ponds 
+# (e.g. ghost reads, test reads). I first identify them:
     ghost_reads <- setdiff(new_dataset$id, list_fish$id)
 
 # I remove all of them from the data frame
@@ -1289,9 +1281,11 @@ ggplot(data = shoaling_output, aes(shoaling)) +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
   xlim(c(0,0.35)) +
-  ylim(c(0,50)) + ggtitle("Shoaling tendency across tests") + geom_density()
+  ylim(c(0,50)) + ggtitle("Shoaling tendency across tests")
 
 ```
+
+### 5.3 Plotting
 
 
 
@@ -1314,7 +1308,7 @@ ggplot(data = shoaling_output, aes(x = Treatment_seq, y = shoaling)) +
 ```
 
 
-
+---
 
 ## 6. Summary of the week
 
