@@ -573,7 +573,7 @@ The plots below show the distribution of latency scores per pond and per treatme
 
 
 ## 3. Travelled distance
-### 3.1 Data manipulation and object definition
+### 3.1 Data manipulation
 
 
 I first clean my data set, and look how many fish are missing and what their identity is. I show three data frames: (i) the cleaned data frame, (ii) the number of individuals per pond, (iii) the identity of the missing fish.
@@ -972,7 +972,7 @@ I first clean my data and check who's missing.
 
 ### 5.2 Duration spent at each antenna
 
-Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. As there are some ponds in which no fish were read for the 'Top' test, I manually enter which ponds were tested during the morning and during the afternoon. 
 
 ```{r, message = FALSE}
 top_schedule <- data.frame(Pond = c(4, 2, 5, 6,  # Morning ponds
@@ -1069,6 +1069,17 @@ ggplot(data = top_output, aes(duration_top)) +
 ## 5. Shoaling index
 
 
+I want to obtain the proportion of time that each individual spends with at least one conspecific, as a proxy for shoaling/social tendency. To do so, I first wish to know how many times each individual was read at the same time than at least another fish at a certain antenna (hereafter named *accompanied reads*, or *AR*). Then, I simply divide this number by the total number of reads.
+
+To reach this goal, I write two functions:
+
+### 5.1 _shoaling.index.pond_ Function
+
+This function has, as an:
+
+- Input n°1 = A clean data frame containing all the reads (for a certain test) at one pond.
+- Input n°2 = The variables of all the fish present in this pond.
+- Output = A data frame containing all the individuals (and not only the ones that were read) of this pond, and for each of them, their number of accompanied reads, and their total number of reads.
 
 ```{r}
 
@@ -1136,34 +1147,58 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
   
 } # end of function
 
+```
 
 
+### 5.2 _shoaling.index._ Function
+
+This function is using the function just above, but for an entire dataset, and not just one pond.
+
+- Input n°1 = A clean data frame containing all the reads (for a certain test) at *all* pond.
+- Input n°2 = The variables of *all the fish*.
+- Output = A data frame containing all the individuals (and not only the ones that were read), and for each of them, their number of accompanied reads, their total number of reads, and the accompanied reads divided by the total reads, (i.e. shoaling index).
+
+
+```{r}
+
+  # Example data frames
+  #clean_df <- bottom_clean_df
+  #variables_df <- bottom_variables
 
 
 shoaling.index <- function(clean_df, variables_df){
-  #clean_df <- bottom_clean_df
-  #variables_df <- bottom_variables
+# I define my objects
   variables_per_pond <- list()
   clean_df_list <- list()
   list <- list()
   
+  # For each Pond
   for (i in 1:8){
+    # I split my data frame per pond
     clean_df_list[[i]] <- subset(clean_df, Pond == i)
+    # I split my variable df by pond
     variables_per_pond[[i]] <- subset(variables_df, Pond == i)
     
+    # If fish were read at this pond...
     if (nrow(clean_df_list[[i]]) != 0){
     
+    # ... Then apply the function defined above, and obtain the reads 
+    # and accompanied reads per individual. 
     list[[i]] <- shoaling.index.pond(clean_df_list[[i]], variables_per_pond[[i]])  
     } 
     
+    # If however no fish was read in this pond
     if (nrow(clean_df_list[[i]]) == 0){
-    
+    # Then my data frame has 0s for total number of reads and accompanied reads
     list[[i]] <- data.frame(variables_per_pond[[i]], tot_reads = 0, tot_acc_reads = 0)
     } 
   }
   
+  # I bind the rows of my list, and obtain a long data frame
   Shoaling_index <- bind_rows(list)
+  # I create my Shoaling index by dividing acc. reads by tot. reads.
   Shoaling_index$shoaling <- Shoaling_index$tot_acc_reads/Shoaling_index$tot_reads
+  # My NAs = 0
   Shoaling_index[is.na(Shoaling_index)] <- 0
   
   
@@ -1172,33 +1207,24 @@ shoaling.index <- function(clean_df, variables_df){
   }
   
 
+```
 
+
+I apply the function to the cleaned data sets.
+
+```{r}
+
+  shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
+  shoaling_bottom <- shoaling.index(bottom_clean_df, bottom_variables)
+  Shoaling_top <- shoaling.index(top_clean_df, top_variables)
+  shoaling_shelters <- shoaling.index(shelter_clean_df, shelter_variables)
 
 ```
 
 
 
 
-
-
-I write a function that computes the number of reads (i.e. ~ number of seconds, see *clean.data* function) each individuals spends accompanied, that is, read during the same second at the same antenna in presence of at least one conspecific. 
-
-
-TEXT TO BE MODIFIED
-Input: A *cleaned* data frame containing all the reads for one day.
-Output: A data frame containing all the fish that have been read in presence of a conspecific, and their corresponding: (i) number of accompanied reads, (ii) total number of reads, (iii) proportion of the time they spend in presence of a conspecific. The individuals that haven't been read in presence of a conspecific are not in the data frame.
-
-
-
-
-
 ```{r, message = FALSE}
-
-shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
-shoaling_bottom <- shoaling.index(bottom_clean_df, bottom_variables)
-Shoaling_top <- shoaling.index(top_clean_df, top_variables)
-shoaling_shelters <- shoaling.index(shelter_clean_df, shelter_variables)
-
 
 
 
@@ -1251,32 +1277,42 @@ d <- ggplot(data = shoaling_shelters, aes(shoaling)) +
 
 
 
-
+Then, I want to put all of these indices together in one data frame.
 
 ```{r}
-Shoaling_tot <- cbind(shoaling_EB[c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads", "tot_acc_reads")],
-                       shoaling_bottom[c("tot_reads", "tot_acc_reads")],
-                       Shoaling_top[c("tot_reads", "tot_acc_reads")],
-                       shoaling_shelters[c("tot_reads", "tot_acc_reads")])
+# I take merge all the columns of interest from the four outputs obtained above.
+  shoaling_output <- cbind(shoaling_EB[c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads", "tot_acc_reads")],
+                         shoaling_bottom[c("tot_reads", "tot_acc_reads")],
+                         Shoaling_top[c("tot_reads", "tot_acc_reads")],
+                         shoaling_shelters[c("tot_reads", "tot_acc_reads")])
 
+# I rename the columns  
+  names(shoaling_output) <- c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads_EB", "acc_reads_EB",
+                           "tot_reads_bottom", "acc_reads_bottom",
+                           "tot_reads_top", "acc_reads_top",
+                           "tot_reads_shelters", "acc_reads_shelters")
 
-names(Shoaling_tot) <- c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads_EB", "acc_reads_EB",
-                         "tot_reads_bottom", "acc_reads_bottom",
-                         "tot_reads_top", "acc_reads_top",
-                         "tot_reads_shelters", "acc_reads_shelters")
+# I make a new columns summing all the accompanied reads  
+  shoaling_output$ACC_READS <- shoaling_output$acc_reads_EB + shoaling_output$acc_reads_bottom + 
+                                shoaling_output$acc_reads_top + shoaling_output$acc_reads_shelters
 
-Shoaling_tot$ACC_READS <- Shoaling_tot$acc_reads_EB + Shoaling_tot$acc_reads_bottom + 
-                              Shoaling_tot$acc_reads_top + Shoaling_tot$acc_reads_shelters
-
-Shoaling_tot$TOT_READS <- Shoaling_tot$tot_reads_EB + Shoaling_tot$tot_reads_bottom + 
-                              Shoaling_tot$tot_reads_top + Shoaling_tot$tot_reads_shelters
-
-
-Shoaling_tot$SHOALING <- Shoaling_tot$ACC_READS/Shoaling_tot$TOT_READS
+# I make a new columns summing all the reads (both accompanied and non accompanied) 
+  shoaling_output$TOT_READS <- shoaling_output$tot_reads_EB + shoaling_output$tot_reads_bottom + 
+                                shoaling_output$tot_reads_top + shoaling_output$tot_reads_shelters
   
+# I compute my shoaling index combining the four tests    
+  shoaling_output$SHOALING <- shoaling_output$ACC_READS/shoaling_output$TOT_READS
+    
   
+
+```
+
+
+I plot the distribution of shoaling index across tests:
+
+```{r}
   
-A <- ggplot(data = Shoaling_tot, aes(SHOALING)) +
+ggplot(data = shoaling_output, aes(SHOALING)) +
     geom_histogram(aes(),
                    bins = 25,
                    fill="#6f7b96",
@@ -1287,14 +1323,13 @@ A <- ggplot(data = Shoaling_tot, aes(SHOALING)) +
   xlim(c(0,0.35)) +
   ylim(c(0,50)) + ggtitle("Shoaling tendency across tests")
 
-print(A)
-
 ```
 
 
 
+
 ```{r}
-    plot <- ggplot(data = Shoaling_tot, aes(x = Treatment_seq, y = SHOALING)) +
+ggplot(data = shoaling_output, aes(x = Treatment_seq, y = SHOALING)) +
       geom_violin(fill = "#e4e3e8") + 
       geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
@@ -1307,7 +1342,7 @@ print(A)
       labs(y = "Proportion of time with conspecific", x =" ") +
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Shoaling")
 
-print(plot)
+
 ```
 
 
@@ -1315,43 +1350,42 @@ print(plot)
 
 ## 6. Summary of the week
 
-I can first look at the individuals that were never read during the whole week. These individuals potentially died, or lost their tag.
+I can first look at the individuals that were never read during the whole week. These individuals could have died, lost their tag, or their tags might be les/non functional. 
 
 
 ```{r, message = FALSE}
-missing_ind_df <- Reduce(intersect, list(EB_missing$missing_id,
+
+# I obtain the name id of the fish that were read in none of the tests
+  week1_miss_ind <- Reduce(intersect, list(EB_missing$missing_id,
                        bottom_missing$missing_id,
                        shelter_missing$missing_id,
                        top_missing$missing_id))
-missing_ind_df <- data.frame(id = missing_ind_df)
-missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
-print(missing_ind_df)
+
+# I make it a one column data frame
+  week1_miss_ind <- data.frame(id = week1_miss_ind)
+# I assign the individuals to their pond
+  week1_miss_ind <- merge(week1_miss_ind, list_fish[,c("id", "Pond")], by = "id", all = F)
+  print(week1_miss_ind)
 ```
 
 
 ```{r, message = FALSE}
-EB_output
-bottom_output
-shelter_output
-top_output
-
-week1 <- merge(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
-      bottom_output[c("id", "Dist")],
-      by = "id", all = T)
-
-week1 <- merge(week1, 
-      shelter_output[c("id", "duration_shelter")], by = "id", all = T)
 
 
-week1 <- merge(week1, 
-      top_output[c("id", "duration_top")], by = "id", all = T)
+week1_df <- data.frame(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
+                    bottom_output[c("Dist")],
+                    shelter_output[c("duration_shelter")],
+                    top_output[c("duration_top")],
+                    shoaling_output[c("SHOALING")])
+
+
 
 
 
 ```
 
 ```{r, message = FALSE}
-ggplot(data = week1, aes(x = duration_shelter, y = duration_top)) +
+ggplot(data = week1_df, aes(x = duration_shelter, y = duration_top)) +
   geom_point(alpha = 0.5) + theme_cowplot()
   #coord_cartesian(xlim = c(0, 100))
   #geom_smooth(colour = "gray")
