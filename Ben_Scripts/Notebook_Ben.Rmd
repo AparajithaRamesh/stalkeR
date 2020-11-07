@@ -290,7 +290,7 @@ Now, we want to know how long individuals take to fully cross the box. To obtain
 
 ### 2.2 Antenna changes
 
-Next, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence. The output is, for the example above: 1, 2, 3. 
+Next, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence of identical numbers. The output is, for the example above: 1, 2, 3. 
 
 
 ```{r, message = FALSE}
@@ -516,7 +516,7 @@ I use the _finalise.EB_ function to clean up the output and to obtain a plottabl
 
 The histogram below shows the distribution of latencies to explore the box. All fish that did not entirely cross the box received the maximal score.
 
-```{r, message = FALSE, dev: CairoPNG}
+```{r, message = FALSE}
   
 ggplot(data = EB_output, aes(time_since_start)) +
     geom_histogram(aes(),
@@ -526,8 +526,7 @@ ggplot(data = EB_output, aes(time_since_start)) +
     labs(x="Latency to explore the box (minutes)", y="Count") +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) + ggtitle("Latency to explore")
-    
-    
+  
 ```
 
 The plots below show the distribution of latency scores per pond and per treatment sequence. 
@@ -575,7 +574,7 @@ windows.options(antialias = "cleartype")
 ```
 
 
-
+---
 
 
 ## 3. Travelled distance
@@ -601,13 +600,13 @@ I make a data frame with the characteristics of all individuals, even the ones t
 ```{r, message = FALSE}
 
 # I merge the clean data frame with the variables data drame  
-  Bottom_variables <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
+  bottom_variables <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
 
 # I remove duplicated rows  
-  Bottom_variables <- Bottom_variables[!duplicated(Bottom_variables[,c('id')]),]
+  bottom_variables <- bottom_variables[!duplicated(bottom_variables[,c('id')]),]
 
 # I must obtain a value of 200.  
-  nrow(Bottom_variables)
+  nrow(bottom_variables)
   
 
 
@@ -651,9 +650,9 @@ I define the distances between the different antennas, and the sequence of cross
 ---
 
 
-### 3.2 Function computing the travelled distance per individual
+### 3.2 _trav.dist_ - A function computing the travelled distance per individual
 
-First, as above, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence. The output is, for the example above: 1, 2, 3. 
+First, as above, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence of identical numvers. The output is, for the example above: 1, 2, 3. 
 
 Second, I compute the traveled distance between these antennas, for every change, and sum them up. At the end, I will obtain a proxy for the distance that a fish has traveled between the antennas during 2:30 hours.
 
@@ -765,7 +764,7 @@ First, I will, for every individual, indicate to what pond and treatment it is a
     
 
 # I assign every individual to its pond and treatment category
-    bottom_output <- merge(Bottom_variables, bottom_output, by = "id", all = T)
+    bottom_output <- merge(bottom_variables, bottom_output, by = "id", all = T)
 
 ```
 
@@ -782,7 +781,7 @@ ggplot(data = bottom_output, aes(Dist)) +
 ```
 
 
-I first do violin plots (with mean and SD) showing all tratment sequences and the time of the day
+Violin plots (with mean and SD) showing all treatment sequences and the time of the day:
 
 
 ```{r, message = FALSE}
@@ -888,9 +887,9 @@ rm(ids, nreads, shelter_list_df_id)
 
 ```
 
-### 4.3 Plotting
 
-First, I will, for every individual, indicate to what pond and treatment it is associated with.
+
+For every individual, I indicate to what pond and treatment it is associated with.
 
 ```{r, message = FALSE}
     
@@ -902,6 +901,10 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 
 
 ```
+
+
+
+### 4.3 Plotting
 
 
 ```{r}
@@ -963,6 +966,9 @@ ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill 
     
 ```
 
+---
+
+
 ## 5. Time spent at the top of the water column
 
 ### 5.1 Data manipulation
@@ -970,15 +976,15 @@ ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill 
 I first clean my data and check who's missing.
 
 ```{r, message = FALSE}
-  Top_clean_df <- clean.data(top_df)
-  print(Top_clean_df)
-  Nb.ind(Top_clean_df)
+  top_clean_df <- clean.data(top_df)
+  print(top_clean_df)
+  Nb.ind(top_clean_df)
   
-  top_missing <- miss.ind(Top_clean_df)
+  top_missing <- miss.ind(top_clean_df)
   print(top_missing)
   
 # I split my dataframe into a list of dataframes (one object per individual)
-   Top_list_df_id <- split(Top_clean_df, f = Top_clean_df$id)
+   Top_list_df_id <- split(top_clean_df, f = top_clean_df$id)
 
    
 ```
@@ -988,50 +994,66 @@ I first clean my data and check who's missing.
 Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
 
 ```{r, message = FALSE}
-Top_shedule <- data.frame(Pond = c(4, 2, 5, 6, 1, 3, 7, 8),
-                          time_of_day = c("Morning",  "Morning", "Morning", "Morning",
+top_schedule <- data.frame(Pond = c(4, 2, 5, 6,  # Morning ponds
+                                    1, 3, 7, 8), # Afternoon ponds
+                          
+                           time_of_day = c("Morning",  "Morning", "Morning", "Morning",
                                           "Afternoon", "Afternoon", "Afternoon", "Afternoon"))
 
-Top_variables <- merge(list_fish[,c(2, 8, 9)], 
-                      Top_shedule, by = "Pond")
+top_variables <- merge(list_fish[,c(2, 8, 9)], 
+                      top_schedule, by = "Pond")
 
 
-Top_variables <- Top_variables[!duplicated(Top_variables[,c('id')]),]
+top_variables <- top_variables[!duplicated(top_variables[,c('id')]),]
 
 ```
 
 
 ```{r, message = FALSE}
 
-nreads <- c()
-ids <- character()
-for (i in 1:length(Top_list_df_id)){
-ids[i] <- Top_list_df_id[[i]]$id[1]
-nreads[i] <- nrow(Top_list_df_id[[i]])}
 
-Top_nreads <- data.frame(id = ids, nb = nreads)
+# I define the objects
+  nreads <- c()
+  ids <- character()
+  
+# For each individual...  
+  for (i in 1:length(Top_list_df_id)){
+    # ...I obtain its name...
+    ids[i] <- Top_list_df_id[[i]]$id[1]
+    # ... and its number of reads.    
+    nreads[i] <- nrow(Top_list_df_id[[i]])
+  }# end of for loop
 
+# I merge these two vectors together
+  top_output <- data.frame(id = ids, nb = nreads)
+
+# and clean my environment
+  rm(ids, nreads, Top_list_df_id, top_schedule)
+  
 
 ```
 
-### 4.3 Plotting
 
-First, I will, for every individual, indicate to what pond and treatment it is associated with.
+I indicate, for every individual, to what pond and treatment it is associated with.
 
 ```{r, message = FALSE}
     
 
 # I assign every individual to its pond and treatment category
-    Top_nreads <- merge(Top_nreads, Top_variables, by = "id", all = T)
-    Top_nreads[is.na(Top_nreads)] <- 0    
-    Top_nreads$duration_top <- Top_nreads$nb/60
+    top_output <- merge(top_output, top_variables, by = "id", all = T)
+    top_output[is.na(top_output)] <- 0    
+    top_output$duration_top <- top_output$nb/60
 
 
 ```
 
 
+### 5.3 Plotting
+
+
+
 ```{r}
-ggplot(data = Top_nreads, aes(duration_top)) +
+ggplot(data = top_output, aes(duration_top)) +
     geom_histogram(aes(),
                    bins = 15,
                    fill="#6f7b96",
@@ -1046,7 +1068,7 @@ ggplot(data = Top_nreads, aes(duration_top)) +
 ```{r}
  
  # Violin plots for differences between the 8 ponds within a week
-ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top, fill = time_of_day)) + 
+ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) +
       
       #geom_boxplot(width=.1, outlier.colour=NA, 
@@ -1069,7 +1091,7 @@ ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top, fill = time_o
       labs(y = "Time spent at the top", x =" ") +
       scale_y_continuous(expand = c(0, 0))
 
-    ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top)) +
+    ggplot(data = top_output, aes(x = Treatment_seq, y = duration_top)) +
       geom_violin(fill = "#e4e3e8") + 
       geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
       #stat_summary(fun.data=mean_sdl, 
@@ -1110,7 +1132,7 @@ print(missing_ind_df)
 EB_output
 bottom_output
 shelter_output
-Top_nreads
+top_output
 
 week1 <- merge(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
       bottom_output[c("id", "Dist")],
@@ -1121,7 +1143,7 @@ week1 <- merge(week1,
 
 
 week1 <- merge(week1, 
-      Top_nreads[c("id", "duration_top")], by = "id", all = T)
+      top_output[c("id", "duration_top")], by = "id", all = T)
 
 
 
@@ -1144,11 +1166,15 @@ DO NOT READ BELOW. I REALISED ALL OF IT WAS INCORRECT. It will hopefully be fixe
 
 
 
-
 shoaling.index.pond <- function(clean_df_pond, df_variables){
   
+  #clean_df_pond <- subset(bottom_clean_df, Pond == 1)
+  #df_variables <- subset(bottom_variables, Pond == 1)
+  
+  # If an individual has been read at the top in this pond
+  if (nrow(clean_df_pond != 0)){
+  
   # I split my data frame into a list of dataframes (one object per individual)
-  # PROBLEM HERE, ANTENNA N°1 IN DIFF PONDS
   clean_df_2 <- split(clean_df_pond, f = clean_df_pond$antenna)
   
   # I define a list
@@ -1156,6 +1182,7 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
   
   # For each antenna...
   for (i in 1:length(clean_df_2)){
+    # If an individual has been read in this antenna
     if (nrow(clean_df_2[[i]] != 0)){
         
     # I subset all the time points for which more than 1 individuals were read at one antenna
@@ -1197,6 +1224,8 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
   accompanied_reads[is.na(accompanied_reads)] <- 0
   return(accompanied_reads)
   
+  } # end of the first 'if'
+  
 } # end of function
 
 
@@ -1204,14 +1233,16 @@ shoaling.index.pond <- function(clean_df_pond, df_variables){
 
 
 shoaling.index <- function(clean_df, variables_df){
-  #clean_df <- Top_clean_df
-  #variables_df <- Top_variables
+  #clean_df <- bottom_clean_df
+  #variables_df <- bottom_variables
   variables_per_pond <- list()
   clean_df_list <- list()
+  list <- list()
   
   for (i in 1:8){
     clean_df_list[[i]] <- subset(clean_df, Pond == i)
     variables_per_pond[[i]] <- subset(variables_df, Pond == i)
+    
     if (nrow(clean_df_list[[i]]) != 0){
     
     list[[i]] <- shoaling.index.pond(clean_df_list[[i]], variables_per_pond[[i]])  
@@ -1256,8 +1287,8 @@ Output: A data frame containing all the fish that have been read in presence of 
 ```{r, message = FALSE}
 
 shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
-shoaling_bottom <- shoaling.index(bottom_clean_df, Bottom_variables)
-Shoaling_top <- shoaling.index(Top_clean_df, Top_variables)
+shoaling_bottom <- shoaling.index(bottom_clean_df, bottom_variables)
+Shoaling_top <- shoaling.index(top_clean_df, top_variables)
 shoaling_shelters <- shoaling.index(shelter_clean_df, shelter_variables)
 
 
