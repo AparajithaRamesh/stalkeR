@@ -7,13 +7,13 @@ output:
 
 This notebook contains chunks of R script computing indices for five different behaviours:
 
-- Travelled distance
+- Traveled distance
 - Tendency to spend time at the top of the pond
 - Latency to cross an exploration box
 - Tendency to hide
 - Shoaling tendency
 
-There is no behavioural test for the last index, but the metric is retrieved from the data collected for the four other tests. This notebook is so far built to compute the indices for one week of treatment, from the four weekly datasets.
+There is no specific behavioural test for the last index. Instead, the metric is retrieved from the data collected in the four other tests. This notebook is so far written to compute the individuals behavioural indices for one week of treatment, from the four weekly data sets.
 
 ## 1. Packages, data import and basic data manipulation
 
@@ -39,7 +39,7 @@ I first import the packages I will use in in the notebook.
   library(cowplot)
 ```
 
-I import the four dataset we get every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (i.e. PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
+I import the four data sets we obtain every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (i.e. PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
 
 ```{r, message = FALSE}
 
@@ -65,15 +65,19 @@ shelter_df <- read_delim("Data/Week 1/20201104.CSV",
 
 ```
 
+Below, you will find a series of generic functions, that can be applied to one of the data sets imported above (i.e. data frame containing the reads for one test during one day). These functions can be applied to data sets coming from the four different tests.
 
 
-I create the **clean.data** *function* to clean my data. This function does the following:
+
+#### 1.1 _clean.data_ Function
+
+I create the **clean.data** *function*. This function does the following things:
 
 - It subsets a few columns of interest from the raw data (i.e. time, antenna, id)
 - It keeps only one read per individual and per second for a given antenna (i.e. remove repeats)
-- I assign every individual to a category named *time of the day*, indicating if it was tested during the morning or during the afternoon.
-- It renames the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2).
-- It removes the ghost reads, and the reads coming from antenna tests, to only keep the fish reads in the ponds.
+- It assigns every individual to a category named *time of the day*, indicating if the fish was tested during the morning or during the afternoon.
+- It renames the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2). Therefore, antenna numbers in all ponds correspond to their respective position.
+- It removes the ghost reads, and the reads coming from antenna tests, only to keep the fish reads in the ponds.
 - It assigns each individual to its *pond number* and *treatment sequence*.
 
 ![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
@@ -101,7 +105,7 @@ clean.data <- function(df){
 
   
   
-# I make a new df with a subset of the variables of interest here
+# I make a new data frame with a subset of the variables of interest here
   new_dataset<-subset(df, select=c(Actual_time, Unit.number, Transponder.code))
   names(new_dataset) <- c("time", "antenna", "id")
   new_dataset <- new_dataset  %>% distinct()
@@ -109,7 +113,7 @@ clean.data <- function(df){
   
    
 # I assign every individual to a group (Morning/Afternoon)
-  x = as.POSIXct(strptime(c("090000","123000","190000"),"%H%M%S"),"UTC")
+  x = as.POSIXct(strptime(c("090000","121500","190000"),"%H%M%S"),"UTC")
   date(x) <- new_dataset$time[1]
 
   new_dataset$time_of_day <- case_when(
@@ -118,7 +122,7 @@ clean.data <- function(df){
   
   
   
-# I rename my antennas with a standardised notation across ponds (see scheme above)
+# I rename my antennas with a similar notation across ponds (see scheme above)
     new_dataset[new_dataset == 11 | new_dataset == 21 | 
                   new_dataset == 31 | new_dataset == 41] <- 1
     new_dataset[new_dataset == 12 | new_dataset == 22 | 
@@ -130,21 +134,18 @@ clean.data <- function(df){
                 new_dataset == 44] <- 4
     
 
-  # Now, I will remove all the reads that do not come from the fish present 
-  # in the ponds (e.g. ghost reads, test reads)
-    list_fish <- read_excel("~/Cours/M2 - Sticklebacks/Data/1. Preliminary tests/4. Week -1/Ben_PITtag_final_grouped_FINAL.xlsx", 
-                            sheet = "Sheet1")
-
-# I identify the reads that do not  come from the ponds
+# I remove all the reads that do not come from the fish present 
+# in the ponds (e.g. ghost reads, test reads).
+# I first identify the reads that do not  come from the ponds
     ghost_reads <- setdiff(new_dataset$id, list_fish$id)
 
-# I remove all of them from the dataframe
+# I remove all of them from the data frame
     for (i in 1:length(ghost_reads)){
     new_dataset <- new_dataset[!(new_dataset$id == ghost_reads[i]),]
     }
     
 # Now, if I run this line, I should obtain a value equal or smaller than 200.
-    length(unique(new_dataset$id))    
+#    length(unique(new_data set$id))    
     
 # I assign every individual to its pond and treatment category
     new_dataset <- merge(new_dataset, list_fish[c(2,8,9)], by = "id")
@@ -157,7 +158,14 @@ clean.data <- function(df){
 ```
 
 
+
+#### 1.2 _Nb.ind_ Function
+
+
 Next, I make a small function to obtain, for each clean data frame, the number of individuals in the pond.
+
+- Input = A clean data frame (see _clean.data_ function.)
+- Output = A data frame containing then number of individuals that were read per pond, and the total number.
 
 ```{r}
 
@@ -184,8 +192,13 @@ Nb.ind <- function(clean_df){
 ```
 
 
+#### 1.3 _miss.ind_ Function
+
 
 Then, I write another small (and very similar) function to obtain the identity of these missing individuals.
+
+- Input = A clean data frame (see _clean.data_ function.)
+- Output = A data frame containing the individuals that were not read, and their corresponding pond number.
 
 ```{r}
 
@@ -220,21 +233,22 @@ Then, I write another small (and very similar) function to obtain the identity o
 ```
 
 
+Next, I can apply these generic functions to the different data sets (at the start of the next sections). The four following sections also contain chunks of code to specifically analyse the data from the four different tests, respectively. 
 
 ---
 
 ## 2. Latency to explore the box
 ### 2.1 Data manipulation
 
-I first clean my dataset, and look how many fish are missing and what their identity is.
+I first clean my data set, and look how many fish are missing and what their identity is. I show three data frames: (i) the cleaned data frame, (ii) the number of individuals per pond, (iii) the identity of the missing fish.
 
 ```{r, message = FALSE}
   EB_clean_df <- clean.data(EB_df)
   print(EB_clean_df)  
   Nb.ind(EB_clean_df)
   
-  missing_EB <- miss.ind(EB_clean_df)
-  print(missing_EB)
+  EB_missing <- miss.ind(EB_clean_df)
+  print(EB_missing)
   
   
 # I split my dataframe into a list of dataframes (one object per individual)
@@ -242,21 +256,25 @@ I first clean my dataset, and look how many fish are missing and what their iden
 
 ```
 
-Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read this day. To do so, I use the _Fish list_ imported above.
 
 ```{r, message = FALSE}
-EB_variables <- merge(list_fish[,c(2, 8, 9)], 
+# I merge the clean data frame with the variables data drame
+  EB_variables <- merge(list_fish[,c(2, 8, 9)], 
                       unique(EB_clean_df[,c(4,5)]), by = "Pond")
-length(unique(EB_variables$id))
+# I remove duplicated rows
+  EB_variables <- EB_variables[!duplicated(EB_variables[,c('id')]),]
 
-EB_variables <- EB_variables[!duplicated(EB_variables[,c('id')]),]
+# I must obtain a value of 200.
+  length(unique(EB_variables$id))
+
 
 ```
 
-I then define the crossing sequences and starting times.
+Now, we want to know how long individuals take to fully cross the box. To obtain this metric, I need to first define the crossing sequences and starting times.
 
 ```{r, message = FALSE}
-# I indicate the crossing sequences (a -> d and d -> a)
+# I indicate the crossing sequences (antennas 1 -> 4 and 4 -> 1)
   p1.4 = c(1, 2, 3, 4)
   p4.1 = c(4, 3, 2, 1)
 
@@ -272,7 +290,7 @@ I then define the crossing sequences and starting times.
 
 ### 2.2 Antenna changes
 
-Next, I want to keep the reads corresponding to antenna changes. For each individual, if an invidiual has been read at the antenna the following way - 1, 1, 1, 2, 2, 3 -, we only keep the first reads for each sequence at the same antenna. The output is, for the example above: 1, 2, 3. 
+Next, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence. The output is, for the example above: 1, 2, 3. 
 
 
 ```{r, message = FALSE}
@@ -298,13 +316,14 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
 
     
     
-  # I bind the rows of the list (i.e. make it a dataframe, as it initially was)
+  # I bind the rows of the list (i.e. make it a data frame, as it initially was)
     EB_Changes <- bind_rows(df_list_red)
     EB_Changes <- as.data.frame(EB_Changes)
     EB_Changes <- merge(unique(EB_clean_df[c(1,4,5,6)]), EB_Changes, by = "id", all = FALSE)
 
   # EB_Changes is basically the initial 'df' but the repeated reads
   # have been eliminated only to keep the first one.
+
 
     
     ```
@@ -313,10 +332,12 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
     
 ### 2.3 Latency to cross the box
 
-I build a function which has, as:
+#### 2.3.1  _first.cross_ Function
+
+Once I have the antenna changes, I can start to look at which sequence of changes I am specifically interested in. To do so, I build a function which has, as:
 
 - Input = A data frame containing the antenna change reads for one individual
-- Output = The first full cross of the exploration box, or an empty dataframe if the individual hasn't fully crossed the box.
+- Output = The first full cross of the exploration box, or an empty data frame if the individual hasn't fully crossed the box.
 
 ```{r, message = FALSE}
 
@@ -333,6 +354,7 @@ first.cross <- function(df){
   
   # Then, I subset the first full box cross (1,2,3,4)
     first_cross_1234 <- df[sort(c(outer(rowstarts_1234[1], (0:3), "+"))), ]
+  # I make it a horizontal table  
     first_cross_1234 <- first_cross_1234 %>% spread(antenna,time)
     first_cross_1234 <- as.data.frame(first_cross_1234)
     names(first_cross_1234) <- c("id", "time_of_day", "Pond", "Treatment_seq", 
@@ -341,11 +363,10 @@ first.cross <- function(df){
   
   
   
-  # On the other hand, if the individual has crossed the box from antenna 1 to antenna 4.
-  if (rowstarts_1234[1] == -1){first_cross_1234 <- 
+  # On the other hand, if the individual hasn't crossed the box from antenna 1 to antenna 4.
+  if (rowstarts_1234[1] == -1){
   # Then I just obtain an empty tibble.  
-    first_cross_4321 <- 
-    tibble( )}
+    first_cross_1234 <- tibble( )}
  
   
   
@@ -365,8 +386,13 @@ first.cross <- function(df){
     
   # I rbind my two tibbles.
   first_cross <- rbind(first_cross_1234, first_cross_4321)
-  
-  
+  # In summary, I either obtain:
+  # (i) A two-rows data frame containing the first cross of the focal ind 
+  # for the two sequences.
+  # (ii) A one-row data frame containing the first cross of the focal ind
+  # if it only crossed the box in one direction.
+  # (iii) An empty data frame if the individual never crossed the box.
+   
   
   
   # If the individual did at least one full cross...
@@ -388,7 +414,9 @@ first.cross <- function(df){
 
 ```
 
-Next, I can apply the function above to all individuals. I then add a column containing the latency to fully explore the box. 
+
+
+Next, I can apply the function above to all individuals. I also add a column containing the latency to fully explore the box. 
 
 ```{r, message = FALSE}
 
@@ -407,7 +435,7 @@ Next, I can apply the function above to all individuals. I then add a column con
   }
   
   
-# I bind the dataframes of my list together to obtain a dataframe containing
+# I bind the data frames of my list together to obtain a single data frame containing
 # The first cross of all individuals that crossed the box.
   EB_Lat <- bind_rows(first_crosses)
 
@@ -430,14 +458,17 @@ Next, I can apply the function above to all individuals. I then add a column con
 
 ```
 
-I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a data set handy for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+
+#### 2.3.2  _finalise.EB_ Function
+
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a nice data frame for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
 
 
 ```{r, message = FALSE}
 
 
 finalise.EB <- function(EB_Lat, EB_variables) {
-# I add the environemntal variables
+# I add the environmental variables
   EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
                         EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
                         by = 'id', all = T)
@@ -462,26 +493,32 @@ finalise.EB <- function(EB_Lat, EB_variables) {
   return(EB_Lat_final)}
 
 
-# I run the function
-  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
-
 ```
 
-I use the finalise.EB function to clean up the output and to obtain a plottable dataframe.
+I use the _finalise.EB_ function to clean up the output and to obtain a plottable data frame.
 
 ```{r}
-# I run the finalise. EB function defined above to clean my output
-  EB_Lat_final <- finalise.EB(EB_Lat, EB_variables)
+# I run the finalise.EB function defined above to clean my output
+  EB_output <- finalise.EB(EB_Lat, EB_variables)
+
+# I clean my environment
+  rm(EB_Changes, EB_Lat,  
+  EB_Lat_morning, EB_Lat_afternoon, 
+  first_crosses, EB_changes_list, 
+  df_list_red, EB_list_df_id)
+
 ```
 
 
 ---
 
+### 2.3 Plotting
+
 The histogram below shows the distribution of latencies to explore the box. All fish that did not entirely cross the box received the maximal score.
 
 ```{r, message = FALSE, dev: CairoPNG}
   
-ggplot(data = EB_Lat_final, aes(time_since_start)) +
+ggplot(data = EB_output, aes(time_since_start)) +
     geom_histogram(aes(),
                    bins = 20,
                    fill="#6f7b96",
@@ -498,9 +535,9 @@ The plots below show the distribution of latency scores per pond and per treatme
 
 ```{r, message = FALSE}
 
-    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
+    ggplot(data = EB_output, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
-      geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
+      #geom_boxplot(width=.1, outlier.colour=NA, position = position_dodge(width = 0.4), colour = "black") +
       scale_fill_brewer(palette="Blues") +
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -519,7 +556,7 @@ The plots below show the distribution of latency scores per pond and per treatme
 
 windows.options(antialias = "cleartype")
 
-    ggplot(data = EB_Lat_final, aes(x = Treatment_seq, y = time_since_start)) + 
+    ggplot(data = EB_output, aes(x = Treatment_seq, y = time_since_start)) + 
       geom_violin(fill = "#e4e3e8") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -545,7 +582,7 @@ windows.options(antialias = "cleartype")
 ### 3.1 Data manipulation and object definition
 
 
-I first clean my data set, and look how many fish are missing and what their identity is. 
+I first clean my data set, and look how many fish are missing and what their identity is. I show three data frames: (i) the cleaned data frame, (ii) the number of individuals per pond, (iii) the identity of the missing fish.
 
 ```{r, message = FALSE}
 
@@ -553,28 +590,26 @@ I first clean my data set, and look how many fish are missing and what their ide
   print(bottom_clean_df)
   Nb.ind(bottom_clean_df)
   
-  missing_bottom <- miss.ind(bottom_clean_df)
-  print(missing_bottom)
+  bottom_missing <- miss.ind(bottom_clean_df)
+  print(bottom_missing)
   
 ```
 
 
-I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day.
+I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day.
 
 ```{r, message = FALSE}
-  Bottom_variables <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
-  
 
+# I merge the clean data frame with the variables data drame  
+  Bottom_variables <- merge(list_fish[,c(2, 8, 9)], unique(bottom_clean_df[,c(4,5)]), by = "Pond")
+
+# I remove duplicated rows  
   Bottom_variables <- Bottom_variables[!duplicated(Bottom_variables[,c('id')]),]
 
-```
+# I must obtain a value of 200.  
+  nrow(Bottom_variables)
+  
 
-
-Then, I split it based on (i) antenna and (ii) individuals, as two lists of data frames.
-
-```{r, message = FALSE}
-# I split my dataframe into a list of dataframes (one object per individual)
-    bottom_list_df_ind <- split(bottom_clean_df, f = bottom_clean_df$id)
 
 ```
 
@@ -618,28 +653,27 @@ I define the distances between the different antennas, and the sequence of cross
 
 ### 3.2 Function computing the travelled distance per individual
 
-First, I remove repeated reads at a single antenna, and obtain the antenna changes. In other words, for each individual, I reduce the sequence of reads (e.g., reads at antennas 1, 1, 1, 2, 2, 3) in a way that I only keep one read in a repeated sequence at the same antenna (e.g., reads at antennas 1, 2, 3).
+First, as above, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence. The output is, for the example above: 1, 2, 3. 
 
-Second, I compute the travelled distance between these antennas, for every change, and sum them up. At the end, I will obtain the minimal total distance that a fish has travelled between the antennas during 2:30 hours.
+Second, I compute the traveled distance between these antennas, for every change, and sum them up. At the end, I will obtain a proxy for the distance that a fish has traveled between the antennas during 2:30 hours.
 
 
 ```{r, message = FALSE}
     trav.dist <- function(new_dataset){
     
-    # I split my dataframe into a list of dataframes (one object per individual)
+    # I split my data frame into a list of data frames (one object per individual)
     df_list <- split(new_dataset, f = new_dataset$id)
 
 
 
 ##  1. REMOVE THE REPEATED READS AND OBTAIN THE ANTENNA CHANGE
 
-    # I define 'df_list_red' which is basically 'df_list' except that the input vector
-    # is replaced by the output vector.
+    # I define 'df_list_red', which will be 'df_list' with only antenna changes
     df_list_red <- list()
     nb_ind <- length(df_list)
 
     
-    # I obtain the output vectors and the associated time and Identifier
+    # I obtain the output vectors and the associated time
     for (i in 1:nb_ind) {
       changes          <- which(df_list[[i]]$antenna!= lag(df_list[[i]]$antenna))
       antenna          <- c(df_list[[i]]$antenna[1], df_list[[i]]$antenna[changes])
@@ -649,17 +683,18 @@ Second, I compute the travelled distance between these antennas, for every chang
     }
 
     
-    # I bind the rows of the list (i.e. make it a dataframe, as it initially was)
+    # I bind the rows of the list (i.e. make it a data frame, as it initially was)
     df2 <- bind_rows(df_list_red)
     df2 <- as_tibble(df2)
-    # df2 is basically the initial 'new_dataset' but the repeated reads
-    # have been eliminated only to keep the first one.
+    # df2 is basically the initial 'new_dataset' but the repeated reads in an identical 
+    # sequence have been eliminated.
 
     
     # I obtain the number of times each individual was read in two different antennas consecutively
     Changes <- sapply(df_list_red, nrow)
-    id <- numeric() # I obtain the individual names
+    id <- numeric() # Individual names
     for(i in 1:length(df_list_red)){
+      
       id[i] <- df_list_red[[i]][1,3]}
 
     # I can generate a data frame with number of changes per individual
@@ -668,7 +703,7 @@ Second, I compute the travelled distance between these antennas, for every chang
 
 ## 2. DISTANCE TRAVELLED BY EACH INDIVIDUAL
 
-    # A for loop calculating the total distance travelled by each individuals between the antennas it's been read at
+    # A for loop calculating the total distance traveled by each individuals between the antennas it's been read at
     
     # I define my Dist numerical vector
     Dist <- numeric()
@@ -704,14 +739,17 @@ Second, I compute the travelled distance between these antennas, for every chang
 I run the function and obtain, for every individual, the distance it travelled between all the antennas it's been read at. However, some individuals might not have been read at all. Therefore, I add the individuals that, potentially, haven't been read and indicate their travelled distance as 0.
 
 ```{r, message = FALSE}
-Travelled.distance <- trav.dist(bottom_clean_df)
+bottom_output <- trav.dist(bottom_clean_df)
 
-   # I check if individuals might have not been recorded at all by the antennas
-    non_read_babies <- setdiff(list_fish$id, Travelled.distance$id)
+# I check if individuals might have not been recorded at all by the antennas
+    non_read_babies <- setdiff(list_fish$id, bottom_output$id)
     non_read_babies <- data.frame(id = non_read_babies, Changes =  0, Dist =  0)
     
-    # Final df containing the read (and potential non-read) individuals
-    Travelled.distance <- rbind(Travelled.distance, non_read_babies)
+# Final df containing the read (and potential non-read) individuals
+    bottom_output <- rbind(bottom_output, non_read_babies)
+    
+# Clean environment
+    rm(non_read_babies)
 ```
 
 
@@ -727,13 +765,13 @@ First, I will, for every individual, indicate to what pond and treatment it is a
     
 
 # I assign every individual to its pond and treatment category
-    Travelled.distance <- merge(Bottom_variables, Travelled.distance, by = "id", all = T)
+    bottom_output <- merge(Bottom_variables, bottom_output, by = "id", all = T)
 
 ```
 
 
 ```{r}
-ggplot(data = Travelled.distance, aes(Dist)) +
+ggplot(data = bottom_output, aes(Dist)) +
     geom_histogram(aes(),
                    bins = 50,
                    fill="#6f7b96",
@@ -749,7 +787,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
 
 ```{r, message = FALSE}
   # Violin plots for differences between the 8 ponds within a week
-      ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist, fill = time_of_day)) + 
+      ggplot(data = bottom_output, aes(x = Treatment_seq, y = Dist, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       
       geom_boxplot(width=.1, outlier.colour=NA, 
@@ -773,7 +811,7 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Distance")
 
 
-    ggplot(data = Travelled.distance, aes(x = Treatment_seq, y = Dist)) + 
+    ggplot(data = bottom_output, aes(x = Treatment_seq, y = Dist)) + 
       geom_violin(fill = "#e4e3e8") + 
       stat_summary(fun.data=mean_sdl, 
                    fun.args = list(mult = 1), # I show 1 SD
@@ -800,42 +838,52 @@ I first do violin plots (with mean and SD) showing all tratment sequences and th
 I first clean my data and check who's missing.
 
 ```{r, message = FALSE}
-  Shelter_clean_df <- clean.data(shelter_df)
-  print(Shelter_clean_df)
-  Nb.ind(Shelter_clean_df)
+  shelter_clean_df <- clean.data(shelter_df)
+  print(shelter_clean_df)
+  Nb.ind(shelter_clean_df)
   
-  missing_shelter <- miss.ind(Shelter_clean_df)
-  print(missing_shelter)
+  shelter_missing <- miss.ind(shelter_clean_df)
+  print(shelter_missing)
   
 # I split my dataframe into a list of dataframes (one object per individual)
-   Shelter_list_df_id <- split(Shelter_clean_df, f = Shelter_clean_df$id)
+   shelter_list_df_id <- split(shelter_clean_df, f = shelter_clean_df$id)
 
    
 ```
 
 ### 4.2 Duration spent at each antenna
 
-Next, I make a dataframe with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read by the antennas this day. To do so, I use the Fish list imported above.
 
 ```{r, message = FALSE}
-Shelter_variables <- merge(list_fish[,c(2, 8, 9)], 
-                      unique(Shelter_clean_df[,c(4,5)]), by = "Pond")
+shelter_variables <- merge(list_fish[,c(2, 8, 9)], 
+                      unique(shelter_clean_df[,c(4,5)]), by = "Pond")
 
 
-Shelter_variables <- Shelter_variables[!duplicated(Shelter_variables[,c('id')]),]
+shelter_variables <- shelter_variables[!duplicated(shelter_variables[,c('id')]),]
 
 ```
 
+Then, I simply want to obtain the number of reads per fish. As only one read per individual is kept per second, this will be an approximation for duration spent read by the antennas.
 
 ```{r, message = FALSE}
+# I define the objects
+  nreads <- c()
+  ids <- character()
+# For each individual...
+  for (i in 1:length(shelter_list_df_id)){
+    # ...I obtain its name...
+    ids[i] <- shelter_list_df_id[[i]]$id[1]
+    # ... and its number of reads.
+    nreads[i] <- nrow(shelter_list_df_id[[i]])
+    
+    } # end of for loop
+  
+# I merge these two vectors together
+shelter_output <- data.frame(id = ids, nb = nreads)
 
-nreads <- c()
-ids <- character()
-for (i in 1:length(Shelter_list_df_id)){
-ids[i] <- Shelter_list_df_id[[i]]$id[1]
-nreads[i] <- nrow(Shelter_list_df_id[[i]])}
-
-Shelter_nreads <- data.frame(id = ids, nb = nreads)
+# and clean my environment
+rm(ids, nreads, shelter_list_df_id)
 
 
 ```
@@ -848,16 +896,16 @@ First, I will, for every individual, indicate to what pond and treatment it is a
     
 
 # I assign every individual to its pond and treatment category
-    Shelter_nreads <- merge(Shelter_variables, Shelter_nreads, by = "id", all = T)
-    Shelter_nreads[is.na(Shelter_nreads)] <- 0    
-    Shelter_nreads$duration_shelter <- Shelter_nreads$nb/60
+    shelter_output <- merge(shelter_variables, shelter_output, by = "id", all = T)
+    shelter_output[is.na(shelter_output)] <- 0    
+    shelter_output$duration_shelter <- shelter_output$nb/60
 
 
 ```
 
 
 ```{r}
-ggplot(data = Shelter_nreads, aes(duration_shelter)) +
+ggplot(data = shelter_output, aes(duration_shelter)) +
     geom_histogram(aes(),
                    bins = 20,
                    fill="#6f7b96",
@@ -872,7 +920,7 @@ ggplot(data = Shelter_nreads, aes(duration_shelter)) +
 ```{r}
  
  # Violin plots for differences between the 8 ponds within a week
-ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter, fill = time_of_day)) + 
+ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) +
       
       #geom_boxplot(width=.1, outlier.colour=NA, 
@@ -895,7 +943,7 @@ ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter, fill 
       labs(y = "Time spent hiding (minutes)", x =" ") +
       scale_y_continuous(expand = c(0, 0))  + ggtitle("Hiding")
 
-    ggplot(data = Shelter_nreads, aes(x = Treatment_seq, y = duration_shelter)) +
+    ggplot(data = shelter_output, aes(x = Treatment_seq, y = duration_shelter)) +
       geom_violin(fill = "#e4e3e8") + 
       geom_point(position = position_jitter(width = 0.06), alpha = 0.2) +
       #stat_summary(fun.data=mean_sdl, 
@@ -926,8 +974,8 @@ I first clean my data and check who's missing.
   print(Top_clean_df)
   Nb.ind(Top_clean_df)
   
-  missing_top <- miss.ind(Top_clean_df)
-  print(missing_top)
+  top_missing <- miss.ind(Top_clean_df)
+  print(top_missing)
   
 # I split my dataframe into a list of dataframes (one object per individual)
    Top_list_df_id <- split(Top_clean_df, f = Top_clean_df$id)
@@ -1041,18 +1089,6 @@ ggplot(data = Top_nreads, aes(x = Treatment_seq, y = duration_top, fill = time_o
     
 ```
 
-```{r, message = FALSE}
-
-```
-
-```{r, message = FALSE}
-
-```
-
-```{r, message = FALSE}
-
-```
-
 
 ## 6. Summary of the week
 
@@ -1060,10 +1096,10 @@ I can first look at the individuals that were never read during the whole week. 
 
 
 ```{r, message = FALSE}
-missing_ind_df <- Reduce(intersect, list(missing_EB$missing_id,
-                       missing_bottom$missing_id,
-                       missing_shelter$missing_id,
-                       missing_top$missing_id))
+missing_ind_df <- Reduce(intersect, list(EB_missing$missing_id,
+                       bottom_missing$missing_id,
+                       shelter_missing$missing_id,
+                       top_missing$missing_id))
 missing_ind_df <- data.frame(id = missing_ind_df)
 missing_ind_df <- merge(missing_ind_df, list_fish[,c("id", "Pond")], by = "id", all = F)
 print(missing_ind_df)
@@ -1071,17 +1107,17 @@ print(missing_ind_df)
 
 
 ```{r, message = FALSE}
-EB_Lat_final
-Travelled.distance
-Shelter_nreads
+EB_output
+bottom_output
+shelter_output
 Top_nreads
 
-week1 <- merge(EB_Lat_final[c("id", "Treatment_seq", "Pond", "time_since_start")],
-      Travelled.distance[c("id", "Dist")],
+week1 <- merge(EB_output[c("id", "Treatment_seq", "Pond", "time_since_start")],
+      bottom_output[c("id", "Dist")],
       by = "id", all = T)
 
 week1 <- merge(week1, 
-      Shelter_nreads[c("id", "duration_shelter")], by = "id", all = T)
+      shelter_output[c("id", "duration_shelter")], by = "id", all = T)
 
 
 week1 <- merge(week1, 
@@ -1222,7 +1258,7 @@ Output: A data frame containing all the fish that have been read in presence of 
 shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
 shoaling_bottom <- shoaling.index(bottom_clean_df, Bottom_variables)
 Shoaling_top <- shoaling.index(Top_clean_df, Top_variables)
-shoaling_shelters <- shoaling.index(Shelter_clean_df, Shelter_variables)
+shoaling_shelters <- shoaling.index(shelter_clean_df, shelter_variables)
 
 
 
@@ -1303,7 +1339,7 @@ Shoaling_tot$SHOALING <- Shoaling_tot$ACC_READS/Shoaling_tot$TOT_READS
   
 A <- ggplot(data = Shoaling_tot, aes(SHOALING)) +
     geom_histogram(aes(),
-                   bins = 20,
+                   bins = 25,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Proportion of a time spent with at least one conspecific", y="Count") +
@@ -1337,6 +1373,22 @@ print(A)
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Shoaling")
 
 print(plot)
+```
+
+
+
+
+
+```{r, message = FALSE}
+
+```
+
+```{r, message = FALSE}
+
+```
+
+```{r, message = FALSE}
+
 ```
 
 
