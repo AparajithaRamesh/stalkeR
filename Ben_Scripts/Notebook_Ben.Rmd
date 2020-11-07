@@ -39,7 +39,7 @@ I first import the packages I will use in in the notebook.
   library(cowplot)
 ```
 
-I import the four data sets we obtain every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (i.e. PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
+I import the four data sets we obtain every week, one for each behavioural test. I also import the list of all the fishes, with their corresponding pond and *treatment sequence* (_i.e._ PP, PM, MP, MM, where P stands for 'Plus predation treatment' and M for 'Minus predation treatment'.
 
 ```{r, message = FALSE}
 
@@ -65,7 +65,7 @@ shelter_df <- read_delim("Data/Week 1/20201104.CSV",
 
 ```
 
-Below, you will find a series of generic functions, that can be applied to one of the data sets imported above (i.e. data frame containing the reads for one test during one day). These functions can be applied to data sets coming from the four different tests.
+Below, you will find a series of generic functions, that can be applied to one of the data sets imported above (_i.e._ data frame containing the reads for one test during one day). These functions can be applied to data sets coming from the four different tests.
 
 
 
@@ -73,8 +73,8 @@ Below, you will find a series of generic functions, that can be applied to one o
 
 I create the **clean.data** *function*. This function does the following things:
 
-- It subsets a few columns of interest from the raw data (i.e. time, antenna, id)
-- It keeps only one read per individual and per second for a given antenna (i.e. remove repeats)
+- It subsets a few columns of interest from the raw data (_i.e._ time, antenna, id)
+- It keeps only one read per individual and per second for a given antenna (_i.e._ remove repeats)
 - It assigns every individual to a category named *time of the day*, indicating if the fish was tested during the morning or during the afternoon.
 - It renames the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2). Therefore, antenna numbers in all ponds correspond to their respective position.
 - It removes the ghost reads, and the reads coming from antenna tests, only to keep the fish reads in the ponds.
@@ -143,9 +143,8 @@ clean.data <- function(df){
     for (i in 1:length(ghost_reads)){
     new_dataset <- new_dataset[!(new_dataset$id == ghost_reads[i]),]
     }
-    
-# Now, if I run this line, I should obtain a value equal or smaller than 200.
-#    length(unique(new_data set$id))    
+
+        
     
 # I assign every individual to its pond and treatment category
     new_dataset <- merge(new_dataset, list_fish[c(2,8,9)], by = "id")
@@ -461,7 +460,7 @@ Next, I can apply the function above to all individuals. I also add a column con
 
 #### 2.3.2  _finalise.EB_ Function
 
-I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a nice data frame for plotting. In this function, I add the individuals variables (i.e. pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a nice data frame for plotting. In this function, I add the individuals variables (_i.e._ pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
 
 
 ```{r, message = FALSE}
@@ -1156,7 +1155,7 @@ This function is using the function just above, but for an entire dataset, and n
 
 - Input n°1 = A clean data frame containing all the reads (for a certain test) at *all* pond.
 - Input n°2 = The variables of *all the fish*.
-- Output = A data frame containing all the individuals (and not only the ones that were read), and for each of them, their number of accompanied reads, their total number of reads, and the accompanied reads divided by the total reads, (i.e. shoaling index).
+- Output = A data frame containing all the individuals (and not only the ones that were read), and for each of them, their number of accompanied reads, their total number of reads, and the accompanied reads divided by the total reads, (_i.e._ shoaling index).
 
 
 ```{r}
@@ -1210,15 +1209,45 @@ shoaling.index <- function(clean_df, variables_df){
 ```
 
 
-I apply the function to the cleaned data sets.
+I apply the function to the cleaned data sets, and assemble them as ggplot-friendly vertical table.
 
 ```{r}
 
   shoaling_EB <- shoaling.index(EB_clean_df, EB_variables)
+  shoaling_EB$test <- "EB"
+  
   shoaling_bottom <- shoaling.index(bottom_clean_df, bottom_variables)
-  Shoaling_top <- shoaling.index(top_clean_df, top_variables)
+  shoaling_bottom$test <- "bottom"
+  
+  shoaling_top <- shoaling.index(top_clean_df, top_variables)
+  shoaling_top$test <- "top"
+  
   shoaling_shelters <- shoaling.index(shelter_clean_df, shelter_variables)
+  shoaling_shelters$test <- "shelter"
+  
+  shoaling_vertical <- rbind(shoaling_EB, shoaling_bottom,
+                      shoaling_top, shoaling_shelters)
+  
 
+```
+
+
+Then, I spread sum the reads (accompanied and total) together using _dplyr_, to give a global shoaling index (_i.e._ proportion of time spent with at least one conspecific, across tests).
+
+```{r}
+  
+  # I depart from the shoaling_vertical df
+  shoaling_output <- shoaling_vertical %>% 
+  # I group by individuals
+  group_by(id) %>% 
+  # I create a new column with the sum of total and acc reads  
+  mutate(tot_reads = sum(tot_reads), tot_acc_reads = sum(tot_acc_reads)) %>% 
+  # I remove repeats  
+  distinct(id, .keep_all = TRUE)
+
+  # I make the shoaling index columns based on the number of reads across tests
+  shoaling_output$shoaling <- shoaling_output$tot_acc_reads/shoaling_output$tot_reads
+  
 ```
 
 
@@ -1226,93 +1255,32 @@ I apply the function to the cleaned data sets.
 
 ```{r, message = FALSE}
 
-
-
-a <- ggplot(data = shoaling_EB, aes(shoaling)) +
+ggplot(data = shoaling_vertical, aes(shoaling)) +
     geom_histogram(aes(),
                    bins = 20,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Proportion of a time with at least one conspecific", y="Count") +
     theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,0.6)) +
-  ylim(c(0,65)) + ggtitle("EB")
+          axis.ticks.y = element_blank(),
+          panel.background = element_rect(fill = "#f7f5f5"),
+          strip.background = element_rect(colour="white", fill="white")) +
+  xlim(c(0,0.5)) +
+  ylim(c(0,65)) + facet_wrap(~ test)
 
-b <- ggplot(data = shoaling_bottom, aes(shoaling)) +
-    geom_histogram(aes(),
-                   bins = 20,
-                   fill="#6f7b96",
-                   colour = "white") +
-    labs(x="Proportion of a time with at least one conspecific", y="Count") +
-    theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,0.6)) +
-  ylim(c(0,65)) + ggtitle("Bottom")
 
-c <- ggplot(data = Shoaling_top, aes(shoaling)) +
-    geom_histogram(aes(),
-                   bins = 20,
-                   fill="#6f7b96",
-                   colour = "white") +
-    labs(x="Proportion of a time with at least one conspecific", y="Count") +
-    theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,0.6)) +
-  ylim(c(0,65)) + ggtitle("Top")
 
-d <- ggplot(data = shoaling_shelters, aes(shoaling)) +
-    geom_histogram(aes(),
-                   bins = 20,
-                   fill="#6f7b96",
-                   colour = "white") +
-    labs(x="Proportion of a time with at least one conspecific", y="Count") +
-    theme(axis.ticks.x = element_blank(),
-          panel.background = element_rect(fill = "#f7f5f5")) +
-  xlim(c(0,0.6)) +
-  ylim(c(0,65)) + ggtitle("Shelter")
 
-((a + b) / (c + d))
 ```
 
 
-
-Then, I want to put all of these indices together in one data frame.
-
-```{r}
-# I take merge all the columns of interest from the four outputs obtained above.
-  shoaling_output <- cbind(shoaling_EB[c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads", "tot_acc_reads")],
-                         shoaling_bottom[c("tot_reads", "tot_acc_reads")],
-                         Shoaling_top[c("tot_reads", "tot_acc_reads")],
-                         shoaling_shelters[c("tot_reads", "tot_acc_reads")])
-
-# I rename the columns  
-  names(shoaling_output) <- c("id", "Pond", "time_of_day", "Treatment_seq", "tot_reads_EB", "acc_reads_EB",
-                           "tot_reads_bottom", "acc_reads_bottom",
-                           "tot_reads_top", "acc_reads_top",
-                           "tot_reads_shelters", "acc_reads_shelters")
-
-# I make a new columns summing all the accompanied reads  
-  shoaling_output$ACC_READS <- shoaling_output$acc_reads_EB + shoaling_output$acc_reads_bottom + 
-                                shoaling_output$acc_reads_top + shoaling_output$acc_reads_shelters
-
-# I make a new columns summing all the reads (both accompanied and non accompanied) 
-  shoaling_output$TOT_READS <- shoaling_output$tot_reads_EB + shoaling_output$tot_reads_bottom + 
-                                shoaling_output$tot_reads_top + shoaling_output$tot_reads_shelters
-  
-# I compute my shoaling index combining the four tests    
-  shoaling_output$SHOALING <- shoaling_output$ACC_READS/shoaling_output$TOT_READS
-    
-  
-
-```
 
 
 I plot the distribution of shoaling index across tests:
 
 ```{r}
   
-ggplot(data = shoaling_output, aes(SHOALING)) +
+ggplot(data = shoaling_output, aes(shoaling)) +
     geom_histogram(aes(),
                    bins = 25,
                    fill="#6f7b96",
@@ -1321,7 +1289,7 @@ ggplot(data = shoaling_output, aes(SHOALING)) +
     theme(axis.ticks.x = element_blank(),
           panel.background = element_rect(fill = "#f7f5f5")) +
   xlim(c(0,0.35)) +
-  ylim(c(0,50)) + ggtitle("Shoaling tendency across tests")
+  ylim(c(0,50)) + ggtitle("Shoaling tendency across tests") + geom_density()
 
 ```
 
@@ -1329,7 +1297,7 @@ ggplot(data = shoaling_output, aes(SHOALING)) +
 
 
 ```{r}
-ggplot(data = shoaling_output, aes(x = Treatment_seq, y = SHOALING)) +
+ggplot(data = shoaling_output, aes(x = Treatment_seq, y = shoaling)) +
       geom_violin(fill = "#e4e3e8") + 
       geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
@@ -1376,7 +1344,7 @@ week1_df <- data.frame(EB_output[c("id", "Treatment_seq", "Pond", "time_since_st
                     bottom_output[c("Dist")],
                     shelter_output[c("duration_shelter")],
                     top_output[c("duration_top")],
-                    shoaling_output[c("SHOALING")])
+                    shoaling_output[c("shoaling")])
 
 
 
@@ -1389,6 +1357,8 @@ ggplot(data = week1_df, aes(x = duration_shelter, y = duration_top)) +
   geom_point(alpha = 0.5) + theme_cowplot()
   #coord_cartesian(xlim = c(0, 100))
   #geom_smooth(colour = "gray")
+
+
 ```
 
 
