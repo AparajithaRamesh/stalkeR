@@ -311,7 +311,8 @@ Next, I want to keep the reads corresponding to antenna changes. For each indivi
     EB_Changes <- bind_rows(df_list_red)
     EB_Changes <- as.data.frame(EB_Changes)
     EB_Changes <- merge(unique(EB_clean_df[c(1,4,5,6)]), EB_Changes, by = "id", all = FALSE)
-
+    EB_Changes <- EB_Changes[order(as.POSIXct(EB_Changes$time)),]
+    rownames(EB_Changes) <- NULL
   # EB_Changes is basically the initial 'df' but the repeated reads
   # have been eliminated only to keep the first one.
 
