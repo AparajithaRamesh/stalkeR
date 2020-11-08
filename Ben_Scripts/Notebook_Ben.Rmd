@@ -282,7 +282,12 @@ Now, we want to know how long individuals take to fully cross the box. To obtain
 
 ---
 
-NOT FINALISED - NOT ANNOTATED
+Idea of the function is to obtain, for each individual:
+
+- Latency to enter the box (_i.e._ reach antenna 2 or 3)
+- Latency to fully cross the box (_i.e._ reach antenna 2 *and* 3) without leaving the box
+- Total time spent in the box (_i.e._ time spent between read at antenna 2 or 3 until leaving the box at antenna 1 or 4)
+
 
 ```{r}
 
@@ -403,6 +408,7 @@ hist(final2$duration)
   final$time_since_start <- as.numeric(final$time_since_start)
 
 # I give the maximal value for the fish that never crossed the box
+# and 0 for duration in the box
   final <- final %>%
     mutate(time_since_start = if_else(is.na(time_since_start), 150, time_since_start),
            duration = if_else(is.na(duration), 0, duration))
@@ -418,7 +424,7 @@ The histogram below shows the distribution of latencies to explore the box. All 
 
 ```{r, message = FALSE}
   
-ggplot(data = final, aes(duration)) +
+ggplot(data = final, aes(time_since_start)) +
     geom_histogram(aes(),
                    bins = 20,
                    fill="#6f7b96",
