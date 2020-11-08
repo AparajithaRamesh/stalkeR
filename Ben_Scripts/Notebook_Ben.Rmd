@@ -140,7 +140,7 @@ clean.data <- function(df){
     
 # I assign every individual to its pond and treatment category
     new_dataset <- merge(new_dataset, list_fish[c(2,8,9)], by = "id")
-    
+    new_dataset <- new_dataset[order(as.POSIXct(new_dataset$time)),]
   
   
   return(new_dataset)
@@ -759,7 +759,7 @@ First, I will, for every individual, indicate to what pond and treatment it is a
 ```{r}
 ggplot(data = bottom_output, aes(Dist)) +
     geom_histogram(aes(),
-                   bins = 50,
+                   bins = 20,
                    fill="#6f7b96",
                    colour = "white") +
     labs(x="Travelled distance", y="Count") +
