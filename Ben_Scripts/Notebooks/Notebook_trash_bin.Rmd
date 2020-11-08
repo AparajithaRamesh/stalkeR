@@ -168,3 +168,91 @@ shoaling.index <- function(clean_df, df_variables){
   } # end of function
 
 ```
+
+---
+
+### EB
+
+
+#### 2.3.1  _first.cross_ Function
+
+Once I have the antenna changes, I can start to look at which sequence of changes I am specifically interested in. To do so, I build a function which has, as:
+
+- Input = A data frame containing the antenna change reads for one individual
+- Output = The first full cross of the exploration box, or an empty data frame if the individual hasn't fully crossed the box.
+
+```{r, message = FALSE}
+
+first.cross <- function(df){
+  
+  # I identify all the row numbers at which the individual started the sequential
+  # crossing between antenna 1 and antenna 4
+  rowstarts_1234  <- unlist(gregexpr("1234", paste(df$antenna, collapse="")))
+  
+  
+  
+  # If the individual has crossed the box from antenna 1 to antenna 4.
+  if (rowstarts_1234[1] != -1){
+  
+  # Then, I subset the first full box cross (1,2,3,4)
+    first_cross_1234 <- df[sort(c(outer(rowstarts_1234[1], (0:3), "+"))), ]
+  # I make it a horizontal table  
+    first_cross_1234 <- first_cross_1234 %>% spread(antenna,time)
+    first_cross_1234 <- as.data.frame(first_cross_1234)
+    names(first_cross_1234) <- c("id", "time_of_day", "Pond", "Treatment_seq", 
+                                 "Ant1", "Ant2", "Ant3", "Ant4")
+    }
+  
+  
+  
+  # On the other hand, if the individual hasn't crossed the box from antenna 1 to antenna 4.
+  if (rowstarts_1234[1] == -1){
+  # Then I just obtain an empty tibble.  
+    first_cross_1234 <- tibble( )}
+ 
+  
+  
+  # Same as above but between antenna 4 and antenna 1. 
+    rowstarts_4321  <- unlist(gregexpr("4321", paste(df$antenna, collapse="")))
+  if (rowstarts_4321[1] != -1){
+  first_cross_4321 <- df[sort(c(outer(rowstarts_4321[1], (0:3), "+"))), ]
+  first_cross_4321 <- first_cross_4321 %>% spread(antenna,time)
+  first_cross_4321 <- as.data.frame(first_cross_4321)
+  
+  
+  names(first_cross_4321) <- c("id", "time_of_day", "Pond", "Treatment_seq", 
+                               "Ant1", "Ant2", "Ant3", "Ant4")}
+  if (rowstarts_4321[1] == -1){first_cross_4321 <- 
+    tibble( )}
+  
+    
+  # I rbind my two tibbles.
+  first_cross <- rbind(first_cross_1234, first_cross_4321)
+  # In summary, I either obtain:
+  # (i) A two-rows data frame containing the first cross of the focal ind 
+  # for the two sequences.
+  # (ii) A one-row data frame containing the first cross of the focal ind
+  # if it only crossed the box in one direction.
+  # (iii) An empty data frame if the individual never crossed the box.
+   
+  
+  
+  # If the individual did at least one full cross...
+  if(dim(first_cross)[1] != 0){
+  # Then, I subset its first full cross.
+    first_cross <- first_cross[order(first_cross$Ant2),]
+    first_cross <- first_cross[1,]}
+  
+  
+  # On the other hand, if the individual hasn't fully crossed the box...
+  if(dim(first_cross)[1] == 0){
+  # Then, I just obtain a data frame with NAs.
+      first_cross <- data.frame(id = df$id[1], Ant1 = NA,
+                   Ant2 = NA, Ant3 = NA, Ant4 = NA)}
+  
+    
+  return(first_cross)} # end of the function
+
+
+```
+
