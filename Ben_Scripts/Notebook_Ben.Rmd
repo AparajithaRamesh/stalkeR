@@ -296,9 +296,10 @@ The function below aims at, from one day of EB data, obtain, for each fish, thre
 ## 1. DEFINE OBJECTS
   # I split my dataframe into a list of dataframes (one object per individual)
     EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
-    df <- data.frame()
-    final1 <- list()
-    final2 <- list()
+    EB_list_changes <- list()
+    index1 <- list()
+    index2 <- list()
+    index3 <- list()
   
     
     
@@ -352,7 +353,7 @@ The function below aims at, from one day of EB data, obtain, for each fish, thre
   if (length(list1) != 0){
 
   # Then I subset the first after being read at 1 or 3 (necessarily at antenna 2 or 3)
-  final1[[i]] <- subset(list1[[1]], time == list1[[1]]$time[1])
+  index2[[i]] <- subset(list1[[1]], time == list1[[1]]$time[1])
 
   # Eventually, this list contains, for each individual that fully crossed the box,
   # its first read at antenna 2 or 3 after entering the box for a full cross.
@@ -384,7 +385,7 @@ The function below aims at, from one day of EB data, obtain, for each fish, thre
   duration <- duration + difftime(list2[[x]][nrow(list2[[x]]), ]$time, list2[[x]][1,]$time, units='m')
 
   # I keep this duration and indicate the name of the corresponding individual
-  final2[[i]] <- data.frame(id = list2[[1]]$id[1], duration)
+  index3[[i]] <- data.frame(id = list2[[1]]$id[1], duration)
 
   } # end of index 3 sequences for loop
   } # end of if
@@ -393,32 +394,39 @@ The function below aims at, from one day of EB data, obtain, for each fish, thre
 
 
 # I bind the rows of my list.
-final1 <- bind_rows(final1)
-final2 <- bind_rows(final2)
-final2$duration <- as.numeric(final2$duration)
-hist(final2$duration)
+index1 <- bind_rows(index1)
+index1 <- na.omit(index1)
+names(index1)[2] <- "time_entering"
 
-# I add a column with the time since these fish were read after the start of the test
-  final <- merge(final1, final2, by = 'id', all = T)
-  final <- merge(final, EB_variables, by = 'id', all = T)
+
+index2 <- bind_rows(index2)
+names(index2)[2] <- "time_first_cross"
+
+
+
+index3 <- bind_rows(index3)
+index3$duration <- as.numeric(index3$duration)
+
+indices <- merge(index1[c("id", "time_entering")], index2[c("id", "time_first_cross")], by = "id", all = T)
+indices <- merge(indices, index3, by ="id", all = T)
+indices <- merge(indices, EB_variables, by = "id", all = T)
+
     
-  final_morning <- subset(final, time_of_day == "Morning") %>%
-    mutate(time_since_start = difftime(time, start_morning, units='m'))
+  indices_morning <- subset(indices, time_of_day == "Morning") %>%
+    mutate(latency_enter = as.numeric(difftime(time_entering, start_morning, units='m')),
+           latency_cross = as.numeric(difftime(time_first_cross, start_morning, units='m'))
+           )
 
-  final_afternoon <- subset(final, time_of_day == "Afternoon") %>%
-    mutate(time_since_start = difftime(time, start_afternoon, units='m'))
+  indices_afternoon <- subset(indices, time_of_day == "Afternoon") %>%
+    mutate(latency_enter = as.numeric(difftime(time_entering, start_afternoon, units='m')),
+           latency_cross = as.numeric(difftime(time_first_cross, start_afternoon, units='m'))
+           )
 
-  final <- rbind(final_morning, final_afternoon)
+  indices <- rbind(indices_morning, indices_afternoon)
 
-
-
-# I make this column as numerical
-  final$time_since_start <- as.numeric(final$time_since_start)
-
-# I give the maximal value for the fish that never crossed the box
-# and 0 for duration in the box
-  final <- final %>%
-    mutate(time_since_start = if_else(is.na(time_since_start), 150, time_since_start),
+  indices <- indices %>%
+    mutate(latency_enter = if_else(is.na(latency_enter), 150, latency_enter),
+           latency_cross = if_else(is.na(latency_cross), 150, latency_cross),
            duration = if_else(is.na(duration), 0, duration))
 
 ```
@@ -432,7 +440,7 @@ The histogram below shows the distribution of latencies to explore the box. All 
 
 ```{r, message = FALSE}
   
-ggplot(data = final, aes(time_since_start)) +
+ggplot(data = indices, aes(latency_enter)) +
     geom_histogram(aes(),
                    bins = 20,
                    fill="#6f7b96",
@@ -448,7 +456,7 @@ The plots below show the distribution of latency scores per pond and per treatme
 
 ```{r, message = FALSE}
 
-    ggplot(data = final, aes(x = Treatment_seq, y = time_since_start, fill = time_of_day)) + 
+    ggplot(data = indices, aes(x = Treatment_seq, y = latency_cross, fill = time_of_day)) + 
       geom_violin(position = position_dodge(width = 0.4)) + 
       
       #geom_boxplot(width=.1, outlier.alpha = 0.1, 
@@ -468,7 +476,7 @@ The plots below show the distribution of latency scores per pond and per treatme
       scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("EB")
 
 
-    ggplot(data = final, aes(x = Treatment_seq, y = time_since_start)) + 
+    ggplot(data = indices, aes(x = Treatment_seq, y = latency_cross)) + 
       geom_violin(fill = "#e4e3e8") + 
       geom_boxplot(fill = "white", width = 0.07, outlier.alpha = 0.3) +
       theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
