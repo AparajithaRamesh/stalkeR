@@ -11,7 +11,7 @@
 
 
 
-<title>Notebook trash bin</title>
+<title>Exploration box fancy function</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1804,464 +1804,165 @@ summary {
 
 
 
-<h1 class="title toc-ignore">Notebook trash bin</h1>
+<h1 class="title toc-ignore">Exploration box fancy function</h1>
 
 </div>
 
 
 <!-- rnb-text-begin -->
-<p>Next, I want to obtain the latency between the time the box was introduced into the pond and the moment each individual fully explored it. I create the <em>lat.expl</em> function, which has, as an:</p>
+<p>The chunk below aims at, from one day of EB data, obtain, for each fish, three different metrics for exploration tendency. The function is built the following way:</p>
 <ul>
-<li>Inout: The reads corresponding to antenna changes for all individuals (data frame). Details in the chunk just above.</li>
-<li>Output: The first box cross for all individuals (data frame). A column is also computing how long since the box has been introduced the individuals have taken to enter the box.</li>
+<li><p>I define a few objects and start a loop going through all individuals</p></li>
+<li><p><strong>Index 1</strong> - Latency to enter the box. I simply obtain, for each individual, the first read at antenna 2 or 3.</p></li>
+<li><p>I obtain the antenna changes. If an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), I only keep the first reads for each sequence of identical numbers. The output is, for the example above: 1, 2, 3.</p></li>
+<li><p>I split these antenna change reads as a list of data frames. Every time that an individual is read at antenna 1 or 4 (entrances of the box), I split the data frame. I know that if, after a 1 or a 4, there is a 2 or a 3, the individual entered the box. I can then trace the individual until it leaves the box again (ant 1 or 4). This perspective is used for calculating index 2.</p></li>
+<li><p>Compute <strong>Index 2</strong> - First time that an individual fully crosses the box. To do so, I am interested in the first sequence containing at least a read from antenna 2 <em>and</em> a read from antenna 3, before the fish leaves the box, either via antenna 1 or via antenna 4. The sequences could be, for instance, (1,2,3,4) or (4,3,2,1) or (1,2,3,2,1) or (1,2,3,2,3,2,3,4) etc. It needs to start by a 1 or a 4, to end by a 1 or a for, and to have at least one 2 and one 3 in between.</p></li>
+<li><p>Compute <strong>Index 3</strong> - Time spent in the box. In this case, the individual does not need to fully cross the box (i.e. no need to be read by antenna 2 <em>and</em> 3 after entering the box and before leaving the box). Instead, I simply calculate the time between an individual is read at antenna 2 or 3 until it is read at antenna 1 or 4 again, whatever the sequence is. The sequence could simply be 4 (enter the box) - 3 (in the box) - 4 (leaves the box), and I would look at the time between 3 and 4. Then, I sum all the times corresponding to the different sequences.</p></li>
 </ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuICAgIFxuICAgIFxuIyAxLiBJIGNyZWF0ZSB0aGUgJ2xhdC5leHBsJyBmdW5jdGlvbiBmb3IgJ0xhdGVuY3kgdG8gZXhwbG9yZScuXG4gICAgIyBGcm9tIHRoZSBjbGVhbmVkIGRhdGEgZnJhbWUsIGl0IG91dHB1dHMgYWxsIHRoZSBpbmRpdmlkdWFsIGZ1bGwgY3Jvc3NpbmdzLlxuICAgIGxhdC5leHBsIDwtIGZ1bmN0aW9uKGRmLCBwYXR0ZXJuMSwgcGF0dGVybjIsIGluaXRpYWxfdGltZSl7XG4gICAgXG4gICAgICBcbiAgICAgIFxuICAjIyAyLiBJREVOVElGWSBXSEVOIElORElWSURVQUxTIENST1NTIFRIRSBCT1ggRU5USVJFTFlcbiAgIyBJIHN0b2xlIHRoZSBuZXh0IHBpZWNlIG9mIGNvZGUgZnJvbSBzb21lb25lIHdheSBzbWFydGVyIHRoYW4gbWUgKFIgU3RhY2sgT3ZlcmZsb3cgNDExMzA5MTIpLlxuICAjIEZpcnN0LCBJIGtlZXAgcmVhZHMgd2hlbiBpbmRpdmlkdWFscyBnbyB0aHJvdWdoIHRoZSBib3ggdGhlIGZvbGxvd2luZyB3YXk6IDEgLT4gMiAtPiAzIC0+IDRcbiAgICBsZW5fcGF0dGVybiA9IDRcbiAgICBkZl9hYmNkIDwtIGRmICU+JSBhcnJhbmdlKGlkLCB0aW1lKSAlPiUgZ3JvdXBfYnkoaWQpICU+JVxuICAgICMgY2hlY2sgbXVsdGlwbGUgbGFncyBjb25kaXRpb25cbiAgICBtdXRhdGUoYWIgPSBSZWR1Y2UoXFwmXFwsIE1hcChcXD09XFwsIHNoaWZ0KGFudGVubmEsIG4gPSAwOihsZW5fcGF0dGVybiAtIDEpLCB0eXBlID0gXFxsZWFkXFwpLCBwYXR0ZXJuMSkpLFxuICAgIGcgPSBjdW1zdW0oYWIpKSAlPiVcbiAgICAjIHVzZSByZWR1Y2Ugb3IgdG8gc3Vic2V0IHNlcXVlbmNlIHJvd3MgaGF2aW5nIHRoZSBzYW1lIGxlbmd0aCBhcyB0aGUgcGF0dGVyblxuICAgIGZpbHRlcihSZWR1Y2UoXFx8XFwsIHNoaWZ0KGFiLCBuID0gMDoobGVuX3BhdHRlcm4gLSAxKSwgdHlwZSA9IFxcbGFnXFwpKSkgJT4lXG4gICAgIyBtYWtlIHVuaXF1ZSBuYW1lc1xuICAgIGdyb3VwX2J5KGcsIGFkZCA9IFRSVUUpICU+JSBtdXRhdGUoYW50ZW5uYSA9IHBhc3RlKGFudGVubmEsIDE6bigpLCBzZXAgPSBcXF9cXCkpICU+JVxuICAgICMgcGl2b3RpbmcgdGhlIHRhYmxlIHRvIHdpZGUgZm9ybWF0XG4gICAgc2VsZWN0KC1hYikgJT4lIHNwcmVhZChhbnRlbm5hLCB0aW1lKVxuXG5cblxuICAjIFNlY29uZCwgSSBrZWVwIHJlYWRzIHdoZW4gaW5kaXZpZHVhbHMgZ28gdGhyb3VnaCB0aGUgYm94IHRoZSBvdGhlciB3YXkgYXJvdW5kOiA0IC0+IDMgLT4gMiAtPiAxXG4gICAgZGZfZGNiYSA8LSBkZiAlPiUgYXJyYW5nZShpZCwgdGltZSkgJT4lIGdyb3VwX2J5KGlkKSAlPiVcbiAgICAjIGNoZWNrIG11bHRpcGxlIGxhZ3MgY29uZGl0aW9uXG4gICAgbXV0YXRlKGFiID0gUmVkdWNlKFxcJlxcLCBNYXAoXFw9PVxcLCBzaGlmdChhbnRlbm5hLCBuID0gMDoobGVuX3BhdHRlcm4gLSAxKSwgdHlwZSA9IFxcbGVhZFxcKSwgcGF0dGVybjIpKSxcbiAgICBnID0gY3Vtc3VtKGFiKSkgJT4lXG4gICAgIyB1c2UgcmVkdWNlIHRvIHN1YnNldCBzZXF1ZW5jZSByb3dzIGhhdmluZyB0aGUgc2FtZSBsZW5ndGggYXMgdGhlIHBhdHRlcm5cbiAgICBmaWx0ZXIoUmVkdWNlKFxcfFxcLCBzaGlmdChhYiwgbiA9IDA6KGxlbl9wYXR0ZXJuIC0gMSksIHR5cGUgPSBcXGxhZ1xcKSkpICU+JVxuICAgICMgbWFrZSB1bmlxdWUgbmFtZXNcbiAgICBncm91cF9ieShnLCBhZGQgPSBUUlVFKSAlPiUgbXV0YXRlKGFudGVubmEgPSBwYXN0ZShhbnRlbm5hLCAxOm4oKSwgc2VwID0gXFxfXFwpKSAlPiVcbiAgICAjIHBpdm90aW5nIHRoZSB0YWJsZSB0byB3aWRlIGZvcm1hdFxuICAgIHNlbGVjdCgtYWIpICU+JSBzcHJlYWQoYW50ZW5uYSwgdGltZSlcblxuXG4gICAgXG4gICAgXG4gICMgSSByZW5hbWUgdGhlIGNvbHVtbnMgb2YgdGhlIHR3byBkYXRhZnJhbWVzIEkgY3JlYXRlZFxuICBuYW1lcyhkZl9hYmNkKSA8LSBjKFxcaWRcXCwgXFx0aW1lX29mX2RheVxcLCBcXFBvbmRcXCwgXFxUcmVhdG1lbnRfc2VxXFwsIFxcZ1xcLCBcbiAgICAgICAgICAgICAgICAgICAgICBcXEFudDFcXCwgXFxBbnQyXFwsIFxcQW50M1xcLCBcXEFudDRcXClcbiAgbmFtZXMoZGZfZGNiYSkgPC0gYyhcXGlkXFwsIFxcdGltZV9vZl9kYXlcXCwgXFxQb25kXFwsIFxcVHJlYXRtZW50X3NlcVxcLCBcXGdcXCwgXG4gICAgICAgICAgICAgICAgICAgICAgXFxBbnQxXFwsIFxcQW50MlxcLCBcXEFudDNcXCwgXFxBbnQ0XFwpXG5cbiAgXG4gICMgSSBvYnRhaW4gYSBkYXRhZnJhbWUgaW4gd2hpY2ggZWFjaCByb3cgcmVwcmVzZW50cyBvbmUgaW5kaXZpZHVhbCBmdWxsIGNyb3NzaW5nXG4gIGRmMyA8LSByYmluZChkZl9hYmNkLCBkZl9kY2JhKVxuXG4gIFxuICAjIEkga2VlcCBpbmRpdmlkdWFscyB3aXRoIHRoZSBzbWFsbGVzdCAnYXJyaXZhbCcgKGkuZS4gQW50MikgdmFsdWUuXG4gIGRmMyA8LSBkZjMgJT4lXG4gICAgZ3JvdXBfYnkoaWQpICU+JVxuICAgIHNsaWNlKHdoaWNoLm1pbihBbnQyKSlcblxuXG4gICMjIDMuIENBTENVTEFURSBMQVRFTkNZIFRJTUVcbiAgIyBJIGFkZCBhIG5ldyBjb2x1bW4gd2l0aCB0aGUgdGltZSB0byBjcm9zcyB0aGUgYm94IHNpbmNlIHRoZSBzdGFydCBvZiB0aGUgdGVzdFxuICBkZjMgPC0gbXV0YXRlKGRmMywgdGltZV9zaW5jZV9zdGFydCA9IGRpZmZ0aW1lKEFudDIsIGluaXRpYWxfdGltZSwgdW5pdHM9J21pbnMnKSlcbiAgZGYzJHRpbWVfc2luY2Vfc3RhcnQgPC0gYXMubnVtZXJpYyhkZjMkdGltZV9zaW5jZV9zdGFydClcblxuXG5cblxuICByZXR1cm4oZGYzKVxufVxuXG5gYGBcbmBgYCJ9 -->
-<pre class="r"><code>```r
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jIyAxLiBERUZJTkUgT0JKRUNUU1xuICAjIEkgc3BsaXQgbXkgZGF0YWZyYW1lIGludG8gYSBsaXN0IG9mIGRhdGFmcmFtZXMgKG9uZSBvYmplY3QgcGVyIGluZGl2aWR1YWwpXG4gICAgRUJfbGlzdF9kZl9pZCA8LSBzcGxpdChFQl9jbGVhbl9kZiwgZiA9IEVCX2NsZWFuX2RmJGlkKVxuICAgIEVCX2xpc3RfY2hhbmdlcyA8LSBsaXN0KClcbiAgICBpbmRleDEgPC0gbGlzdCgpXG4gICAgaW5kZXgyIDwtIGxpc3QoKVxuICAgIGluZGV4MyA8LSBsaXN0KClcbiAgXG4gICAgXG4gICAgXG4gICMgRm9yIGV2ZXJ5IGluZGl2aWR1YWwuLi5cbiAgZm9yIChpIGluIDE6bGVuZ3RoKEVCX2xpc3RfZGZfaWQpKXtcbiAgICBcbiMjIDIuIElOREVYIDEgLSBGSVJTVCBUSU1FIEVOVEVSSU5HIFRIRSBCT1hcbiAgaW5kZXgxW1tpXV0gPC0gc3Vic2V0KEVCX2xpc3RfZGZfaWRbW2ldXSwgYW50ZW5uYSA9PSAyIHwgYW50ZW5uYSA9PSAzKVsxLF1cbiAgXG4gICAgXG4gIFxuICAgIFxuXG4jIyAzLiBBTlRFTk5BIENIQU5HRVNcbiAgIyBJIG9idGFpbiB0aGUgcmVhZHMgY29ycmVzcG9uZGluZyB0byBhbiBhbnRlbm5hIGNoYW5nZSBhbmQgdGhlXG4gICMgY29ycmVzcG9uZGluZyBhbnRlbm5hIG51bWJlciwgdGltZSBhbmQgZmlzaCBpZC5cbiAgRUJfbGlzdF9kZl9pZFtbaV1dW29yZGVyKGFzLlBPU0lYY3QoRUJfbGlzdF9kZl9pZFtbaV1dJHRpbWUpKSxdXG4gIFxuICBjaGFuZ2VzICAgICAgICAgIDwtIHdoaWNoKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hIT0gbGFnKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hKSlcbiAgYW50ZW5uYSAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kYW50ZW5uYVtjaGFuZ2VzXSlcbiAgdGltZSAgICAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSR0aW1lWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kdGltZVtjaGFuZ2VzXSlcbiAgaWQgICAgICAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSRpZFsxXSwgRUJfbGlzdF9kZl9pZFtbaV1dJGlkW2NoYW5nZXNdKVxuICBFQl9saXN0X2NoYW5nZXNbW2ldXSA8LSBkYXRhLmZyYW1lKGFudGVubmEsIHRpbWUsIGlkKVxuICBcblxuXG5cblxuIyMgNC4gU1BMSVQgVEhFU0UgQU5URU5OQSBDSEFOR0VTIERGIFdIRU4gVEhFIEZJU0ggSVMgUkVBRCBBVCBBTlQgMSBPUiA0XG4gICMgSSBtYXJrIGFsbCB0aGUgcm93IG51bWJlcnMgYXQgd2hpY2ggdGhlIGZpc2ggd2FzIHJlYWQgYXQgYW50ZW5uYSAxIG9yIGEgNFxuICB2ZWMgPC0gd2hpY2goRUJfbGlzdF9jaGFuZ2VzW1tpXV1bLFwiYW50ZW5uYVwiXSA9PSAxIHwgRUJfbGlzdF9jaGFuZ2VzW1tpXV1bLFwiYW50ZW5uYVwiXSA9PSA0KVxuICBcbiAgIyBJIHdhbnQgdG8gY3V0ICphZnRlciogcmVhZHMgYXQgYW50ZW5uYSAxIGFuZCA0XG4gIHZlYyA8LSB2ZWMgICsxXG4gIFxuICAjIEkgc3BsaXQgbXkgZGF0YSBmcmFtZSBldmVyeSB0aW1lIHRoZSBpbmRpdmlkdWFsIHBhc3NlcyBieSBhbnQgMSBvciA0XG4gIGxpc3QgPC0gc3BsaXQoRUJfbGlzdF9jaGFuZ2VzW1tpXV0sIGN1bXN1bSgxOm5yb3coRUJfbGlzdF9jaGFuZ2VzW1tpXV0pICVpbiUgdmVjKSlcblxuICBcbiAgXG4gIFxuICBcbiMjIDUuIElOREVYIDIgLSBGSVJTVCBUSU1FIFRPIEZVTExZIENST1NTIFRIRSBCT1hcbiAgIyBJIHNlbGVjdCB0aGUgc2VxdWVuY2VzIGZvciB3aGljaCB0aGUgaW5kaXZpZHVhbCBpcyByZWFkIGF0IGFudGVubmFzIDIgKmFuZCogM1xuICBjb25kMSA8LSBsYXBwbHkobGlzdCwgZnVuY3Rpb24oeCkgbnJvdyh4KSA+PSAzKVxuXG4gICMgSSBhcHBseSB0aGlzIGNvbmRpdGlvbiB0byBrZWVwIHRoZSBjcm9zc2luZyBzZXF1ZW5jZXNcbiAgbGlzdDEgPC0gbGlzdFt1bmxpc3QoY29uZDEpXVxuXG4gICMgSWYgdGhlcmUgaXMgc3VjaCBhIHNlcXVlbmNlIGNvcnJlc3BvbmRpbmcgdG8gYSBmdWxsIGNyb3NzaW5nXG4gIGlmIChsZW5ndGgobGlzdDEpICE9IDApe1xuXG4gICMgVGhlbiBJIHN1YnNldCB0aGUgZmlyc3QgYWZ0ZXIgYmVpbmcgcmVhZCBhdCAxIG9yIDMgKG5lY2Vzc2FyaWx5IGF0IGFudGVubmEgMiBvciAzKVxuICBpbmRleDJbW2ldXSA8LSBzdWJzZXQobGlzdDFbWzFdXSwgdGltZSA9PSBsaXN0MVtbMV1dJHRpbWVbMV0pXG5cbiAgIyBFdmVudHVhbGx5LCB0aGlzIGxpc3QgY29udGFpbnMsIGZvciBlYWNoIGluZGl2aWR1YWwgdGhhdCBmdWxseSBjcm9zc2VkIHRoZSBib3gsXG4gICMgaXRzIGZpcnN0IHJlYWQgYXQgYW50ZW5uYSAyIG9yIDMgYWZ0ZXIgZW50ZXJpbmcgdGhlIGJveCBmb3IgYSBmdWxsIGNyb3NzLlxuXG4gIH0gIyBlbmQgb2YgaWZcblxuICBcbiAgXG4gIFxuICBcblxuIyMgNi4gSU5ERVggMyAtIERVUkFUSU9OIFNQRU5UIElOIFRIRSBCT1hcbiAgIyBJIHNlbGVjdCB0aGUgc2VxdWVuY2VzIGZvciB3aGljaCB0aGUgaW5kaXZpZHVhbCBpcyByZWFkIGF0IGxlYXN0IG9uY2UgYXQgYW50ZW5uYSAyIG9yIDNcbiAgY29uZDIgPC0gbGFwcGx5KGxpc3QsIGZ1bmN0aW9uKHgpIG5yb3coeCkgPj0gMilcbiAgXG4gICMgSSBrZWVwIHRoZSBzZXF1ZW5jZXMgY29ycmVzcG9uZGluZyB0byB0aGlzIGNvbmRpdGlvblxuICBsaXN0MiA8LSBsaXN0W3VubGlzdChjb25kMildXG5cbiAgIyBJZiB0aGUgaW5kaXZpZHVhbCBlbnRlcmVkIHRoZSBib3ggYXQgbGVhc3Qgb25jZVxuICBpZiAobGVuZ3RoKGxpc3QyKSAhPSAwKXtcblxuICAjIEZvciBlYWNoIHNlcXVlbmNlXG4gIGZvcih4IGluIDE6bGVuZ3RoKGxpc3QyKSl7XG4gICAgXG4gICMgSSBzZXQgbXkgaW5pdGlhbCB2YWx1ZSBvZiBhIGFzIDBcbiAgZHVyYXRpb24gPC0gMFxuICBcbiAgIyBBbmQgc3VtIGFsbCB0aGUgdGltZSBzcGVudCBpbnNpZGUgdGhlIGJveFxuICBkdXJhdGlvbiA8LSBkdXJhdGlvbiArIGRpZmZ0aW1lKGxpc3QyW1t4XV1bbnJvdyhsaXN0MltbeF1dKSwgXSR0aW1lLCBsaXN0MltbeF1dWzEsXSR0aW1lLCB1bml0cz0nbScpXG5cbiAgIyBJIGtlZXAgdGhpcyBkdXJhdGlvbiBhbmQgaW5kaWNhdGUgdGhlIG5hbWUgb2YgdGhlIGNvcnJlc3BvbmRpbmcgaW5kaXZpZHVhbFxuICBpbmRleDNbW2ldXSA8LSBkYXRhLmZyYW1lKGlkID0gbGlzdDJbWzFdXSRpZFsxXSwgZHVyYXRpb24pXG5cbiAgfSAjIGVuZCBvZiBpbmRleCAzIHNlcXVlbmNlcyBmb3IgbG9vcFxuICB9ICMgZW5kIG9mIGlmXG5cbn0gIyBlbmQgb2YgbWFpbiBmb3IgbG9vcCAoZ29pbmcgdGhyb3VnaCBpbmRpdmlkdWFscylcblxuXG4jIEkgYmluZCB0aGUgcm93cyBvZiBteSBsaXN0LlxuaW5kZXgxIDwtIGJpbmRfcm93cyhpbmRleDEpXG5pbmRleDEgPC0gbmEub21pdChpbmRleDEpXG5uYW1lcyhpbmRleDEpWzJdIDwtIFwidGltZV9lbnRlcmluZ1wiXG5cblxuaW5kZXgyIDwtIGJpbmRfcm93cyhpbmRleDIpXG5uYW1lcyhpbmRleDIpWzJdIDwtIFwidGltZV9maXJzdF9jcm9zc1wiXG5cblxuXG5pbmRleDMgPC0gYmluZF9yb3dzKGluZGV4MylcbmluZGV4MyRkdXJhdGlvbiA8LSBhcy5udW1lcmljKGluZGV4MyRkdXJhdGlvbilcblxuaW5kaWNlcyA8LSBtZXJnZShpbmRleDFbYyhcImlkXCIsIFwidGltZV9lbnRlcmluZ1wiKV0sIGluZGV4MltjKFwiaWRcIiwgXCJ0aW1lX2ZpcnN0X2Nyb3NzXCIpXSwgYnkgPSBcImlkXCIsIGFsbCA9IFQpXG5pbmRpY2VzIDwtIG1lcmdlKGluZGljZXMsIGluZGV4MywgYnkgPVwiaWRcIiwgYWxsID0gVClcbmluZGljZXMgPC0gbWVyZ2UoaW5kaWNlcywgRUJfdmFyaWFibGVzLCBieSA9IFwiaWRcIiwgYWxsID0gVClcblxuICAgIFxuICBpbmRpY2VzX21vcm5pbmcgPC0gc3Vic2V0KGluZGljZXMsIHRpbWVfb2ZfZGF5ID09IFwiTW9ybmluZ1wiKSAlPiVcbiAgICBtdXRhdGUobGF0ZW5jeV9lbnRlciA9IGFzLm51bWVyaWMoZGlmZnRpbWUodGltZV9lbnRlcmluZywgc3RhcnRfbW9ybmluZywgdW5pdHM9J20nKSksXG4gICAgICAgICAgIGxhdGVuY3lfY3Jvc3MgPSBhcy5udW1lcmljKGRpZmZ0aW1lKHRpbWVfZmlyc3RfY3Jvc3MsIHN0YXJ0X21vcm5pbmcsIHVuaXRzPSdtJykpXG4gICAgICAgICAgIClcblxuICBpbmRpY2VzX2FmdGVybm9vbiA8LSBzdWJzZXQoaW5kaWNlcywgdGltZV9vZl9kYXkgPT0gXCJBZnRlcm5vb25cIikgJT4lXG4gICAgbXV0YXRlKGxhdGVuY3lfZW50ZXIgPSBhcy5udW1lcmljKGRpZmZ0aW1lKHRpbWVfZW50ZXJpbmcsIHN0YXJ0X2FmdGVybm9vbiwgdW5pdHM9J20nKSksXG4gICAgICAgICAgIGxhdGVuY3lfY3Jvc3MgPSBhcy5udW1lcmljKGRpZmZ0aW1lKHRpbWVfZmlyc3RfY3Jvc3MsIHN0YXJ0X2FmdGVybm9vbiwgdW5pdHM9J20nKSlcbiAgICAgICAgICAgKVxuXG4gIGluZGljZXMgPC0gcmJpbmQoaW5kaWNlc19tb3JuaW5nLCBpbmRpY2VzX2FmdGVybm9vbilcblxuICBpbmRpY2VzIDwtIGluZGljZXMgJT4lXG4gICAgbXV0YXRlKGxhdGVuY3lfZW50ZXIgPSBpZl9lbHNlKGlzLm5hKGxhdGVuY3lfZW50ZXIpLCAxNTAsIGxhdGVuY3lfZW50ZXIpLFxuICAgICAgICAgICBsYXRlbmN5X2Nyb3NzID0gaWZfZWxzZShpcy5uYShsYXRlbmN5X2Nyb3NzKSwgMTUwLCBsYXRlbmN5X2Nyb3NzKSxcbiAgICAgICAgICAgZHVyYXRpb24gPSBpZl9lbHNlKGlzLm5hKGR1cmF0aW9uKSwgMCwgZHVyYXRpb24pKVxuXG5gYGAifQ== -->
+<pre class="r"><code>
+## 1. DEFINE OBJECTS
+  # I split my dataframe into a list of dataframes (one object per individual)
+    EB_list_df_id &lt;- split(EB_clean_df, f = EB_clean_df$id)
+    EB_list_changes &lt;- list()
+    index1 &lt;- list()
+    index2 &lt;- list()
+    index3 &lt;- list()
+  
     
     
-# 1. I create the &#39;lat.expl&#39; function for &#39;Latency to explore&#39;.
-    # From the cleaned data frame, it outputs all the individual full crossings.
-    lat.expl &lt;- function(df, pattern1, pattern2, initial_time){
+  # For every individual...
+  for (i in 1:length(EB_list_df_id)){
     
-      
-      
-  ## 2. IDENTIFY WHEN INDIVIDUALS CROSS THE BOX ENTIRELY
-  # I stole the next piece of code from someone way smarter than me (R Stack Overflow 41130912).
-  # First, I keep reads when individuals go through the box the following way: 1 -&gt; 2 -&gt; 3 -&gt; 4
-    len_pattern = 4
-    df_abcd &lt;- df %&gt;% arrange(id, time) %&gt;% group_by(id) %&gt;%
-    # check multiple lags condition
-    mutate(ab = Reduce(\&amp;\, Map(\==\, shift(antenna, n = 0:(len_pattern - 1), type = \lead\), pattern1)),
-    g = cumsum(ab)) %&gt;%
-    # use reduce or to subset sequence rows having the same length as the pattern
-    filter(Reduce(\|\, shift(ab, n = 0:(len_pattern - 1), type = \lag\))) %&gt;%
-    # make unique names
-    group_by(g, add = TRUE) %&gt;% mutate(antenna = paste(antenna, 1:n(), sep = \_\)) %&gt;%
-    # pivoting the table to wide format
-    select(-ab) %&gt;% spread(antenna, time)
-
-
-
-  # Second, I keep reads when individuals go through the box the other way around: 4 -&gt; 3 -&gt; 2 -&gt; 1
-    df_dcba &lt;- df %&gt;% arrange(id, time) %&gt;% group_by(id) %&gt;%
-    # check multiple lags condition
-    mutate(ab = Reduce(\&amp;\, Map(\==\, shift(antenna, n = 0:(len_pattern - 1), type = \lead\), pattern2)),
-    g = cumsum(ab)) %&gt;%
-    # use reduce to subset sequence rows having the same length as the pattern
-    filter(Reduce(\|\, shift(ab, n = 0:(len_pattern - 1), type = \lag\))) %&gt;%
-    # make unique names
-    group_by(g, add = TRUE) %&gt;% mutate(antenna = paste(antenna, 1:n(), sep = \_\)) %&gt;%
-    # pivoting the table to wide format
-    select(-ab) %&gt;% spread(antenna, time)
-
+## 2. INDEX 1 - FIRST TIME ENTERING THE BOX
+  index1[[i]] &lt;- subset(EB_list_df_id[[i]], antenna == 2 | antenna == 3)[1,]
+  
     
+  
     
-  # I rename the columns of the two dataframes I created
-  names(df_abcd) &lt;- c(\id\, \time_of_day\, \Pond\, \Treatment_seq\, \g\, 
-                      \Ant1\, \Ant2\, \Ant3\, \Ant4\)
-  names(df_dcba) &lt;- c(\id\, \time_of_day\, \Pond\, \Treatment_seq\, \g\, 
-                      \Ant1\, \Ant2\, \Ant3\, \Ant4\)
 
-  
-  # I obtain a dataframe in which each row represents one individual full crossing
-  df3 &lt;- rbind(df_abcd, df_dcba)
-
-  
-  # I keep individuals with the smallest &#39;arrival&#39; (i.e. Ant2) value.
-  df3 &lt;- df3 %&gt;%
-    group_by(id) %&gt;%
-    slice(which.min(Ant2))
-
-
-  ## 3. CALCULATE LATENCY TIME
-  # I add a new column with the time to cross the box since the start of the test
-  df3 &lt;- mutate(df3, time_since_start = difftime(Ant2, initial_time, units=&#39;mins&#39;))
-  df3$time_since_start &lt;- as.numeric(df3$time_since_start)
-
-
-
-
-  return(df3)
-}
-</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-I run my function for each half-day, as the starting time will differ. Then, I merge them together.
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuXG5cbiMgSSBydW4gbXkgZnVuY3Rpb25zIGZvciB0aGUgbW9ybmluZyBhbmQgdGhlIGFmdGVybm9vblxuICBFQl9MYXRfTW9ybmluZyA8LSBsYXQuZXhwbChzdWJzZXQoRUJfQ2hhbmdlcywgdGltZV9vZl9kYXkgPT0gXFxNb3JuaW5nXFwpLCBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcDEuNCwgcDQuMSwgc3RhcnRfbW9ybmluZylcbiAgRUJfTGF0X0FmdGVybm9vbiA8LSBsYXQuZXhwbChzdWJzZXQoRUJfQ2hhbmdlcywgdGltZV9vZl9kYXkgPT0gXFxBZnRlcm5vb25cXCksIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHAxLjQsIHA0LjEsIHN0YXJ0X2FmdGVybm9vbilcblxuICBcblxuIyBJIG9idGFpbiBteSBmaW5hbCBkYXRhc2V0IHdpdGggdGhlIGZpcnN0IGNyb3NzaW5nIHNlcXVlbmNlIGZvciBldmVyeVxuIyBpbmRpdmlkdWFsIGFuZCBhdCB3aGF0IHRpbWUgaXQgaGFwcGVuZWRcbiAgRUJfTGF0IDwtIHJiaW5kKEVCX0xhdF9Nb3JuaW5nLCBFQl9MYXRfQWZ0ZXJub29uKVxuICBcbiAgXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-
-
-# I run my functions for the morning and the afternoon
-  EB_Lat_Morning &lt;- lat.expl(subset(EB_Changes, time_of_day == \Morning\), 
-                             p1.4, p4.1, start_morning)
-  EB_Lat_Afternoon &lt;- lat.expl(subset(EB_Changes, time_of_day == \Afternoon\), 
-                               p1.4, p4.1, start_afternoon)
-
-  
-
-# I obtain my final dataset with the first crossing sequence for every
-# individual and at what time it happened
-  EB_Lat &lt;- rbind(EB_Lat_Morning, EB_Lat_Afternoon)
-  
-  </code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-
-
-
-
-
-
----
-
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuc2hvYWxpbmcuaW5kZXggPC0gZnVuY3Rpb24oY2xlYW5fZGYsIGRmX3ZhcmlhYmxlcyl7XG5cbiAgXG4gIFxuIyBJIHNwbGl0IG15IGRhdGEgZnJhbWUgaW50byBhIGxpc3Qgb2YgZGF0YWZyYW1lcyAob25lIG9iamVjdCBwZXIgaW5kaXZpZHVhbClcbiAgIyBQUk9CTEVNIEhFUkUsIEFOVEVOTkEgTsOCwrAxIElOIERJRkYgUE9ORFNcbiAgY2xlYW5fZGZfMiA8LSBzcGxpdChjbGVhbl9kZiwgZiA9IGNsZWFuX2RmJGFudGVubmEpXG5cbiMgSSBkZWZpbmUgYSBsaXN0XG4gIGFjY29tcGFuaWVkX3JlYWRzIDwtIGxpc3QoKVxuICBcbiAgICAjIEZvciBlYWNoIGFudGVubmEuLi5cbiAgICBmb3IgKGkgaW4gMTpsZW5ndGgoY2xlYW5fZGZfMikpe1xuICAgICBcbiAgICAgICMgSSBzdWJzZXQgYWxsIHRoZSB0aW1lIHBvaW50cyBmb3Igd2hpY2ggbW9yZSB0aGFuIDEgaW5kaXZpZHVhbHMgd2VyZSByZWFkIGF0IG9uZSBhbnRlbm5hXG4gICAgICBhY2NvbXBhbmllZF9yZWFkc1tbaV1dIDwtICBjbGVhbl9kZl8yW1tpXV0gJT4lIGdyb3VwX2J5KHRpbWUpICU+JSBmaWx0ZXIobigpID4gMSlcbiAgXG4gICAgICAjIEkgY291bnQgdGhlIG51bWJlciBvZiBhY2NvbXBhbmllZCByZWFkcyBwZXIgaW5kaXZpZHVhbFxuICAgICAgYWNjb21wYW5pZWRfcmVhZHNbW2ldXSA8LSBhY2NvbXBhbmllZF9yZWFkc1tbaV1dICU+JSBncm91cF9ieShpZCkgJT4lIGFkZF90YWxseSgpXG4gICAgICAjIEkgcmVtb3ZlIGR1cGxpY2F0ZWQgcm93c1xuICAgICAgYWNjb21wYW5pZWRfcmVhZHNbW2ldXSA8LSBhY2NvbXBhbmllZF9yZWFkc1tbaV1dWyFkdXBsaWNhdGVkKGFjY29tcGFuaWVkX3JlYWRzW1tpXV1bLGMoJ2lkJyldKSxdXG4gICAgfVxuICBcbiAgXG4gICMgSSBiaW5kIHRoZSByb3dzIG9mIHRoZSBsaXN0IG9mIGRhdGFmcmFtZXNcbiAgICBhY2NvbXBhbmllZF9yZWFkcyA8LSBiaW5kX3Jvd3MoYWNjb21wYW5pZWRfcmVhZHMpXG4gIFxuICAgICMgSSBrZWVwIHRoZSB0b3RhbCBudW1iZXIgb2YgYWNjb21wYW5pZWQgcmVhZHMgaW4gYWxsIGFudGVubmFzXG4gICAgYWNjb21wYW5pZWRfcmVhZHMgPC0gYWNjb21wYW5pZWRfcmVhZHMgJT4lXG4gICAgICBncm91cF9ieShpZCkgJT4lXG4gICAgICBtdXRhdGUodG90X2FjY19yZWFkcyA9IHN1bShuKSlcblxuICAgIFxuICAgIFxuICAjIEkgcmVtb3ZlIHRoZSAnbicgY29sdW1uLCB1c2VsZXNzIG5vd1xuICAgIGFjY29tcGFuaWVkX3JlYWRzIDwtIGFjY29tcGFuaWVkX3JlYWRzWywtIGMoNyldXG4gICMgSSByZW1vdmUgZHVwbGljYXRlZCByb3dzXG4gICAgYWNjb21wYW5pZWRfcmVhZHMgPC0gYWNjb21wYW5pZWRfcmVhZHNbIWR1cGxpY2F0ZWQoYWNjb21wYW5pZWRfcmVhZHNbLGMoJ2lkJyldKSxdXG4gIFxuICAjIE5vdywgSSB3YW50IHRvIHRha2UgaW50byBhY2NvdW50IHRoZSB0b3RhbCBudW1iZXIgb2YgcmVhZHMgb2YgZWFjaCBpbmRpdmlkdWFsIGFzIHdlbGxcbiAgICBjbGVhbl9kZiA8LSBjbGVhbl9kZiAlPiUgZ3JvdXBfYnkoaWQpICU+JSBhZGRfdGFsbHkoKVxuICAgIGNsZWFuX2RmIDwtIGNsZWFuX2RmWyFkdXBsaWNhdGVkKGNsZWFuX2RmWyxjKCdpZCcpXSksXVxuICAgIGNsZWFuX2RmIDwtIG1lcmdlKEVCX3ZhcmlhYmxlcywgY2xlYW5fZGZbYyhcXGlkXFwsIFxcblxcKV0sIGJ5ID0gXFxpZFxcLCBhbGwgPSBUKVxuICAgIGNsZWFuX2RmW2lzLm5hKGNsZWFuX2RmKV0gPC0gMFxuICAgIFxuICAjIEkgYWRkIHRoZW0gdG8gdGhlIGRhdGEgZnJhbWUgd2l0aCB0aGUgYWNjb21wYW5pZWQgcmVhZHNcbiAgICBhY2NvbXBhbmllZF9yZWFkcyA8LSBtZXJnZShjbGVhbl9kZltjKFxcaWRcXCwgXFxQb25kXFwsIFxcdGltZV9vZl9kYXlcXCwgXFxUcmVhdG1lbnRfc2VxXFwsIFxcblxcKV0sIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGFjY29tcGFuaWVkX3JlYWRzW2MoXFxpZFxcLCBcXHRvdF9hY2NfcmVhZHNcXCldLCBieSA9IFxcaWRcXCwgYWxsID0gVCkgXG4gICAgbmFtZXMoYWNjb21wYW5pZWRfcmVhZHMpWzVdIDwtIFxcdG90X3JlYWRzXFxcbiAgICBhY2NvbXBhbmllZF9yZWFkc1tpcy5uYShhY2NvbXBhbmllZF9yZWFkcyldIDwtIDBcbiAgICBhY2NvbXBhbmllZF9yZWFkcyRzaG9hbGluZyA8LSBhY2NvbXBhbmllZF9yZWFkcyR0b3RfYWNjX3JlYWRzL2FjY29tcGFuaWVkX3JlYWRzJHRvdF9yZWFkc1xuICAgIHJldHVybihhY2NvbXBhbmllZF9yZWFkcylcbiAgICBcbiAgfSAjIGVuZCBvZiBmdW5jdGlvblxuXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-shoaling.index &lt;- function(clean_df, df_variables){
-
-  
-  
-# I split my data frame into a list of dataframes (one object per individual)
-  # PROBLEM HERE, ANTENNA NÂ°1 IN DIFF PONDS
-  clean_df_2 &lt;- split(clean_df, f = clean_df$antenna)
-
-# I define a list
-  accompanied_reads &lt;- list()
-  
-    # For each antenna...
-    for (i in 1:length(clean_df_2)){
-     
-      # I subset all the time points for which more than 1 individuals were read at one antenna
-      accompanied_reads[[i]] &lt;-  clean_df_2[[i]] %&gt;% group_by(time) %&gt;% filter(n() &gt; 1)
-  
-      # I count the number of accompanied reads per individual
-      accompanied_reads[[i]] &lt;- accompanied_reads[[i]] %&gt;% group_by(id) %&gt;% add_tally()
-      # I remove duplicated rows
-      accompanied_reads[[i]] &lt;- accompanied_reads[[i]][!duplicated(accompanied_reads[[i]][,c(&#39;id&#39;)]),]
-    }
-  
-  
-  # I bind the rows of the list of dataframes
-    accompanied_reads &lt;- bind_rows(accompanied_reads)
-  
-    # I keep the total number of accompanied reads in all antennas
-    accompanied_reads &lt;- accompanied_reads %&gt;%
-      group_by(id) %&gt;%
-      mutate(tot_acc_reads = sum(n))
-
-    
-    
-  # I remove the &#39;n&#39; column, useless now
-    accompanied_reads &lt;- accompanied_reads[,- c(7)]
-  # I remove duplicated rows
-    accompanied_reads &lt;- accompanied_reads[!duplicated(accompanied_reads[,c(&#39;id&#39;)]),]
-  
-  # Now, I want to take into account the total number of reads of each individual as well
-    clean_df &lt;- clean_df %&gt;% group_by(id) %&gt;% add_tally()
-    clean_df &lt;- clean_df[!duplicated(clean_df[,c(&#39;id&#39;)]),]
-    clean_df &lt;- merge(EB_variables, clean_df[c(\id\, \n\)], by = \id\, all = T)
-    clean_df[is.na(clean_df)] &lt;- 0
-    
-  # I add them to the data frame with the accompanied reads
-    accompanied_reads &lt;- merge(clean_df[c(\id\, \Pond\, \time_of_day\, \Treatment_seq\, \n\)], 
-                               accompanied_reads[c(\id\, \tot_acc_reads\)], by = \id\, all = T) 
-    names(accompanied_reads)[5] &lt;- \tot_reads\
-    accompanied_reads[is.na(accompanied_reads)] &lt;- 0
-    accompanied_reads$shoaling &lt;- accompanied_reads$tot_acc_reads/accompanied_reads$tot_reads
-    return(accompanied_reads)
-    
-  } # end of function
-</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
----
-
-### EB
-
-
-### 2.2 Antenna changes
-
-Next, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence of identical numbers. The output is, for the example above: 1, 2, 3. 
-
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuICBcbiMgSSBpbmRpY2F0ZSB0aGUgY3Jvc3Npbmcgc2VxdWVuY2VzIChhbnRlbm5hcyAxIC0+IDQgYW5kIDQgLT4gMSlcbiAgcDEuNCA9IGMoMSwgMiwgMywgNClcbiAgcDQuMSA9IGMoNCwgMywgMiwgMSlcblxuXG4gICMgSSBkZWZpbmUgbXkgb2JqZWN0c1xuICAgIGRmX2xpc3RfcmVkIDwtIGxpc3QoKVxuICAgIG5iX2luZCA8LSBsZW5ndGgoRUJfbGlzdF9kZl9pZCkgIyBudW1iZXIgb2YgaW5kaXZpZHVhbHMgdGhhdCBoYXZlIGJlZW4gcmVhZCBieSB0aGUgYW50ZW5uYXNcblxuICAgIFxuICAgIFxuICAjIEZvciBlYWNoIGluZGl2aWR1YWwsIEkgd2FudCB0byBvYnRhaW4gdGhlIHJlYWRzIGNvcnJlc3BvbmRpbmcgdG8gYW4gYW50ZW5uYSBjaGFuZ2UgYW5kIHRoZVxuICAjIGNvcnJlc3BvbmRpbmcgYW50ZW5uYSBudW1iZXIsIHRpbWUgYW5kIGZpc2ggaWQuXG4gICAgZm9yIChpIGluIDE6bmJfaW5kKSB7XG4gICAgICBFQl9saXN0X2RmX2lkW1tpXV0gPC0gRUJfbGlzdF9kZl9pZFtbaV1dW29yZGVyKGFzLlBPU0lYY3QoRUJfbGlzdF9kZl9pZFtbaV1dJHRpbWUpKSxdXG4gICAgICBcbiAgICAgIGNoYW5nZXMgICAgICAgICAgPC0gd2hpY2goRUJfbGlzdF9kZl9pZFtbaV1dJGFudGVubmEhPSBsYWcoRUJfbGlzdF9kZl9pZFtbaV1dJGFudGVubmEpKVxuICAgICAgYW50ZW5uYSAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kYW50ZW5uYVtjaGFuZ2VzXSlcbiAgICAgIHRpbWUgICAgICAgICAgICAgPC0gYyhFQl9saXN0X2RmX2lkW1tpXV0kdGltZVsxXSwgRUJfbGlzdF9kZl9pZFtbaV1dJHRpbWVbY2hhbmdlc10pXG4gICAgICBpZCAgICAgICAgICAgICAgIDwtIGMoRUJfbGlzdF9kZl9pZFtbaV1dJGlkWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kaWRbY2hhbmdlc10pXG4gICAgICBkZl9saXN0X3JlZFtbaV1dIDwtIGRhdGEuZnJhbWUoYW50ZW5uYSwgdGltZSwgaWQpXG4gICAgfVxuXG5cbiAgICBcbiAgICBcbiAgIyBJIGJpbmQgdGhlIHJvd3Mgb2YgdGhlIGxpc3QgKGkuZS4gbWFrZSBpdCBhIGRhdGEgZnJhbWUsIGFzIGl0IGluaXRpYWxseSB3YXMpXG4gICAgRUJfQ2hhbmdlcyA8LSBiaW5kX3Jvd3MoZGZfbGlzdF9yZWQpXG4gICAgRUJfQ2hhbmdlcyA8LSBhcy5kYXRhLmZyYW1lKEVCX0NoYW5nZXMpXG4gICAgRUJfQ2hhbmdlcyA8LSBtZXJnZShFQl92YXJpYWJsZXNbYyhcImlkXCIsIFwiUG9uZFwiLCBcIlRyZWF0bWVudF9zZXFcIiwgXCJ0aW1lX29mX2RheVwiKV0sIFxuICAgIEVCX0NoYW5nZXMsIGJ5ID0gXCJpZFwiKVxuICAgIEVCX0NoYW5nZXMgPC0gRUJfQ2hhbmdlc1tvcmRlcihhcy5QT1NJWGN0KEVCX0NoYW5nZXMkdGltZSkpLF1cbiAgICByb3duYW1lcyhFQl9DaGFuZ2VzKSA8LSBOVUxMXG4gICMgRUJfQ2hhbmdlcyBpcyBiYXNpY2FsbHkgdGhlIGluaXRpYWwgJ2RmJyBidXQgdGhlIHJlcGVhdGVkIHJlYWRzXG4gICMgaGF2ZSBiZWVuIGVsaW1pbmF0ZWQgb25seSB0byBrZWVwIHRoZSBmaXJzdCBvbmUuXG5cblxuICAgIFxuYGBgIn0= --&gt;
-
-```r
-  
-# I indicate the crossing sequences (antennas 1 -&gt; 4 and 4 -&gt; 1)
-  p1.4 = c(1, 2, 3, 4)
-  p4.1 = c(4, 3, 2, 1)
-
-
-  # I define my objects
-    df_list_red &lt;- list()
-    nb_ind &lt;- length(EB_list_df_id) # number of individuals that have been read by the antennas
-
-    
-    
-  # For each individual, I want to obtain the reads corresponding to an antenna change and the
+## 3. ANTENNA CHANGES
+  # I obtain the reads corresponding to an antenna change and the
   # corresponding antenna number, time and fish id.
-    for (i in 1:nb_ind) {
-      EB_list_df_id[[i]] &lt;- EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
-      
-      changes          &lt;- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
-      antenna          &lt;- c(EB_list_df_id[[i]]$antenna[1], EB_list_df_id[[i]]$antenna[changes])
-      time             &lt;- c(EB_list_df_id[[i]]$time[1], EB_list_df_id[[i]]$time[changes])
-      id               &lt;- c(EB_list_df_id[[i]]$id[1], EB_list_df_id[[i]]$id[changes])
-      df_list_red[[i]] &lt;- data.frame(antenna, time, id)
-    }
+  EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
+  
+  changes          &lt;- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
+  antenna          &lt;- c(EB_list_df_id[[i]]$antenna[1], EB_list_df_id[[i]]$antenna[changes])
+  time             &lt;- c(EB_list_df_id[[i]]$time[1], EB_list_df_id[[i]]$time[changes])
+  id               &lt;- c(EB_list_df_id[[i]]$id[1], EB_list_df_id[[i]]$id[changes])
+  EB_list_changes[[i]] &lt;- data.frame(antenna, time, id)
+  
+
+
+
+
+## 4. SPLIT THESE ANTENNA CHANGES DF WHEN THE FISH IS READ AT ANT 1 OR 4
+  # I mark all the row numbers at which the fish was read at antenna 1 or a 4
+  vec &lt;- which(EB_list_changes[[i]][,&quot;antenna&quot;] == 1 | EB_list_changes[[i]][,&quot;antenna&quot;] == 4)
+  
+  # I want to cut *after* reads at antenna 1 and 4
+  vec &lt;- vec  +1
+  
+  # I split my data frame every time the individual passes by ant 1 or 4
+  list &lt;- split(EB_list_changes[[i]], cumsum(1:nrow(EB_list_changes[[i]]) %in% vec))
+
+  
+  
+  
+  
+## 5. INDEX 2 - FIRST TIME TO FULLY CROSS THE BOX
+  # I select the sequences for which the individual is read at antennas 2 *and* 3
+  cond1 &lt;- lapply(list, function(x) nrow(x) &gt;= 3)
+
+  # I apply this condition to keep the crossing sequences
+  list1 &lt;- list[unlist(cond1)]
+
+  # If there is such a sequence corresponding to a full crossing
+  if (length(list1) != 0){
+
+  # Then I subset the first after being read at 1 or 3 (necessarily at antenna 2 or 3)
+  index2[[i]] &lt;- subset(list1[[1]], time == list1[[1]]$time[1])
+
+  # Eventually, this list contains, for each individual that fully crossed the box,
+  # its first read at antenna 2 or 3 after entering the box for a full cross.
+
+  } # end of if
+
+  
+  
+  
+  
+
+## 6. INDEX 3 - DURATION SPENT IN THE BOX
+  # I select the sequences for which the individual is read at least once at antenna 2 or 3
+  cond2 &lt;- lapply(list, function(x) nrow(x) &gt;= 2)
+  
+  # I keep the sequences corresponding to this condition
+  list2 &lt;- list[unlist(cond2)]
+
+  # If the individual entered the box at least once
+  if (length(list2) != 0){
+
+  # For each sequence
+  for(x in 1:length(list2)){
+    
+  # I set my initial value of a as 0
+  duration &lt;- 0
+  
+  # And sum all the time spent inside the box
+  duration &lt;- duration + difftime(list2[[x]][nrow(list2[[x]]), ]$time, list2[[x]][1,]$time, units=&#39;m&#39;)
+
+  # I keep this duration and indicate the name of the corresponding individual
+  index3[[i]] &lt;- data.frame(id = list2[[1]]$id[1], duration)
+
+  } # end of index 3 sequences for loop
+  } # end of if
+
+} # end of main for loop (going through individuals)
+
+
+# I bind the rows of my list.
+index1 &lt;- bind_rows(index1)
+index1 &lt;- na.omit(index1)
+names(index1)[2] &lt;- &quot;time_entering&quot;
+
+
+index2 &lt;- bind_rows(index2)
+names(index2)[2] &lt;- &quot;time_first_cross&quot;
+
+
+
+index3 &lt;- bind_rows(index3)
+index3$duration &lt;- as.numeric(index3$duration)
+
+indices &lt;- merge(index1[c(&quot;id&quot;, &quot;time_entering&quot;)], index2[c(&quot;id&quot;, &quot;time_first_cross&quot;)], by = &quot;id&quot;, all = T)
+indices &lt;- merge(indices, index3, by =&quot;id&quot;, all = T)
+indices &lt;- merge(indices, EB_variables, by = &quot;id&quot;, all = T)
 
     
-    
-  # I bind the rows of the list (i.e. make it a data frame, as it initially was)
-    EB_Changes &lt;- bind_rows(df_list_red)
-    EB_Changes &lt;- as.data.frame(EB_Changes)
-    EB_Changes &lt;- merge(EB_variables[c(&quot;id&quot;, &quot;Pond&quot;, &quot;Treatment_seq&quot;, &quot;time_of_day&quot;)], 
-    EB_Changes, by = &quot;id&quot;)
-    EB_Changes &lt;- EB_Changes[order(as.POSIXct(EB_Changes$time)),]
-    rownames(EB_Changes) &lt;- NULL
-  # EB_Changes is basically the initial &#39;df&#39; but the repeated reads
-  # have been eliminated only to keep the first one.
+  indices_morning &lt;- subset(indices, time_of_day == &quot;Morning&quot;) %&gt;%
+    mutate(latency_enter = as.numeric(difftime(time_entering, start_morning, units=&#39;m&#39;)),
+           latency_cross = as.numeric(difftime(time_first_cross, start_morning, units=&#39;m&#39;))
+           )
 
-    </code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="first.cross-function" class="section level4">
-<h4>2.3.1 <em>first.cross</em> Function</h4>
-<p>Once I have the antenna changes, I can start to look at which sequence of changes I am specifically interested in. To do so, I build a function which has, as:</p>
-<ul>
-<li>Input = A data frame containing the antenna change reads for one individual</li>
-<li>Output = The first full cross of the exploration box, or an empty data frame if the individual hasn’t fully crossed the box.</li>
-</ul>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5maXJzdC5jcm9zcyA8LSBmdW5jdGlvbihkZil7XG4gIFxuICAjIEkgaWRlbnRpZnkgYWxsIHRoZSByb3cgbnVtYmVycyBhdCB3aGljaCB0aGUgaW5kaXZpZHVhbCBzdGFydGVkIHRoZSBzZXF1ZW50aWFsXG4gICMgY3Jvc3NpbmcgYmV0d2VlbiBhbnRlbm5hIDEgYW5kIGFudGVubmEgNFxuICByb3dzdGFydHNfMTIzNCAgPC0gdW5saXN0KGdyZWdleHByKFwiMTIzNFwiLCBwYXN0ZShkZiRhbnRlbm5hLCBjb2xsYXBzZT1cIlwiKSkpXG4gIFxuICBcbiAgXG4gICMgSWYgdGhlIGluZGl2aWR1YWwgaGFzIGNyb3NzZWQgdGhlIGJveCBmcm9tIGFudGVubmEgMSB0byBhbnRlbm5hIDQuXG4gIGlmIChyb3dzdGFydHNfMTIzNFsxXSAhPSAtMSl7XG4gIFxuICAjIFRoZW4sIEkgc3Vic2V0IHRoZSBmaXJzdCBmdWxsIGJveCBjcm9zcyAoMSwyLDMsNClcbiAgICBmaXJzdF9jcm9zc18xMjM0IDwtIGRmW3NvcnQoYyhvdXRlcihyb3dzdGFydHNfMTIzNFsxXSwgKDA6MyksIFwiK1wiKSkpLCBdXG4gICMgSSBtYWtlIGl0IGEgaG9yaXpvbnRhbCB0YWJsZSAgXG4gICAgZmlyc3RfY3Jvc3NfMTIzNCA8LSBmaXJzdF9jcm9zc18xMjM0ICU+JSBzcHJlYWQoYW50ZW5uYSx0aW1lKVxuICAgIGZpcnN0X2Nyb3NzXzEyMzQgPC0gYXMuZGF0YS5mcmFtZShmaXJzdF9jcm9zc18xMjM0KVxuICAgIG5hbWVzKGZpcnN0X2Nyb3NzXzEyMzQpIDwtIGMoXCJpZFwiLCBcInRpbWVfb2ZfZGF5XCIsIFwiUG9uZFwiLCBcIlRyZWF0bWVudF9zZXFcIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcIkFudDFcIiwgXCJBbnQyXCIsIFwiQW50M1wiLCBcIkFudDRcIilcbiAgICB9XG4gIFxuICBcbiAgXG4gICMgT24gdGhlIG90aGVyIGhhbmQsIGlmIHRoZSBpbmRpdmlkdWFsIGhhc24ndCBjcm9zc2VkIHRoZSBib3ggZnJvbSBhbnRlbm5hIDEgdG8gYW50ZW5uYSA0LlxuICBpZiAocm93c3RhcnRzXzEyMzRbMV0gPT0gLTEpe1xuICAjIFRoZW4gSSBqdXN0IG9idGFpbiBhbiBlbXB0eSB0aWJibGUuICBcbiAgICBmaXJzdF9jcm9zc18xMjM0IDwtIHRpYmJsZSggKX1cbiBcbiAgXG4gIFxuICAjIFNhbWUgYXMgYWJvdmUgYnV0IGJldHdlZW4gYW50ZW5uYSA0IGFuZCBhbnRlbm5hIDEuIFxuICAgIHJvd3N0YXJ0c180MzIxICA8LSB1bmxpc3QoZ3JlZ2V4cHIoXCI0MzIxXCIsIHBhc3RlKGRmJGFudGVubmEsIGNvbGxhcHNlPVwiXCIpKSlcbiAgaWYgKHJvd3N0YXJ0c180MzIxWzFdICE9IC0xKXtcbiAgZmlyc3RfY3Jvc3NfNDMyMSA8LSBkZltzb3J0KGMob3V0ZXIocm93c3RhcnRzXzQzMjFbMV0sICgwOjMpLCBcIitcIikpKSwgXVxuICBmaXJzdF9jcm9zc180MzIxIDwtIGZpcnN0X2Nyb3NzXzQzMjEgJT4lIHNwcmVhZChhbnRlbm5hLHRpbWUpXG4gIGZpcnN0X2Nyb3NzXzQzMjEgPC0gYXMuZGF0YS5mcmFtZShmaXJzdF9jcm9zc180MzIxKVxuICBcbiAgXG4gIG5hbWVzKGZpcnN0X2Nyb3NzXzQzMjEpIDwtIGMoXCJpZFwiLCBcInRpbWVfb2ZfZGF5XCIsIFwiUG9uZFwiLCBcIlRyZWF0bWVudF9zZXFcIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXCJBbnQxXCIsIFwiQW50MlwiLCBcIkFudDNcIiwgXCJBbnQ0XCIpfVxuICBpZiAocm93c3RhcnRzXzQzMjFbMV0gPT0gLTEpe2ZpcnN0X2Nyb3NzXzQzMjEgPC0gXG4gICAgdGliYmxlKCApfVxuICBcbiAgICBcbiAgIyBJIHJiaW5kIG15IHR3byB0aWJibGVzLlxuICBmaXJzdF9jcm9zcyA8LSByYmluZChmaXJzdF9jcm9zc18xMjM0LCBmaXJzdF9jcm9zc180MzIxKVxuICAjIEluIHN1bW1hcnksIEkgZWl0aGVyIG9idGFpbjpcbiAgIyAoaSkgQSB0d28tcm93cyBkYXRhIGZyYW1lIGNvbnRhaW5pbmcgdGhlIGZpcnN0IGNyb3NzIG9mIHRoZSBmb2NhbCBpbmQgXG4gICMgZm9yIHRoZSB0d28gc2VxdWVuY2VzLlxuICAjIChpaSkgQSBvbmUtcm93IGRhdGEgZnJhbWUgY29udGFpbmluZyB0aGUgZmlyc3QgY3Jvc3Mgb2YgdGhlIGZvY2FsIGluZFxuICAjIGlmIGl0IG9ubHkgY3Jvc3NlZCB0aGUgYm94IGluIG9uZSBkaXJlY3Rpb24uXG4gICMgKGlpaSkgQW4gZW1wdHkgZGF0YSBmcmFtZSBpZiB0aGUgaW5kaXZpZHVhbCBuZXZlciBjcm9zc2VkIHRoZSBib3guXG4gICBcbiAgXG4gIFxuICAjIElmIHRoZSBpbmRpdmlkdWFsIGRpZCBhdCBsZWFzdCBvbmUgZnVsbCBjcm9zcy4uLlxuICBpZihkaW0oZmlyc3RfY3Jvc3MpWzFdICE9IDApe1xuICAjIFRoZW4sIEkgc3Vic2V0IGl0cyBmaXJzdCBmdWxsIGNyb3NzLlxuICAgIGZpcnN0X2Nyb3NzIDwtIGZpcnN0X2Nyb3NzW29yZGVyKGZpcnN0X2Nyb3NzJEFudDIpLF1cbiAgICBmaXJzdF9jcm9zcyA8LSBmaXJzdF9jcm9zc1sxLF19XG4gIFxuICBcbiAgIyBPbiB0aGUgb3RoZXIgaGFuZCwgaWYgdGhlIGluZGl2aWR1YWwgaGFzbid0IGZ1bGx5IGNyb3NzZWQgdGhlIGJveC4uLlxuICBpZihkaW0oZmlyc3RfY3Jvc3MpWzFdID09IDApe1xuICAjIFRoZW4sIEkganVzdCBvYnRhaW4gYSBkYXRhIGZyYW1lIHdpdGggTkFzLlxuICAgICAgZmlyc3RfY3Jvc3MgPC0gZGF0YS5mcmFtZShpZCA9IGRmJGlkWzFdLCBBbnQxID0gTkEsXG4gICAgICAgICAgICAgICAgICAgQW50MiA9IE5BLCBBbnQzID0gTkEsIEFudDQgPSBOQSl9XG4gIFxuICAgIFxuICByZXR1cm4oZmlyc3RfY3Jvc3MpfSAjIGVuZCBvZiB0aGUgZnVuY3Rpb25cblxuXG5gYGAifQ== -->
-<pre class="r"><code>
-first.cross &lt;- function(df){
-  
-  # I identify all the row numbers at which the individual started the sequential
-  # crossing between antenna 1 and antenna 4
-  rowstarts_1234  &lt;- unlist(gregexpr(&quot;1234&quot;, paste(df$antenna, collapse=&quot;&quot;)))
-  
-  
-  
-  # If the individual has crossed the box from antenna 1 to antenna 4.
-  if (rowstarts_1234[1] != -1){
-  
-  # Then, I subset the first full box cross (1,2,3,4)
-    first_cross_1234 &lt;- df[sort(c(outer(rowstarts_1234[1], (0:3), &quot;+&quot;))), ]
-  # I make it a horizontal table  
-    first_cross_1234 &lt;- first_cross_1234 %&gt;% spread(antenna,time)
-    first_cross_1234 &lt;- as.data.frame(first_cross_1234)
-    names(first_cross_1234) &lt;- c(&quot;id&quot;, &quot;time_of_day&quot;, &quot;Pond&quot;, &quot;Treatment_seq&quot;, 
-                                 &quot;Ant1&quot;, &quot;Ant2&quot;, &quot;Ant3&quot;, &quot;Ant4&quot;)
-    }
-  
-  
-  
-  # On the other hand, if the individual hasn&#39;t crossed the box from antenna 1 to antenna 4.
-  if (rowstarts_1234[1] == -1){
-  # Then I just obtain an empty tibble.  
-    first_cross_1234 &lt;- tibble( )}
- 
-  
-  
-  # Same as above but between antenna 4 and antenna 1. 
-    rowstarts_4321  &lt;- unlist(gregexpr(&quot;4321&quot;, paste(df$antenna, collapse=&quot;&quot;)))
-  if (rowstarts_4321[1] != -1){
-  first_cross_4321 &lt;- df[sort(c(outer(rowstarts_4321[1], (0:3), &quot;+&quot;))), ]
-  first_cross_4321 &lt;- first_cross_4321 %&gt;% spread(antenna,time)
-  first_cross_4321 &lt;- as.data.frame(first_cross_4321)
-  
-  
-  names(first_cross_4321) &lt;- c(&quot;id&quot;, &quot;time_of_day&quot;, &quot;Pond&quot;, &quot;Treatment_seq&quot;, 
-                               &quot;Ant1&quot;, &quot;Ant2&quot;, &quot;Ant3&quot;, &quot;Ant4&quot;)}
-  if (rowstarts_4321[1] == -1){first_cross_4321 &lt;- 
-    tibble( )}
-  
-    
-  # I rbind my two tibbles.
-  first_cross &lt;- rbind(first_cross_1234, first_cross_4321)
-  # In summary, I either obtain:
-  # (i) A two-rows data frame containing the first cross of the focal ind 
-  # for the two sequences.
-  # (ii) A one-row data frame containing the first cross of the focal ind
-  # if it only crossed the box in one direction.
-  # (iii) An empty data frame if the individual never crossed the box.
-   
-  
-  
-  # If the individual did at least one full cross...
-  if(dim(first_cross)[1] != 0){
-  # Then, I subset its first full cross.
-    first_cross &lt;- first_cross[order(first_cross$Ant2),]
-    first_cross &lt;- first_cross[1,]}
-  
-  
-  # On the other hand, if the individual hasn&#39;t fully crossed the box...
-  if(dim(first_cross)[1] == 0){
-  # Then, I just obtain a data frame with NAs.
-      first_cross &lt;- data.frame(id = df$id[1], Ant1 = NA,
-                   Ant2 = NA, Ant3 = NA, Ant4 = NA)}
-  
-    
-  return(first_cross)} # end of the function
+  indices_afternoon &lt;- subset(indices, time_of_day == &quot;Afternoon&quot;) %&gt;%
+    mutate(latency_enter = as.numeric(difftime(time_entering, start_afternoon, units=&#39;m&#39;)),
+           latency_cross = as.numeric(difftime(time_first_cross, start_afternoon, units=&#39;m&#39;))
+           )
+
+  indices &lt;- rbind(indices_morning, indices_afternoon)
+
+  indices &lt;- indices %&gt;%
+    mutate(latency_enter = if_else(is.na(latency_enter), 150, latency_enter),
+           latency_cross = if_else(is.na(latency_cross), 150, latency_cross),
+           duration = if_else(is.na(duration), 0, duration))
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="latency-to-cross-the-box" class="section level3">
-<h3>2.3 Latency to cross the box</h3>
-<p>Next, I can apply the function above to all individuals. I also add a column containing the latency to fully explore the box.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jIEkgc3BsaXQgbXkgZGF0YSBmcmFtZSBwZXIgaW5kaXZpZHVhbFxuICBFQl9jaGFuZ2VzX2xpc3QgPC0gc3BsaXQoRUJfQ2hhbmdlcywgZiA9IEVCX0NoYW5nZXMkaWQpXG5cblxuIyBJIGRlZmluZSBhIGxpc3RcbiAgZmlyc3RfY3Jvc3NlcyA8LSBsaXN0KClcblxuICBcbiMgRm9yIGVhY2ggaW5kaXZpZHVhbC4uLlxuICBmb3IoaSBpbiAxOmxlbmd0aChFQl9jaGFuZ2VzX2xpc3QpKXtcbiAgICAjIEkgd2FudCB0byBvYnRhaW4gdGhlIGZpcnN0IGZ1bGwgY3Jvc3Mgb2YgdGhlIGJveCwgdXNpbmcgdGhlIGZ1bmN0aW9uIGRlZmluZWQgYWJvdmUuXG4gICAgZmlyc3RfY3Jvc3Nlc1tbaV1dIDwtIGZpcnN0LmNyb3NzKEVCX2NoYW5nZXNfbGlzdFtbaV1dKVxuICB9XG4gIFxuICBcbiMgSSBiaW5kIHRoZSBkYXRhIGZyYW1lcyBvZiBteSBsaXN0IHRvZ2V0aGVyIHRvIG9idGFpbiBhIHNpbmdsZSBkYXRhIGZyYW1lIGNvbnRhaW5pbmdcbiMgVGhlIGZpcnN0IGNyb3NzIG9mIGFsbCBpbmRpdmlkdWFscyB0aGF0IGNyb3NzZWQgdGhlIGJveC5cbiAgRUJfTGF0IDwtIGJpbmRfcm93cyhmaXJzdF9jcm9zc2VzKVxuXG5cbiAgXG4jIEkgYWRkIGEgbmV3IGNvbHVtbiB3aXRoIHRoZSB0aW1lIHRvIGNyb3NzIHRoZSBib3ggc2luY2UgdGhlIHN0YXJ0IG9mIHRoZSB0ZXN0XG4jIEZvciB0aGUgbW9ybmluZ1xuICBFQl9MYXRfbW9ybmluZyA8LSBtdXRhdGUoc3Vic2V0KEVCX0xhdCwgdGltZV9vZl9kYXkgPT0gXCJNb3JuaW5nXCIpLCBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgIHRpbWVfc2luY2Vfc3RhcnQgPSBkaWZmdGltZShBbnQyLCBzdGFydF9tb3JuaW5nLCB1bml0cz0nbScpKVxuIyBGb3IgdGhlIGFmdGVybm9vblxuICBFQl9MYXRfYWZ0ZXJub29uIDwtIG11dGF0ZShzdWJzZXQoRUJfTGF0LCB0aW1lX29mX2RheSA9PSBcIkFmdGVybm9vblwiKSwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRpbWVfc2luY2Vfc3RhcnQgPSBkaWZmdGltZShBbnQyLCBzdGFydF9hZnRlcm5vb24sIHVuaXRzPSdtJykpXG5cbiAgXG4jIEkgYmluZCB0aGUgdHdvLCBhbmQgdHJhbnNmb3JtIG15IGNvbHVtbiAoaW4gbWludXRlcykgYXMgbnVtZXJpY2FsXG4gIEVCX0xhdCA8LSByYmluZChFQl9MYXRfbW9ybmluZywgRUJfTGF0X2FmdGVybm9vbilcbiAgRUJfTGF0JHRpbWVfc2luY2Vfc3RhcnQgPC0gYXMubnVtZXJpYyhFQl9MYXQkdGltZV9zaW5jZV9zdGFydClcblxuXG5cbmBgYCJ9 -->
-<pre class="r"><code>
-# I split my data frame per individual
-  EB_changes_list &lt;- split(EB_Changes, f = EB_Changes$id)
 
-
-# I define a list
-  first_crosses &lt;- list()
-
-  
-# For each individual...
-  for(i in 1:length(EB_changes_list)){
-    # I want to obtain the first full cross of the box, using the function defined above.
-    first_crosses[[i]] &lt;- first.cross(EB_changes_list[[i]])
-  }
-  
-  
-# I bind the data frames of my list together to obtain a single data frame containing
-# The first cross of all individuals that crossed the box.
-  EB_Lat &lt;- bind_rows(first_crosses)
-
-
-  
-# I add a new column with the time to cross the box since the start of the test
-# For the morning
-  EB_Lat_morning &lt;- mutate(subset(EB_Lat, time_of_day == &quot;Morning&quot;), 
-                           time_since_start = difftime(Ant2, start_morning, units=&#39;m&#39;))
-# For the afternoon
-  EB_Lat_afternoon &lt;- mutate(subset(EB_Lat, time_of_day == &quot;Afternoon&quot;), 
-                             time_since_start = difftime(Ant2, start_afternoon, units=&#39;m&#39;))
-
-  
-# I bind the two, and transform my column (in minutes) as numerical
-  EB_Lat &lt;- rbind(EB_Lat_morning, EB_Lat_afternoon)
-  EB_Lat$time_since_start &lt;- as.numeric(EB_Lat$time_since_start)
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="finalise.eb-function" class="section level4">
-<h4>2.3.2 <em>finalise.EB</em> Function</h4>
-<p>I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a nice data frame for plotting. In this function, I add the individuals variables (<em>i.e.</em> pond, Time of the day, treatment sequence, hereafter <em>variables</em>). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5cbmZpbmFsaXNlLkVCIDwtIGZ1bmN0aW9uKEVCX0xhdCwgRUJfdmFyaWFibGVzKSB7XG4jIEkgYWRkIHRoZSBlbnZpcm9ubWVudGFsIHZhcmlhYmxlc1xuICBFQl9MYXRfZmluYWwgPC0gbWVyZ2UoRUJfTGF0W2MoXCJpZFwiLCBcInRpbWVfc2luY2Vfc3RhcnRcIildLCBcbiAgICAgICAgICAgICAgICAgICAgICAgIEVCX3ZhcmlhYmxlc1tjKCdpZCcsIFwidGltZV9vZl9kYXlcIiwgXCJQb25kXCIsIFwiVHJlYXRtZW50X3NlcVwiKV0sIFxuICAgICAgICAgICAgICAgICAgICAgICAgYnkgPSAnaWQnLCBhbGwgPSBUKVxuXG4gIFxuICBcbiMgSSBhc3NpZ24gdGhlIG1heGltYWwgdmFsdWVzIHRvIGFsbCB0aGUgZmlzaCB0aGF0IG5ldmVyIGNyb3NzZWQgdGhlIGJveC5cbiAgRUJfTGF0X2ZpbmFsJHRpbWVfc2luY2Vfc3RhcnRbaXMubmEoRUJfTGF0X2ZpbmFsJHRpbWVfc2luY2Vfc3RhcnQpXSA8LSAxNTBcblxuICBcbiAgXG4jIEkgY3JlYXRlIGFuIGV4cGxvcmF0aW9uIGluZGV4LCBmb3Igd2hpY2ggYSBsb3cgdmFsdWUgbWVhbnMgdGhhdCBpbmRpdmlkdWFscyBuZXZlciBcbiMgZXhwbG9yZWQgdGhlIGJveCwgYW5kIGEgaGlnaCB2YWx1ZSBtZWFucyB0aGF0IGluZGl2aWR1YWxzIGV4cGxvcmVkIGl0IGVhcmx5LlxuICBFQl9MYXRfZmluYWwkRXhwbF9pbmRleCA8LSAgYWJzKGMoRUJfTGF0X2ZpbmFsJHRpbWVfc2luY2Vfc3RhcnQgLSAxNTApKVxuXG4gIFxuICBcbiMgSSBvbmx5IGtlZXAgdGhlIHZhcmlhYmxlcyBvZiBpbnRlcmVzdCBmb3IgcGxvdHRpbmcuXG4gIEVCX0xhdF9maW5hbCA8LSBFQl9MYXRfZmluYWxbYyhcImlkXCIsIFwiUG9uZFwiLCBcIlRyZWF0bWVudF9zZXFcIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcInRpbWVfc2luY2Vfc3RhcnRcIiwgXCJ0aW1lX29mX2RheVwiLCBcIkV4cGxfaW5kZXhcIildXG4gIFxuICByZXR1cm4oRUJfTGF0X2ZpbmFsKX1cblxuXG5gYGAifQ== -->
-<pre class="r"><code>
-
-finalise.EB &lt;- function(EB_Lat, EB_variables) {
-# I add the environmental variables
-  EB_Lat_final &lt;- merge(EB_Lat[c(&quot;id&quot;, &quot;time_since_start&quot;)], 
-                        EB_variables[c(&#39;id&#39;, &quot;time_of_day&quot;, &quot;Pond&quot;, &quot;Treatment_seq&quot;)], 
-                        by = &#39;id&#39;, all = T)
-
-  
-  
-# I assign the maximal values to all the fish that never crossed the box.
-  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] &lt;- 150
-
-  
-  
-# I create an exploration index, for which a low value means that individuals never 
-# explored the box, and a high value means that individuals explored it early.
-  EB_Lat_final$Expl_index &lt;-  abs(c(EB_Lat_final$time_since_start - 150))
-
-  
-  
-# I only keep the variables of interest for plotting.
-  EB_Lat_final &lt;- EB_Lat_final[c(&quot;id&quot;, &quot;Pond&quot;, &quot;Treatment_seq&quot;, 
-                                 &quot;time_since_start&quot;, &quot;time_of_day&quot;, &quot;Expl_index&quot;)]
-  
-  return(EB_Lat_final)}
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>I use the <em>finalise.EB</em> function to clean up the output and to obtain a plottable data frame.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBJIHJ1biB0aGUgZmluYWxpc2UuRUIgZnVuY3Rpb24gZGVmaW5lZCBhYm92ZSB0byBjbGVhbiBteSBvdXRwdXRcbiAgRUJfb3V0cHV0IDwtIGZpbmFsaXNlLkVCKEVCX0xhdCwgRUJfdmFyaWFibGVzKVxuXG4jIEkgY2xlYW4gbXkgZW52aXJvbm1lbnRcbiAgcm0oRUJfQ2hhbmdlcywgRUJfTGF0LCAgXG4gIEVCX0xhdF9tb3JuaW5nLCBFQl9MYXRfYWZ0ZXJub29uLCBcbiAgZmlyc3RfY3Jvc3NlcywgRUJfY2hhbmdlc19saXN0LCBcbiAgZGZfbGlzdF9yZWQsIEVCX2xpc3RfZGZfaWQpXG5cbmBgYCJ9 -->
-<pre class="r"><code># I run the finalise.EB function defined above to clean my output
-  EB_output &lt;- finalise.EB(EB_Lat, EB_variables)
-
-# I clean my environment
-  rm(EB_Changes, EB_Lat,  
-  EB_Lat_morning, EB_Lat_afternoon, 
-  first_crosses, EB_changes_list, 
-  df_list_red, EB_list_df_id)
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-</div>
-</div>
-
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIk5vdGVib29rIHRyYXNoIGJpbiINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCk5leHQsIEkgd2FudCB0byBvYnRhaW4gdGhlIGxhdGVuY3kgYmV0d2VlbiB0aGUgdGltZSB0aGUgYm94IHdhcyBpbnRyb2R1Y2VkIGludG8gdGhlIHBvbmQgYW5kIHRoZSBtb21lbnQgZWFjaCBpbmRpdmlkdWFsIGZ1bGx5IGV4cGxvcmVkIGl0LiBJIGNyZWF0ZSB0aGUgKmxhdC5leHBsKiBmdW5jdGlvbiwgd2hpY2ggaGFzLCBhcyBhbjoNCg0KLSBJbm91dDogVGhlIHJlYWRzIGNvcnJlc3BvbmRpbmcgdG8gYW50ZW5uYSBjaGFuZ2VzIGZvciBhbGwgaW5kaXZpZHVhbHMgKGRhdGEgZnJhbWUpLiBEZXRhaWxzIGluIHRoZSBjaHVuayBqdXN0IGFib3ZlLg0KLSBPdXRwdXQ6IFRoZSBmaXJzdCBib3ggY3Jvc3MgZm9yIGFsbCBpbmRpdmlkdWFscyAoZGF0YSBmcmFtZSkuIEEgY29sdW1uIGlzIGFsc28gY29tcHV0aW5nIGhvdyBsb25nIHNpbmNlIHRoZSBib3ggaGFzIGJlZW4gaW50cm9kdWNlZCB0aGUgaW5kaXZpZHVhbHMgaGF2ZSB0YWtlbiB0byBlbnRlciB0aGUgYm94Lg0KICAgIA0KICAgIA0KYGBge3IsIG1lc3NhZ2UgPSBGQUxTRX0NCiAgICANCiAgICANCiMgMS4gSSBjcmVhdGUgdGhlICdsYXQuZXhwbCcgZnVuY3Rpb24gZm9yICdMYXRlbmN5IHRvIGV4cGxvcmUnLg0KICAgICMgRnJvbSB0aGUgY2xlYW5lZCBkYXRhIGZyYW1lLCBpdCBvdXRwdXRzIGFsbCB0aGUgaW5kaXZpZHVhbCBmdWxsIGNyb3NzaW5ncy4NCiAgICBsYXQuZXhwbCA8LSBmdW5jdGlvbihkZiwgcGF0dGVybjEsIHBhdHRlcm4yLCBpbml0aWFsX3RpbWUpew0KICAgIA0KICAgICAgDQogICAgICANCiAgIyMgMi4gSURFTlRJRlkgV0hFTiBJTkRJVklEVUFMUyBDUk9TUyBUSEUgQk9YIEVOVElSRUxZDQogICMgSSBzdG9sZSB0aGUgbmV4dCBwaWVjZSBvZiBjb2RlIGZyb20gc29tZW9uZSB3YXkgc21hcnRlciB0aGFuIG1lIChSIFN0YWNrIE92ZXJmbG93IDQxMTMwOTEyKS4NCiAgIyBGaXJzdCwgSSBrZWVwIHJlYWRzIHdoZW4gaW5kaXZpZHVhbHMgZ28gdGhyb3VnaCB0aGUgYm94IHRoZSBmb2xsb3dpbmcgd2F5OiAxIC0+IDIgLT4gMyAtPiA0DQogICAgbGVuX3BhdHRlcm4gPSA0DQogICAgZGZfYWJjZCA8LSBkZiAlPiUgYXJyYW5nZShpZCwgdGltZSkgJT4lIGdyb3VwX2J5KGlkKSAlPiUNCiAgICAjIGNoZWNrIG11bHRpcGxlIGxhZ3MgY29uZGl0aW9uDQogICAgbXV0YXRlKGFiID0gUmVkdWNlKCImIiwgTWFwKCI9PSIsIHNoaWZ0KGFudGVubmEsIG4gPSAwOihsZW5fcGF0dGVybiAtIDEpLCB0eXBlID0gImxlYWQiKSwgcGF0dGVybjEpKSwNCiAgICBnID0gY3Vtc3VtKGFiKSkgJT4lDQogICAgIyB1c2UgcmVkdWNlIG9yIHRvIHN1YnNldCBzZXF1ZW5jZSByb3dzIGhhdmluZyB0aGUgc2FtZSBsZW5ndGggYXMgdGhlIHBhdHRlcm4NCiAgICBmaWx0ZXIoUmVkdWNlKCJ8Iiwgc2hpZnQoYWIsIG4gPSAwOihsZW5fcGF0dGVybiAtIDEpLCB0eXBlID0gImxhZyIpKSkgJT4lDQogICAgIyBtYWtlIHVuaXF1ZSBuYW1lcw0KICAgIGdyb3VwX2J5KGcsIGFkZCA9IFRSVUUpICU+JSBtdXRhdGUoYW50ZW5uYSA9IHBhc3RlKGFudGVubmEsIDE6bigpLCBzZXAgPSAiXyIpKSAlPiUNCiAgICAjIHBpdm90aW5nIHRoZSB0YWJsZSB0byB3aWRlIGZvcm1hdA0KICAgIHNlbGVjdCgtYWIpICU+JSBzcHJlYWQoYW50ZW5uYSwgdGltZSkNCg0KDQoNCiAgIyBTZWNvbmQsIEkga2VlcCByZWFkcyB3aGVuIGluZGl2aWR1YWxzIGdvIHRocm91Z2ggdGhlIGJveCB0aGUgb3RoZXIgd2F5IGFyb3VuZDogNCAtPiAzIC0+IDIgLT4gMQ0KICAgIGRmX2RjYmEgPC0gZGYgJT4lIGFycmFuZ2UoaWQsIHRpbWUpICU+JSBncm91cF9ieShpZCkgJT4lDQogICAgIyBjaGVjayBtdWx0aXBsZSBsYWdzIGNvbmRpdGlvbg0KICAgIG11dGF0ZShhYiA9IFJlZHVjZSgiJiIsIE1hcCgiPT0iLCBzaGlmdChhbnRlbm5hLCBuID0gMDoobGVuX3BhdHRlcm4gLSAxKSwgdHlwZSA9ICJsZWFkIiksIHBhdHRlcm4yKSksDQogICAgZyA9IGN1bXN1bShhYikpICU+JQ0KICAgICMgdXNlIHJlZHVjZSB0byBzdWJzZXQgc2VxdWVuY2Ugcm93cyBoYXZpbmcgdGhlIHNhbWUgbGVuZ3RoIGFzIHRoZSBwYXR0ZXJuDQogICAgZmlsdGVyKFJlZHVjZSgifCIsIHNoaWZ0KGFiLCBuID0gMDoobGVuX3BhdHRlcm4gLSAxKSwgdHlwZSA9ICJsYWciKSkpICU+JQ0KICAgICMgbWFrZSB1bmlxdWUgbmFtZXMNCiAgICBncm91cF9ieShnLCBhZGQgPSBUUlVFKSAlPiUgbXV0YXRlKGFudGVubmEgPSBwYXN0ZShhbnRlbm5hLCAxOm4oKSwgc2VwID0gIl8iKSkgJT4lDQogICAgIyBwaXZvdGluZyB0aGUgdGFibGUgdG8gd2lkZSBmb3JtYXQNCiAgICBzZWxlY3QoLWFiKSAlPiUgc3ByZWFkKGFudGVubmEsIHRpbWUpDQoNCg0KICAgIA0KICAgIA0KICAjIEkgcmVuYW1lIHRoZSBjb2x1bW5zIG9mIHRoZSB0d28gZGF0YWZyYW1lcyBJIGNyZWF0ZWQNCiAgbmFtZXMoZGZfYWJjZCkgPC0gYygiaWQiLCAidGltZV9vZl9kYXkiLCAiUG9uZCIsICJUcmVhdG1lbnRfc2VxIiwgImciLCANCiAgICAgICAgICAgICAgICAgICAgICAiQW50MSIsICJBbnQyIiwgIkFudDMiLCAiQW50NCIpDQogIG5hbWVzKGRmX2RjYmEpIDwtIGMoImlkIiwgInRpbWVfb2ZfZGF5IiwgIlBvbmQiLCAiVHJlYXRtZW50X3NlcSIsICJnIiwgDQogICAgICAgICAgICAgICAgICAgICAgIkFudDEiLCAiQW50MiIsICJBbnQzIiwgIkFudDQiKQ0KDQogIA0KICAjIEkgb2J0YWluIGEgZGF0YWZyYW1lIGluIHdoaWNoIGVhY2ggcm93IHJlcHJlc2VudHMgb25lIGluZGl2aWR1YWwgZnVsbCBjcm9zc2luZw0KICBkZjMgPC0gcmJpbmQoZGZfYWJjZCwgZGZfZGNiYSkNCg0KICANCiAgIyBJIGtlZXAgaW5kaXZpZHVhbHMgd2l0aCB0aGUgc21hbGxlc3QgJ2Fycml2YWwnIChpLmUuIEFudDIpIHZhbHVlLg0KICBkZjMgPC0gZGYzICU+JQ0KICAgIGdyb3VwX2J5KGlkKSAlPiUNCiAgICBzbGljZSh3aGljaC5taW4oQW50MikpDQoNCg0KICAjIyAzLiBDQUxDVUxBVEUgTEFURU5DWSBUSU1FDQogICMgSSBhZGQgYSBuZXcgY29sdW1uIHdpdGggdGhlIHRpbWUgdG8gY3Jvc3MgdGhlIGJveCBzaW5jZSB0aGUgc3RhcnQgb2YgdGhlIHRlc3QNCiAgZGYzIDwtIG11dGF0ZShkZjMsIHRpbWVfc2luY2Vfc3RhcnQgPSBkaWZmdGltZShBbnQyLCBpbml0aWFsX3RpbWUsIHVuaXRzPSdtaW5zJykpDQogIGRmMyR0aW1lX3NpbmNlX3N0YXJ0IDwtIGFzLm51bWVyaWMoZGYzJHRpbWVfc2luY2Vfc3RhcnQpDQoNCg0KDQoNCiAgcmV0dXJuKGRmMykNCn0NCg0KYGBgDQoNCg0KSSBydW4gbXkgZnVuY3Rpb24gZm9yIGVhY2ggaGFsZi1kYXksIGFzIHRoZSBzdGFydGluZyB0aW1lIHdpbGwgZGlmZmVyLiBUaGVuLCBJIG1lcmdlIHRoZW0gdG9nZXRoZXIuDQoNCmBgYHtyLCBtZXNzYWdlID0gRkFMU0V9DQoNCg0KIyBJIHJ1biBteSBmdW5jdGlvbnMgZm9yIHRoZSBtb3JuaW5nIGFuZCB0aGUgYWZ0ZXJub29uDQogIEVCX0xhdF9Nb3JuaW5nIDwtIGxhdC5leHBsKHN1YnNldChFQl9DaGFuZ2VzLCB0aW1lX29mX2RheSA9PSAiTW9ybmluZyIpLCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcDEuNCwgcDQuMSwgc3RhcnRfbW9ybmluZykNCiAgRUJfTGF0X0FmdGVybm9vbiA8LSBsYXQuZXhwbChzdWJzZXQoRUJfQ2hhbmdlcywgdGltZV9vZl9kYXkgPT0gIkFmdGVybm9vbiIpLCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwMS40LCBwNC4xLCBzdGFydF9hZnRlcm5vb24pDQoNCiAgDQoNCiMgSSBvYnRhaW4gbXkgZmluYWwgZGF0YXNldCB3aXRoIHRoZSBmaXJzdCBjcm9zc2luZyBzZXF1ZW5jZSBmb3IgZXZlcnkNCiMgaW5kaXZpZHVhbCBhbmQgYXQgd2hhdCB0aW1lIGl0IGhhcHBlbmVkDQogIEVCX0xhdCA8LSByYmluZChFQl9MYXRfTW9ybmluZywgRUJfTGF0X0FmdGVybm9vbikNCiAgDQogIA0KYGBgDQoNCg0KDQoNCg0KDQoNCi0tLQ0KDQoNCg0KYGBge3IsIG1lc3NhZ2UgPSBGQUxTRX0NCnNob2FsaW5nLmluZGV4IDwtIGZ1bmN0aW9uKGNsZWFuX2RmLCBkZl92YXJpYWJsZXMpew0KDQogIA0KICANCiMgSSBzcGxpdCBteSBkYXRhIGZyYW1lIGludG8gYSBsaXN0IG9mIGRhdGFmcmFtZXMgKG9uZSBvYmplY3QgcGVyIGluZGl2aWR1YWwpDQogICMgUFJPQkxFTSBIRVJFLCBBTlRFTk5BIE7CsDEgSU4gRElGRiBQT05EUw0KICBjbGVhbl9kZl8yIDwtIHNwbGl0KGNsZWFuX2RmLCBmID0gY2xlYW5fZGYkYW50ZW5uYSkNCg0KIyBJIGRlZmluZSBhIGxpc3QNCiAgYWNjb21wYW5pZWRfcmVhZHMgPC0gbGlzdCgpDQogIA0KICAgICMgRm9yIGVhY2ggYW50ZW5uYS4uLg0KICAgIGZvciAoaSBpbiAxOmxlbmd0aChjbGVhbl9kZl8yKSl7DQogICAgIA0KICAgICAgIyBJIHN1YnNldCBhbGwgdGhlIHRpbWUgcG9pbnRzIGZvciB3aGljaCBtb3JlIHRoYW4gMSBpbmRpdmlkdWFscyB3ZXJlIHJlYWQgYXQgb25lIGFudGVubmENCiAgICAgIGFjY29tcGFuaWVkX3JlYWRzW1tpXV0gPC0gIGNsZWFuX2RmXzJbW2ldXSAlPiUgZ3JvdXBfYnkodGltZSkgJT4lIGZpbHRlcihuKCkgPiAxKQ0KICANCiAgICAgICMgSSBjb3VudCB0aGUgbnVtYmVyIG9mIGFjY29tcGFuaWVkIHJlYWRzIHBlciBpbmRpdmlkdWFsDQogICAgICBhY2NvbXBhbmllZF9yZWFkc1tbaV1dIDwtIGFjY29tcGFuaWVkX3JlYWRzW1tpXV0gJT4lIGdyb3VwX2J5KGlkKSAlPiUgYWRkX3RhbGx5KCkNCiAgICAgICMgSSByZW1vdmUgZHVwbGljYXRlZCByb3dzDQogICAgICBhY2NvbXBhbmllZF9yZWFkc1tbaV1dIDwtIGFjY29tcGFuaWVkX3JlYWRzW1tpXV1bIWR1cGxpY2F0ZWQoYWNjb21wYW5pZWRfcmVhZHNbW2ldXVssYygnaWQnKV0pLF0NCiAgICB9DQogIA0KICANCiAgIyBJIGJpbmQgdGhlIHJvd3Mgb2YgdGhlIGxpc3Qgb2YgZGF0YWZyYW1lcw0KICAgIGFjY29tcGFuaWVkX3JlYWRzIDwtIGJpbmRfcm93cyhhY2NvbXBhbmllZF9yZWFkcykNCiAgDQogICAgIyBJIGtlZXAgdGhlIHRvdGFsIG51bWJlciBvZiBhY2NvbXBhbmllZCByZWFkcyBpbiBhbGwgYW50ZW5uYXMNCiAgICBhY2NvbXBhbmllZF9yZWFkcyA8LSBhY2NvbXBhbmllZF9yZWFkcyAlPiUNCiAgICAgIGdyb3VwX2J5KGlkKSAlPiUNCiAgICAgIG11dGF0ZSh0b3RfYWNjX3JlYWRzID0gc3VtKG4pKQ0KDQogICAgDQogICAgDQogICMgSSByZW1vdmUgdGhlICduJyBjb2x1bW4sIHVzZWxlc3Mgbm93DQogICAgYWNjb21wYW5pZWRfcmVhZHMgPC0gYWNjb21wYW5pZWRfcmVhZHNbLC0gYyg3KV0NCiAgIyBJIHJlbW92ZSBkdXBsaWNhdGVkIHJvd3MNCiAgICBhY2NvbXBhbmllZF9yZWFkcyA8LSBhY2NvbXBhbmllZF9yZWFkc1shZHVwbGljYXRlZChhY2NvbXBhbmllZF9yZWFkc1ssYygnaWQnKV0pLF0NCiAgDQogICMgTm93LCBJIHdhbnQgdG8gdGFrZSBpbnRvIGFjY291bnQgdGhlIHRvdGFsIG51bWJlciBvZiByZWFkcyBvZiBlYWNoIGluZGl2aWR1YWwgYXMgd2VsbA0KICAgIGNsZWFuX2RmIDwtIGNsZWFuX2RmICU+JSBncm91cF9ieShpZCkgJT4lIGFkZF90YWxseSgpDQogICAgY2xlYW5fZGYgPC0gY2xlYW5fZGZbIWR1cGxpY2F0ZWQoY2xlYW5fZGZbLGMoJ2lkJyldKSxdDQogICAgY2xlYW5fZGYgPC0gbWVyZ2UoRUJfdmFyaWFibGVzLCBjbGVhbl9kZltjKCJpZCIsICJuIildLCBieSA9ICJpZCIsIGFsbCA9IFQpDQogICAgY2xlYW5fZGZbaXMubmEoY2xlYW5fZGYpXSA8LSAwDQogICAgDQogICMgSSBhZGQgdGhlbSB0byB0aGUgZGF0YSBmcmFtZSB3aXRoIHRoZSBhY2NvbXBhbmllZCByZWFkcw0KICAgIGFjY29tcGFuaWVkX3JlYWRzIDwtIG1lcmdlKGNsZWFuX2RmW2MoImlkIiwgIlBvbmQiLCAidGltZV9vZl9kYXkiLCAiVHJlYXRtZW50X3NlcSIsICJuIildLCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhY2NvbXBhbmllZF9yZWFkc1tjKCJpZCIsICJ0b3RfYWNjX3JlYWRzIildLCBieSA9ICJpZCIsIGFsbCA9IFQpIA0KICAgIG5hbWVzKGFjY29tcGFuaWVkX3JlYWRzKVs1XSA8LSAidG90X3JlYWRzIg0KICAgIGFjY29tcGFuaWVkX3JlYWRzW2lzLm5hKGFjY29tcGFuaWVkX3JlYWRzKV0gPC0gMA0KICAgIGFjY29tcGFuaWVkX3JlYWRzJHNob2FsaW5nIDwtIGFjY29tcGFuaWVkX3JlYWRzJHRvdF9hY2NfcmVhZHMvYWNjb21wYW5pZWRfcmVhZHMkdG90X3JlYWRzDQogICAgcmV0dXJuKGFjY29tcGFuaWVkX3JlYWRzKQ0KICAgIA0KICB9ICMgZW5kIG9mIGZ1bmN0aW9uDQoNCmBgYA0KDQotLS0NCg0KIyMjIEVCDQoNCg0KIyMjIDIuMiBBbnRlbm5hIGNoYW5nZXMNCg0KTmV4dCwgSSB3YW50IHRvIGtlZXAgdGhlIHJlYWRzIGNvcnJlc3BvbmRpbmcgdG8gYW50ZW5uYSBjaGFuZ2VzLiBGb3IgZWFjaCBpbmRpdmlkdWFsLCBpZiBhbiBpbmRpdmlkdWFsIGhhcyBiZWVuIHJlYWQgYXQgdGhlIGFudGVubmEgdGhlIGZvbGxvd2luZyB3YXkgKDEsIDEsIDEsIDIsIDIsIDMpLCB3ZSBvbmx5IGtlZXAgdGhlIGZpcnN0IHJlYWRzIGZvciBlYWNoIHNlcXVlbmNlIG9mIGlkZW50aWNhbCBudW1iZXJzLiBUaGUgb3V0cHV0IGlzLCBmb3IgdGhlIGV4YW1wbGUgYWJvdmU6IDEsIDIsIDMuIA0KDQoNCmBgYHtyLCBtZXNzYWdlID0gRkFMU0V9DQogIA0KIyBJIGluZGljYXRlIHRoZSBjcm9zc2luZyBzZXF1ZW5jZXMgKGFudGVubmFzIDEgLT4gNCBhbmQgNCAtPiAxKQ0KICBwMS40ID0gYygxLCAyLCAzLCA0KQ0KICBwNC4xID0gYyg0LCAzLCAyLCAxKQ0KDQoNCiAgIyBJIGRlZmluZSBteSBvYmplY3RzDQogICAgZGZfbGlzdF9yZWQgPC0gbGlzdCgpDQogICAgbmJfaW5kIDwtIGxlbmd0aChFQl9saXN0X2RmX2lkKSAjIG51bWJlciBvZiBpbmRpdmlkdWFscyB0aGF0IGhhdmUgYmVlbiByZWFkIGJ5IHRoZSBhbnRlbm5hcw0KDQogICAgDQogICAgDQogICMgRm9yIGVhY2ggaW5kaXZpZHVhbCwgSSB3YW50IHRvIG9idGFpbiB0aGUgcmVhZHMgY29ycmVzcG9uZGluZyB0byBhbiBhbnRlbm5hIGNoYW5nZSBhbmQgdGhlDQogICMgY29ycmVzcG9uZGluZyBhbnRlbm5hIG51bWJlciwgdGltZSBhbmQgZmlzaCBpZC4NCiAgICBmb3IgKGkgaW4gMTpuYl9pbmQpIHsNCiAgICAgIEVCX2xpc3RfZGZfaWRbW2ldXSA8LSBFQl9saXN0X2RmX2lkW1tpXV1bb3JkZXIoYXMuUE9TSVhjdChFQl9saXN0X2RmX2lkW1tpXV0kdGltZSkpLF0NCiAgICAgIA0KICAgICAgY2hhbmdlcyAgICAgICAgICA8LSB3aGljaChFQl9saXN0X2RmX2lkW1tpXV0kYW50ZW5uYSE9IGxhZyhFQl9saXN0X2RmX2lkW1tpXV0kYW50ZW5uYSkpDQogICAgICBhbnRlbm5hICAgICAgICAgIDwtIGMoRUJfbGlzdF9kZl9pZFtbaV1dJGFudGVubmFbMV0sIEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hW2NoYW5nZXNdKQ0KICAgICAgdGltZSAgICAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSR0aW1lWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kdGltZVtjaGFuZ2VzXSkNCiAgICAgIGlkICAgICAgICAgICAgICAgPC0gYyhFQl9saXN0X2RmX2lkW1tpXV0kaWRbMV0sIEVCX2xpc3RfZGZfaWRbW2ldXSRpZFtjaGFuZ2VzXSkNCiAgICAgIGRmX2xpc3RfcmVkW1tpXV0gPC0gZGF0YS5mcmFtZShhbnRlbm5hLCB0aW1lLCBpZCkNCiAgICB9DQoNCg0KICAgIA0KICAgIA0KICAjIEkgYmluZCB0aGUgcm93cyBvZiB0aGUgbGlzdCAoaS5lLiBtYWtlIGl0IGEgZGF0YSBmcmFtZSwgYXMgaXQgaW5pdGlhbGx5IHdhcykNCiAgICBFQl9DaGFuZ2VzIDwtIGJpbmRfcm93cyhkZl9saXN0X3JlZCkNCiAgICBFQl9DaGFuZ2VzIDwtIGFzLmRhdGEuZnJhbWUoRUJfQ2hhbmdlcykNCiAgICBFQl9DaGFuZ2VzIDwtIG1lcmdlKEVCX3ZhcmlhYmxlc1tjKCJpZCIsICJQb25kIiwgIlRyZWF0bWVudF9zZXEiLCAidGltZV9vZl9kYXkiKV0sIA0KICAgIEVCX0NoYW5nZXMsIGJ5ID0gImlkIikNCiAgICBFQl9DaGFuZ2VzIDwtIEVCX0NoYW5nZXNbb3JkZXIoYXMuUE9TSVhjdChFQl9DaGFuZ2VzJHRpbWUpKSxdDQogICAgcm93bmFtZXMoRUJfQ2hhbmdlcykgPC0gTlVMTA0KICAjIEVCX0NoYW5nZXMgaXMgYmFzaWNhbGx5IHRoZSBpbml0aWFsICdkZicgYnV0IHRoZSByZXBlYXRlZCByZWFkcw0KICAjIGhhdmUgYmVlbiBlbGltaW5hdGVkIG9ubHkgdG8ga2VlcCB0aGUgZmlyc3Qgb25lLg0KDQoNCiAgICANCiAgICBgYGANCg0KDQojIyMjIDIuMy4xICBfZmlyc3QuY3Jvc3NfIEZ1bmN0aW9uDQoNCk9uY2UgSSBoYXZlIHRoZSBhbnRlbm5hIGNoYW5nZXMsIEkgY2FuIHN0YXJ0IHRvIGxvb2sgYXQgd2hpY2ggc2VxdWVuY2Ugb2YgY2hhbmdlcyBJIGFtIHNwZWNpZmljYWxseSBpbnRlcmVzdGVkIGluLiBUbyBkbyBzbywgSSBidWlsZCBhIGZ1bmN0aW9uIHdoaWNoIGhhcywgYXM6DQoNCi0gSW5wdXQgPSBBIGRhdGEgZnJhbWUgY29udGFpbmluZyB0aGUgYW50ZW5uYSBjaGFuZ2UgcmVhZHMgZm9yIG9uZSBpbmRpdmlkdWFsDQotIE91dHB1dCA9IFRoZSBmaXJzdCBmdWxsIGNyb3NzIG9mIHRoZSBleHBsb3JhdGlvbiBib3gsIG9yIGFuIGVtcHR5IGRhdGEgZnJhbWUgaWYgdGhlIGluZGl2aWR1YWwgaGFzbid0IGZ1bGx5IGNyb3NzZWQgdGhlIGJveC4NCg0KYGBge3IsIG1lc3NhZ2UgPSBGQUxTRX0NCg0KZmlyc3QuY3Jvc3MgPC0gZnVuY3Rpb24oZGYpew0KICANCiAgIyBJIGlkZW50aWZ5IGFsbCB0aGUgcm93IG51bWJlcnMgYXQgd2hpY2ggdGhlIGluZGl2aWR1YWwgc3RhcnRlZCB0aGUgc2VxdWVudGlhbA0KICAjIGNyb3NzaW5nIGJldHdlZW4gYW50ZW5uYSAxIGFuZCBhbnRlbm5hIDQNCiAgcm93c3RhcnRzXzEyMzQgIDwtIHVubGlzdChncmVnZXhwcigiMTIzNCIsIHBhc3RlKGRmJGFudGVubmEsIGNvbGxhcHNlPSIiKSkpDQogIA0KICANCiAgDQogICMgSWYgdGhlIGluZGl2aWR1YWwgaGFzIGNyb3NzZWQgdGhlIGJveCBmcm9tIGFudGVubmEgMSB0byBhbnRlbm5hIDQuDQogIGlmIChyb3dzdGFydHNfMTIzNFsxXSAhPSAtMSl7DQogIA0KICAjIFRoZW4sIEkgc3Vic2V0IHRoZSBmaXJzdCBmdWxsIGJveCBjcm9zcyAoMSwyLDMsNCkNCiAgICBmaXJzdF9jcm9zc18xMjM0IDwtIGRmW3NvcnQoYyhvdXRlcihyb3dzdGFydHNfMTIzNFsxXSwgKDA6MyksICIrIikpKSwgXQ0KICAjIEkgbWFrZSBpdCBhIGhvcml6b250YWwgdGFibGUgIA0KICAgIGZpcnN0X2Nyb3NzXzEyMzQgPC0gZmlyc3RfY3Jvc3NfMTIzNCAlPiUgc3ByZWFkKGFudGVubmEsdGltZSkNCiAgICBmaXJzdF9jcm9zc18xMjM0IDwtIGFzLmRhdGEuZnJhbWUoZmlyc3RfY3Jvc3NfMTIzNCkNCiAgICBuYW1lcyhmaXJzdF9jcm9zc18xMjM0KSA8LSBjKCJpZCIsICJ0aW1lX29mX2RheSIsICJQb25kIiwgIlRyZWF0bWVudF9zZXEiLCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJBbnQxIiwgIkFudDIiLCAiQW50MyIsICJBbnQ0IikNCiAgICB9DQogIA0KICANCiAgDQogICMgT24gdGhlIG90aGVyIGhhbmQsIGlmIHRoZSBpbmRpdmlkdWFsIGhhc24ndCBjcm9zc2VkIHRoZSBib3ggZnJvbSBhbnRlbm5hIDEgdG8gYW50ZW5uYSA0Lg0KICBpZiAocm93c3RhcnRzXzEyMzRbMV0gPT0gLTEpew0KICAjIFRoZW4gSSBqdXN0IG9idGFpbiBhbiBlbXB0eSB0aWJibGUuICANCiAgICBmaXJzdF9jcm9zc18xMjM0IDwtIHRpYmJsZSggKX0NCiANCiAgDQogIA0KICAjIFNhbWUgYXMgYWJvdmUgYnV0IGJldHdlZW4gYW50ZW5uYSA0IGFuZCBhbnRlbm5hIDEuIA0KICAgIHJvd3N0YXJ0c180MzIxICA8LSB1bmxpc3QoZ3JlZ2V4cHIoIjQzMjEiLCBwYXN0ZShkZiRhbnRlbm5hLCBjb2xsYXBzZT0iIikpKQ0KICBpZiAocm93c3RhcnRzXzQzMjFbMV0gIT0gLTEpew0KICBmaXJzdF9jcm9zc180MzIxIDwtIGRmW3NvcnQoYyhvdXRlcihyb3dzdGFydHNfNDMyMVsxXSwgKDA6MyksICIrIikpKSwgXQ0KICBmaXJzdF9jcm9zc180MzIxIDwtIGZpcnN0X2Nyb3NzXzQzMjEgJT4lIHNwcmVhZChhbnRlbm5hLHRpbWUpDQogIGZpcnN0X2Nyb3NzXzQzMjEgPC0gYXMuZGF0YS5mcmFtZShmaXJzdF9jcm9zc180MzIxKQ0KICANCiAgDQogIG5hbWVzKGZpcnN0X2Nyb3NzXzQzMjEpIDwtIGMoImlkIiwgInRpbWVfb2ZfZGF5IiwgIlBvbmQiLCAiVHJlYXRtZW50X3NlcSIsIA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJBbnQxIiwgIkFudDIiLCAiQW50MyIsICJBbnQ0Iil9DQogIGlmIChyb3dzdGFydHNfNDMyMVsxXSA9PSAtMSl7Zmlyc3RfY3Jvc3NfNDMyMSA8LSANCiAgICB0aWJibGUoICl9DQogIA0KICAgIA0KICAjIEkgcmJpbmQgbXkgdHdvIHRpYmJsZXMuDQogIGZpcnN0X2Nyb3NzIDwtIHJiaW5kKGZpcnN0X2Nyb3NzXzEyMzQsIGZpcnN0X2Nyb3NzXzQzMjEpDQogICMgSW4gc3VtbWFyeSwgSSBlaXRoZXIgb2J0YWluOg0KICAjIChpKSBBIHR3by1yb3dzIGRhdGEgZnJhbWUgY29udGFpbmluZyB0aGUgZmlyc3QgY3Jvc3Mgb2YgdGhlIGZvY2FsIGluZCANCiAgIyBmb3IgdGhlIHR3byBzZXF1ZW5jZXMuDQogICMgKGlpKSBBIG9uZS1yb3cgZGF0YSBmcmFtZSBjb250YWluaW5nIHRoZSBmaXJzdCBjcm9zcyBvZiB0aGUgZm9jYWwgaW5kDQogICMgaWYgaXQgb25seSBjcm9zc2VkIHRoZSBib3ggaW4gb25lIGRpcmVjdGlvbi4NCiAgIyAoaWlpKSBBbiBlbXB0eSBkYXRhIGZyYW1lIGlmIHRoZSBpbmRpdmlkdWFsIG5ldmVyIGNyb3NzZWQgdGhlIGJveC4NCiAgIA0KICANCiAgDQogICMgSWYgdGhlIGluZGl2aWR1YWwgZGlkIGF0IGxlYXN0IG9uZSBmdWxsIGNyb3NzLi4uDQogIGlmKGRpbShmaXJzdF9jcm9zcylbMV0gIT0gMCl7DQogICMgVGhlbiwgSSBzdWJzZXQgaXRzIGZpcnN0IGZ1bGwgY3Jvc3MuDQogICAgZmlyc3RfY3Jvc3MgPC0gZmlyc3RfY3Jvc3Nbb3JkZXIoZmlyc3RfY3Jvc3MkQW50MiksXQ0KICAgIGZpcnN0X2Nyb3NzIDwtIGZpcnN0X2Nyb3NzWzEsXX0NCiAgDQogIA0KICAjIE9uIHRoZSBvdGhlciBoYW5kLCBpZiB0aGUgaW5kaXZpZHVhbCBoYXNuJ3QgZnVsbHkgY3Jvc3NlZCB0aGUgYm94Li4uDQogIGlmKGRpbShmaXJzdF9jcm9zcylbMV0gPT0gMCl7DQogICMgVGhlbiwgSSBqdXN0IG9idGFpbiBhIGRhdGEgZnJhbWUgd2l0aCBOQXMuDQogICAgICBmaXJzdF9jcm9zcyA8LSBkYXRhLmZyYW1lKGlkID0gZGYkaWRbMV0sIEFudDEgPSBOQSwNCiAgICAgICAgICAgICAgICAgICBBbnQyID0gTkEsIEFudDMgPSBOQSwgQW50NCA9IE5BKX0NCiAgDQogICAgDQogIHJldHVybihmaXJzdF9jcm9zcyl9ICMgZW5kIG9mIHRoZSBmdW5jdGlvbg0KDQoNCmBgYA0KDQoNCg0KDQogICAgDQojIyMgMi4zIExhdGVuY3kgdG8gY3Jvc3MgdGhlIGJveA0KDQoNCk5leHQsIEkgY2FuIGFwcGx5IHRoZSBmdW5jdGlvbiBhYm92ZSB0byBhbGwgaW5kaXZpZHVhbHMuIEkgYWxzbyBhZGQgYSBjb2x1bW4gY29udGFpbmluZyB0aGUgbGF0ZW5jeSB0byBmdWxseSBleHBsb3JlIHRoZSBib3guIA0KDQpgYGB7ciwgbWVzc2FnZSA9IEZBTFNFfQ0KDQojIEkgc3BsaXQgbXkgZGF0YSBmcmFtZSBwZXIgaW5kaXZpZHVhbA0KICBFQl9jaGFuZ2VzX2xpc3QgPC0gc3BsaXQoRUJfQ2hhbmdlcywgZiA9IEVCX0NoYW5nZXMkaWQpDQoNCg0KIyBJIGRlZmluZSBhIGxpc3QNCiAgZmlyc3RfY3Jvc3NlcyA8LSBsaXN0KCkNCg0KICANCiMgRm9yIGVhY2ggaW5kaXZpZHVhbC4uLg0KICBmb3IoaSBpbiAxOmxlbmd0aChFQl9jaGFuZ2VzX2xpc3QpKXsNCiAgICAjIEkgd2FudCB0byBvYnRhaW4gdGhlIGZpcnN0IGZ1bGwgY3Jvc3Mgb2YgdGhlIGJveCwgdXNpbmcgdGhlIGZ1bmN0aW9uIGRlZmluZWQgYWJvdmUuDQogICAgZmlyc3RfY3Jvc3Nlc1tbaV1dIDwtIGZpcnN0LmNyb3NzKEVCX2NoYW5nZXNfbGlzdFtbaV1dKQ0KICB9DQogIA0KICANCiMgSSBiaW5kIHRoZSBkYXRhIGZyYW1lcyBvZiBteSBsaXN0IHRvZ2V0aGVyIHRvIG9idGFpbiBhIHNpbmdsZSBkYXRhIGZyYW1lIGNvbnRhaW5pbmcNCiMgVGhlIGZpcnN0IGNyb3NzIG9mIGFsbCBpbmRpdmlkdWFscyB0aGF0IGNyb3NzZWQgdGhlIGJveC4NCiAgRUJfTGF0IDwtIGJpbmRfcm93cyhmaXJzdF9jcm9zc2VzKQ0KDQoNCiAgDQojIEkgYWRkIGEgbmV3IGNvbHVtbiB3aXRoIHRoZSB0aW1lIHRvIGNyb3NzIHRoZSBib3ggc2luY2UgdGhlIHN0YXJ0IG9mIHRoZSB0ZXN0DQojIEZvciB0aGUgbW9ybmluZw0KICBFQl9MYXRfbW9ybmluZyA8LSBtdXRhdGUoc3Vic2V0KEVCX0xhdCwgdGltZV9vZl9kYXkgPT0gIk1vcm5pbmciKSwgDQogICAgICAgICAgICAgICAgICAgICAgICAgICB0aW1lX3NpbmNlX3N0YXJ0ID0gZGlmZnRpbWUoQW50Miwgc3RhcnRfbW9ybmluZywgdW5pdHM9J20nKSkNCiMgRm9yIHRoZSBhZnRlcm5vb24NCiAgRUJfTGF0X2FmdGVybm9vbiA8LSBtdXRhdGUoc3Vic2V0KEVCX0xhdCwgdGltZV9vZl9kYXkgPT0gIkFmdGVybm9vbiIpLCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdGltZV9zaW5jZV9zdGFydCA9IGRpZmZ0aW1lKEFudDIsIHN0YXJ0X2FmdGVybm9vbiwgdW5pdHM9J20nKSkNCg0KICANCiMgSSBiaW5kIHRoZSB0d28sIGFuZCB0cmFuc2Zvcm0gbXkgY29sdW1uIChpbiBtaW51dGVzKSBhcyBudW1lcmljYWwNCiAgRUJfTGF0IDwtIHJiaW5kKEVCX0xhdF9tb3JuaW5nLCBFQl9MYXRfYWZ0ZXJub29uKQ0KICBFQl9MYXQkdGltZV9zaW5jZV9zdGFydCA8LSBhcy5udW1lcmljKEVCX0xhdCR0aW1lX3NpbmNlX3N0YXJ0KQ0KDQoNCg0KYGBgDQoNCg0KDQoNCiMjIyMgMi4zLjIgIF9maW5hbGlzZS5FQl8gRnVuY3Rpb24NCg0KSSBtYWtlIGEgc21hbGwgZnVuY3Rpb24sIHRvIG1vZGlmeSBteSBkYXRhIGZyYW1lIGNvbnRhaW5pbmcgdGhlIGNyb3NzaW5nIHNlcXVlbmNlIG9mIGFsbCBpbmRpdmlkdWFscyB0aGF0IGNyb3NzZWQgdGhlIGJveCBpbiBhIHdheSB0aGF0IEkgaGF2ZSBhIG5pY2UgZGF0YSBmcmFtZSBmb3IgcGxvdHRpbmcuIEluIHRoaXMgZnVuY3Rpb24sIEkgYWRkIHRoZSBpbmRpdmlkdWFscyB2YXJpYWJsZXMgKF9pLmUuXyBwb25kLCBUaW1lIG9mIHRoZSBkYXksIHRyZWF0bWVudCBzZXF1ZW5jZSwgaGVyZWFmdGVyIF92YXJpYWJsZXNfKS4gRmluYWxseSwgSSBnaXZlIHRoZSBtYXhpbWFsIHZhbHVlICh0aGF0IGlzLCAxNTAgbWludXRlcykgdG8gYWxsIGluZGl2aWR1YWxzIHRoYXQgbmV2ZXIgY3Jvc3NlZCB0aGUgYm94Lg0KDQoNCmBgYHtyLCBtZXNzYWdlID0gRkFMU0V9DQoNCg0KZmluYWxpc2UuRUIgPC0gZnVuY3Rpb24oRUJfTGF0LCBFQl92YXJpYWJsZXMpIHsNCiMgSSBhZGQgdGhlIGVudmlyb25tZW50YWwgdmFyaWFibGVzDQogIEVCX0xhdF9maW5hbCA8LSBtZXJnZShFQl9MYXRbYygiaWQiLCAidGltZV9zaW5jZV9zdGFydCIpXSwgDQogICAgICAgICAgICAgICAgICAgICAgICBFQl92YXJpYWJsZXNbYygnaWQnLCAidGltZV9vZl9kYXkiLCAiUG9uZCIsICJUcmVhdG1lbnRfc2VxIildLCANCiAgICAgICAgICAgICAgICAgICAgICAgIGJ5ID0gJ2lkJywgYWxsID0gVCkNCg0KICANCiAgDQojIEkgYXNzaWduIHRoZSBtYXhpbWFsIHZhbHVlcyB0byBhbGwgdGhlIGZpc2ggdGhhdCBuZXZlciBjcm9zc2VkIHRoZSBib3guDQogIEVCX0xhdF9maW5hbCR0aW1lX3NpbmNlX3N0YXJ0W2lzLm5hKEVCX0xhdF9maW5hbCR0aW1lX3NpbmNlX3N0YXJ0KV0gPC0gMTUwDQoNCiAgDQogIA0KIyBJIGNyZWF0ZSBhbiBleHBsb3JhdGlvbiBpbmRleCwgZm9yIHdoaWNoIGEgbG93IHZhbHVlIG1lYW5zIHRoYXQgaW5kaXZpZHVhbHMgbmV2ZXIgDQojIGV4cGxvcmVkIHRoZSBib3gsIGFuZCBhIGhpZ2ggdmFsdWUgbWVhbnMgdGhhdCBpbmRpdmlkdWFscyBleHBsb3JlZCBpdCBlYXJseS4NCiAgRUJfTGF0X2ZpbmFsJEV4cGxfaW5kZXggPC0gIGFicyhjKEVCX0xhdF9maW5hbCR0aW1lX3NpbmNlX3N0YXJ0IC0gMTUwKSkNCg0KICANCiAgDQojIEkgb25seSBrZWVwIHRoZSB2YXJpYWJsZXMgb2YgaW50ZXJlc3QgZm9yIHBsb3R0aW5nLg0KICBFQl9MYXRfZmluYWwgPC0gRUJfTGF0X2ZpbmFsW2MoImlkIiwgIlBvbmQiLCAiVHJlYXRtZW50X3NlcSIsIA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInRpbWVfc2luY2Vfc3RhcnQiLCAidGltZV9vZl9kYXkiLCAiRXhwbF9pbmRleCIpXQ0KICANCiAgcmV0dXJuKEVCX0xhdF9maW5hbCl9DQoNCg0KYGBgDQoNCkkgdXNlIHRoZSBfZmluYWxpc2UuRUJfIGZ1bmN0aW9uIHRvIGNsZWFuIHVwIHRoZSBvdXRwdXQgYW5kIHRvIG9idGFpbiBhIHBsb3R0YWJsZSBkYXRhIGZyYW1lLg0KDQpgYGB7cn0NCiMgSSBydW4gdGhlIGZpbmFsaXNlLkVCIGZ1bmN0aW9uIGRlZmluZWQgYWJvdmUgdG8gY2xlYW4gbXkgb3V0cHV0DQogIEVCX291dHB1dCA8LSBmaW5hbGlzZS5FQihFQl9MYXQsIEVCX3ZhcmlhYmxlcykNCg0KIyBJIGNsZWFuIG15IGVudmlyb25tZW50DQogIHJtKEVCX0NoYW5nZXMsIEVCX0xhdCwgIA0KICBFQl9MYXRfbW9ybmluZywgRUJfTGF0X2FmdGVybm9vbiwgDQogIGZpcnN0X2Nyb3NzZXMsIEVCX2NoYW5nZXNfbGlzdCwgDQogIGRmX2xpc3RfcmVkLCBFQl9saXN0X2RmX2lkKQ0KDQpgYGANCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkV4cGxvcmF0aW9uIGJveCBmYW5jeSBmdW5jdGlvbiINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCg0KDQpUaGUgY2h1bmsgYmVsb3cgYWltcyBhdCwgZnJvbSBvbmUgZGF5IG9mIEVCIGRhdGEsIG9idGFpbiwgZm9yIGVhY2ggZmlzaCwgdGhyZWUgZGlmZmVyZW50IG1ldHJpY3MgZm9yIGV4cGxvcmF0aW9uIHRlbmRlbmN5LiBUaGUgZnVuY3Rpb24gaXMgYnVpbHQgdGhlIGZvbGxvd2luZyB3YXk6DQoNCi0gSSBkZWZpbmUgYSBmZXcgb2JqZWN0cyBhbmQgc3RhcnQgYSBsb29wIGdvaW5nIHRocm91Z2ggYWxsIGluZGl2aWR1YWxzDQoNCi0gKipJbmRleCAxKiogLSBMYXRlbmN5IHRvIGVudGVyIHRoZSBib3guIEkgc2ltcGx5IG9idGFpbiwgZm9yIGVhY2ggaW5kaXZpZHVhbCwgdGhlIGZpcnN0IHJlYWQgYXQgYW50ZW5uYSAyIG9yIDMuDQoNCg0KLSBJIG9idGFpbiB0aGUgYW50ZW5uYSBjaGFuZ2VzLiBJZiBhbiBpbmRpdmlkdWFsIGhhcyBiZWVuIHJlYWQgYXQgdGhlIGFudGVubmEgdGhlIGZvbGxvd2luZyB3YXkgKDEsIDEsIDEsIDIsIDIsIDMpLCBJIG9ubHkga2VlcCB0aGUgZmlyc3QgcmVhZHMgZm9yIGVhY2ggc2VxdWVuY2Ugb2YgaWRlbnRpY2FsIG51bWJlcnMuIFRoZSBvdXRwdXQgaXMsIGZvciB0aGUgZXhhbXBsZSBhYm92ZTogMSwgMiwgMy4gDQoNCg0KLSBJIHNwbGl0IHRoZXNlIGFudGVubmEgY2hhbmdlIHJlYWRzIGFzIGEgbGlzdCBvZiBkYXRhIGZyYW1lcy4gRXZlcnkgdGltZSB0aGF0IGFuIGluZGl2aWR1YWwgaXMgcmVhZCBhdCBhbnRlbm5hIDEgb3IgNCAoZW50cmFuY2VzIG9mIHRoZSBib3gpLCBJIHNwbGl0IHRoZSBkYXRhIGZyYW1lLiBJIGtub3cgdGhhdCBpZiwgYWZ0ZXIgYSAxIG9yIGEgNCwgdGhlcmUgaXMgYSAyIG9yIGEgMywgdGhlIGluZGl2aWR1YWwgZW50ZXJlZCB0aGUgYm94LiBJIGNhbiB0aGVuIHRyYWNlIHRoZSBpbmRpdmlkdWFsIHVudGlsIGl0IGxlYXZlcyB0aGUgYm94IGFnYWluIChhbnQgMSBvciA0KS4gVGhpcyBwZXJzcGVjdGl2ZSBpcyB1c2VkIGZvciBjYWxjdWxhdGluZyBpbmRleCAyLg0KDQotIENvbXB1dGUgKipJbmRleCAyKiogLSBGaXJzdCB0aW1lIHRoYXQgYW4gaW5kaXZpZHVhbCBmdWxseSBjcm9zc2VzIHRoZSBib3guIFRvIGRvIHNvLCBJIGFtIGludGVyZXN0ZWQgaW4gdGhlIGZpcnN0IHNlcXVlbmNlIGNvbnRhaW5pbmcgYXQgbGVhc3QgYSByZWFkIGZyb20gYW50ZW5uYSAyICphbmQqIGEgcmVhZCBmcm9tIGFudGVubmEgMywgYmVmb3JlIHRoZSBmaXNoIGxlYXZlcyB0aGUgYm94LCBlaXRoZXIgdmlhIGFudGVubmEgMSBvciB2aWEgYW50ZW5uYSA0LiBUaGUgc2VxdWVuY2VzIGNvdWxkIGJlLCBmb3IgaW5zdGFuY2UsICgxLDIsMyw0KSBvciAoNCwzLDIsMSkgb3IgKDEsMiwzLDIsMSkgb3IgKDEsMiwzLDIsMywyLDMsNCkgZXRjLiBJdCBuZWVkcyB0byBzdGFydCBieSBhIDEgb3IgYSA0LCB0byBlbmQgYnkgYSAxIG9yIGEgZm9yLCBhbmQgdG8gaGF2ZSBhdCBsZWFzdCBvbmUgMiBhbmQgb25lIDMgaW4gYmV0d2Vlbi4NCg0KDQotIENvbXB1dGUgKipJbmRleCAzKiogLSBUaW1lIHNwZW50IGluIHRoZSBib3guIEluIHRoaXMgY2FzZSwgdGhlIGluZGl2aWR1YWwgZG9lcyBub3QgbmVlZCB0byBmdWxseSBjcm9zcyB0aGUgYm94IChpLmUuIG5vIG5lZWQgdG8gYmUgcmVhZCBieSBhbnRlbm5hIDIgKmFuZCogMyBhZnRlciBlbnRlcmluZyB0aGUgYm94IGFuZCBiZWZvcmUgbGVhdmluZyB0aGUgYm94KS4gSW5zdGVhZCwgSSBzaW1wbHkgY2FsY3VsYXRlIHRoZSB0aW1lIGJldHdlZW4gYW4gaW5kaXZpZHVhbCBpcyByZWFkIGF0IGFudGVubmEgMiBvciAzIHVudGlsIGl0IGlzIHJlYWQgYXQgYW50ZW5uYSAxIG9yIDQgYWdhaW4sIHdoYXRldmVyIHRoZSBzZXF1ZW5jZSBpcy4gVGhlIHNlcXVlbmNlIGNvdWxkIHNpbXBseSBiZSA0IChlbnRlciB0aGUgYm94KSAtIDMgKGluIHRoZSBib3gpIC0gNCAobGVhdmVzIHRoZSBib3gpLCBhbmQgSSB3b3VsZCBsb29rIGF0IHRoZSB0aW1lIGJldHdlZW4gMyBhbmQgNC4gVGhlbiwgSSBzdW0gYWxsIHRoZSB0aW1lcyBjb3JyZXNwb25kaW5nIHRvIHRoZSBkaWZmZXJlbnQgc2VxdWVuY2VzLg0KDQoNCmBgYHtyfQ0KDQojIyAxLiBERUZJTkUgT0JKRUNUUw0KICAjIEkgc3BsaXQgbXkgZGF0YWZyYW1lIGludG8gYSBsaXN0IG9mIGRhdGFmcmFtZXMgKG9uZSBvYmplY3QgcGVyIGluZGl2aWR1YWwpDQogICAgRUJfbGlzdF9kZl9pZCA8LSBzcGxpdChFQl9jbGVhbl9kZiwgZiA9IEVCX2NsZWFuX2RmJGlkKQ0KICAgIEVCX2xpc3RfY2hhbmdlcyA8LSBsaXN0KCkNCiAgICBpbmRleDEgPC0gbGlzdCgpDQogICAgaW5kZXgyIDwtIGxpc3QoKQ0KICAgIGluZGV4MyA8LSBsaXN0KCkNCiAgDQogICAgDQogICAgDQogICMgRm9yIGV2ZXJ5IGluZGl2aWR1YWwuLi4NCiAgZm9yIChpIGluIDE6bGVuZ3RoKEVCX2xpc3RfZGZfaWQpKXsNCiAgICANCiMjIDIuIElOREVYIDEgLSBGSVJTVCBUSU1FIEVOVEVSSU5HIFRIRSBCT1gNCiAgaW5kZXgxW1tpXV0gPC0gc3Vic2V0KEVCX2xpc3RfZGZfaWRbW2ldXSwgYW50ZW5uYSA9PSAyIHwgYW50ZW5uYSA9PSAzKVsxLF0NCiAgDQogICAgDQogIA0KICAgIA0KDQojIyAzLiBBTlRFTk5BIENIQU5HRVMNCiAgIyBJIG9idGFpbiB0aGUgcmVhZHMgY29ycmVzcG9uZGluZyB0byBhbiBhbnRlbm5hIGNoYW5nZSBhbmQgdGhlDQogICMgY29ycmVzcG9uZGluZyBhbnRlbm5hIG51bWJlciwgdGltZSBhbmQgZmlzaCBpZC4NCiAgRUJfbGlzdF9kZl9pZFtbaV1dW29yZGVyKGFzLlBPU0lYY3QoRUJfbGlzdF9kZl9pZFtbaV1dJHRpbWUpKSxdDQogIA0KICBjaGFuZ2VzICAgICAgICAgIDwtIHdoaWNoKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hIT0gbGFnKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hKSkNCiAgYW50ZW5uYSAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSRhbnRlbm5hWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kYW50ZW5uYVtjaGFuZ2VzXSkNCiAgdGltZSAgICAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSR0aW1lWzFdLCBFQl9saXN0X2RmX2lkW1tpXV0kdGltZVtjaGFuZ2VzXSkNCiAgaWQgICAgICAgICAgICAgICA8LSBjKEVCX2xpc3RfZGZfaWRbW2ldXSRpZFsxXSwgRUJfbGlzdF9kZl9pZFtbaV1dJGlkW2NoYW5nZXNdKQ0KICBFQl9saXN0X2NoYW5nZXNbW2ldXSA8LSBkYXRhLmZyYW1lKGFudGVubmEsIHRpbWUsIGlkKQ0KICANCg0KDQoNCg0KIyMgNC4gU1BMSVQgVEhFU0UgQU5URU5OQSBDSEFOR0VTIERGIFdIRU4gVEhFIEZJU0ggSVMgUkVBRCBBVCBBTlQgMSBPUiA0DQogICMgSSBtYXJrIGFsbCB0aGUgcm93IG51bWJlcnMgYXQgd2hpY2ggdGhlIGZpc2ggd2FzIHJlYWQgYXQgYW50ZW5uYSAxIG9yIGEgNA0KICB2ZWMgPC0gd2hpY2goRUJfbGlzdF9jaGFuZ2VzW1tpXV1bLCJhbnRlbm5hIl0gPT0gMSB8IEVCX2xpc3RfY2hhbmdlc1tbaV1dWywiYW50ZW5uYSJdID09IDQpDQogIA0KICAjIEkgd2FudCB0byBjdXQgKmFmdGVyKiByZWFkcyBhdCBhbnRlbm5hIDEgYW5kIDQNCiAgdmVjIDwtIHZlYyAgKzENCiAgDQogICMgSSBzcGxpdCBteSBkYXRhIGZyYW1lIGV2ZXJ5IHRpbWUgdGhlIGluZGl2aWR1YWwgcGFzc2VzIGJ5IGFudCAxIG9yIDQNCiAgbGlzdCA8LSBzcGxpdChFQl9saXN0X2NoYW5nZXNbW2ldXSwgY3Vtc3VtKDE6bnJvdyhFQl9saXN0X2NoYW5nZXNbW2ldXSkgJWluJSB2ZWMpKQ0KDQogIA0KICANCiAgDQogIA0KIyMgNS4gSU5ERVggMiAtIEZJUlNUIFRJTUUgVE8gRlVMTFkgQ1JPU1MgVEhFIEJPWA0KICAjIEkgc2VsZWN0IHRoZSBzZXF1ZW5jZXMgZm9yIHdoaWNoIHRoZSBpbmRpdmlkdWFsIGlzIHJlYWQgYXQgYW50ZW5uYXMgMiAqYW5kKiAzDQogIGNvbmQxIDwtIGxhcHBseShsaXN0LCBmdW5jdGlvbih4KSBucm93KHgpID49IDMpDQoNCiAgIyBJIGFwcGx5IHRoaXMgY29uZGl0aW9uIHRvIGtlZXAgdGhlIGNyb3NzaW5nIHNlcXVlbmNlcw0KICBsaXN0MSA8LSBsaXN0W3VubGlzdChjb25kMSldDQoNCiAgIyBJZiB0aGVyZSBpcyBzdWNoIGEgc2VxdWVuY2UgY29ycmVzcG9uZGluZyB0byBhIGZ1bGwgY3Jvc3NpbmcNCiAgaWYgKGxlbmd0aChsaXN0MSkgIT0gMCl7DQoNCiAgIyBUaGVuIEkgc3Vic2V0IHRoZSBmaXJzdCBhZnRlciBiZWluZyByZWFkIGF0IDEgb3IgMyAobmVjZXNzYXJpbHkgYXQgYW50ZW5uYSAyIG9yIDMpDQogIGluZGV4MltbaV1dIDwtIHN1YnNldChsaXN0MVtbMV1dLCB0aW1lID09IGxpc3QxW1sxXV0kdGltZVsxXSkNCg0KICAjIEV2ZW50dWFsbHksIHRoaXMgbGlzdCBjb250YWlucywgZm9yIGVhY2ggaW5kaXZpZHVhbCB0aGF0IGZ1bGx5IGNyb3NzZWQgdGhlIGJveCwNCiAgIyBpdHMgZmlyc3QgcmVhZCBhdCBhbnRlbm5hIDIgb3IgMyBhZnRlciBlbnRlcmluZyB0aGUgYm94IGZvciBhIGZ1bGwgY3Jvc3MuDQoNCiAgfSAjIGVuZCBvZiBpZg0KDQogIA0KICANCiAgDQogIA0KDQojIyA2LiBJTkRFWCAzIC0gRFVSQVRJT04gU1BFTlQgSU4gVEhFIEJPWA0KICAjIEkgc2VsZWN0IHRoZSBzZXF1ZW5jZXMgZm9yIHdoaWNoIHRoZSBpbmRpdmlkdWFsIGlzIHJlYWQgYXQgbGVhc3Qgb25jZSBhdCBhbnRlbm5hIDIgb3IgMw0KICBjb25kMiA8LSBsYXBwbHkobGlzdCwgZnVuY3Rpb24oeCkgbnJvdyh4KSA+PSAyKQ0KICANCiAgIyBJIGtlZXAgdGhlIHNlcXVlbmNlcyBjb3JyZXNwb25kaW5nIHRvIHRoaXMgY29uZGl0aW9uDQogIGxpc3QyIDwtIGxpc3RbdW5saXN0KGNvbmQyKV0NCg0KICAjIElmIHRoZSBpbmRpdmlkdWFsIGVudGVyZWQgdGhlIGJveCBhdCBsZWFzdCBvbmNlDQogIGlmIChsZW5ndGgobGlzdDIpICE9IDApew0KDQogICMgRm9yIGVhY2ggc2VxdWVuY2UNCiAgZm9yKHggaW4gMTpsZW5ndGgobGlzdDIpKXsNCiAgICANCiAgIyBJIHNldCBteSBpbml0aWFsIHZhbHVlIG9mIGEgYXMgMA0KICBkdXJhdGlvbiA8LSAwDQogIA0KICAjIEFuZCBzdW0gYWxsIHRoZSB0aW1lIHNwZW50IGluc2lkZSB0aGUgYm94DQogIGR1cmF0aW9uIDwtIGR1cmF0aW9uICsgZGlmZnRpbWUobGlzdDJbW3hdXVtucm93KGxpc3QyW1t4XV0pLCBdJHRpbWUsIGxpc3QyW1t4XV1bMSxdJHRpbWUsIHVuaXRzPSdtJykNCg0KICAjIEkga2VlcCB0aGlzIGR1cmF0aW9uIGFuZCBpbmRpY2F0ZSB0aGUgbmFtZSBvZiB0aGUgY29ycmVzcG9uZGluZyBpbmRpdmlkdWFsDQogIGluZGV4M1tbaV1dIDwtIGRhdGEuZnJhbWUoaWQgPSBsaXN0MltbMV1dJGlkWzFdLCBkdXJhdGlvbikNCg0KICB9ICMgZW5kIG9mIGluZGV4IDMgc2VxdWVuY2VzIGZvciBsb29wDQogIH0gIyBlbmQgb2YgaWYNCg0KfSAjIGVuZCBvZiBtYWluIGZvciBsb29wIChnb2luZyB0aHJvdWdoIGluZGl2aWR1YWxzKQ0KDQoNCiMgSSBiaW5kIHRoZSByb3dzIG9mIG15IGxpc3QuDQppbmRleDEgPC0gYmluZF9yb3dzKGluZGV4MSkNCmluZGV4MSA8LSBuYS5vbWl0KGluZGV4MSkNCm5hbWVzKGluZGV4MSlbMl0gPC0gInRpbWVfZW50ZXJpbmciDQoNCg0KaW5kZXgyIDwtIGJpbmRfcm93cyhpbmRleDIpDQpuYW1lcyhpbmRleDIpWzJdIDwtICJ0aW1lX2ZpcnN0X2Nyb3NzIg0KDQoNCg0KaW5kZXgzIDwtIGJpbmRfcm93cyhpbmRleDMpDQppbmRleDMkZHVyYXRpb24gPC0gYXMubnVtZXJpYyhpbmRleDMkZHVyYXRpb24pDQoNCmluZGljZXMgPC0gbWVyZ2UoaW5kZXgxW2MoImlkIiwgInRpbWVfZW50ZXJpbmciKV0sIGluZGV4MltjKCJpZCIsICJ0aW1lX2ZpcnN0X2Nyb3NzIildLCBieSA9ICJpZCIsIGFsbCA9IFQpDQppbmRpY2VzIDwtIG1lcmdlKGluZGljZXMsIGluZGV4MywgYnkgPSJpZCIsIGFsbCA9IFQpDQppbmRpY2VzIDwtIG1lcmdlKGluZGljZXMsIEVCX3ZhcmlhYmxlcywgYnkgPSAiaWQiLCBhbGwgPSBUKQ0KDQogICAgDQogIGluZGljZXNfbW9ybmluZyA8LSBzdWJzZXQoaW5kaWNlcywgdGltZV9vZl9kYXkgPT0gIk1vcm5pbmciKSAlPiUNCiAgICBtdXRhdGUobGF0ZW5jeV9lbnRlciA9IGFzLm51bWVyaWMoZGlmZnRpbWUodGltZV9lbnRlcmluZywgc3RhcnRfbW9ybmluZywgdW5pdHM9J20nKSksDQogICAgICAgICAgIGxhdGVuY3lfY3Jvc3MgPSBhcy5udW1lcmljKGRpZmZ0aW1lKHRpbWVfZmlyc3RfY3Jvc3MsIHN0YXJ0X21vcm5pbmcsIHVuaXRzPSdtJykpDQogICAgICAgICAgICkNCg0KICBpbmRpY2VzX2FmdGVybm9vbiA8LSBzdWJzZXQoaW5kaWNlcywgdGltZV9vZl9kYXkgPT0gIkFmdGVybm9vbiIpICU+JQ0KICAgIG11dGF0ZShsYXRlbmN5X2VudGVyID0gYXMubnVtZXJpYyhkaWZmdGltZSh0aW1lX2VudGVyaW5nLCBzdGFydF9hZnRlcm5vb24sIHVuaXRzPSdtJykpLA0KICAgICAgICAgICBsYXRlbmN5X2Nyb3NzID0gYXMubnVtZXJpYyhkaWZmdGltZSh0aW1lX2ZpcnN0X2Nyb3NzLCBzdGFydF9hZnRlcm5vb24sIHVuaXRzPSdtJykpDQogICAgICAgICAgICkNCg0KICBpbmRpY2VzIDwtIHJiaW5kKGluZGljZXNfbW9ybmluZywgaW5kaWNlc19hZnRlcm5vb24pDQoNCiAgaW5kaWNlcyA8LSBpbmRpY2VzICU+JQ0KICAgIG11dGF0ZShsYXRlbmN5X2VudGVyID0gaWZfZWxzZShpcy5uYShsYXRlbmN5X2VudGVyKSwgMTUwLCBsYXRlbmN5X2VudGVyKSwNCiAgICAgICAgICAgbGF0ZW5jeV9jcm9zcyA9IGlmX2Vsc2UoaXMubmEobGF0ZW5jeV9jcm9zcyksIDE1MCwgbGF0ZW5jeV9jcm9zcyksDQogICAgICAgICAgIGR1cmF0aW9uID0gaWZfZWxzZShpcy5uYShkdXJhdGlvbiksIDAsIGR1cmF0aW9uKSkNCg0KYGBgDQo=</div>
 
 
 
@@ -2308,7 +2009,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("Notebook_trash_bin.Rmd");
+  window.initializeSourceEmbed("Exploration box - all indices.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>

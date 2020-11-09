@@ -174,6 +174,54 @@ shoaling.index <- function(clean_df, df_variables){
 ### EB
 
 
+### 2.2 Antenna changes
+
+Next, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence of identical numbers. The output is, for the example above: 1, 2, 3. 
+
+
+```{r, message = FALSE}
+  
+# I indicate the crossing sequences (antennas 1 -> 4 and 4 -> 1)
+  p1.4 = c(1, 2, 3, 4)
+  p4.1 = c(4, 3, 2, 1)
+
+
+  # I define my objects
+    df_list_red <- list()
+    nb_ind <- length(EB_list_df_id) # number of individuals that have been read by the antennas
+
+    
+    
+  # For each individual, I want to obtain the reads corresponding to an antenna change and the
+  # corresponding antenna number, time and fish id.
+    for (i in 1:nb_ind) {
+      EB_list_df_id[[i]] <- EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
+      
+      changes          <- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
+      antenna          <- c(EB_list_df_id[[i]]$antenna[1], EB_list_df_id[[i]]$antenna[changes])
+      time             <- c(EB_list_df_id[[i]]$time[1], EB_list_df_id[[i]]$time[changes])
+      id               <- c(EB_list_df_id[[i]]$id[1], EB_list_df_id[[i]]$id[changes])
+      df_list_red[[i]] <- data.frame(antenna, time, id)
+    }
+
+
+    
+    
+  # I bind the rows of the list (i.e. make it a data frame, as it initially was)
+    EB_Changes <- bind_rows(df_list_red)
+    EB_Changes <- as.data.frame(EB_Changes)
+    EB_Changes <- merge(EB_variables[c("id", "Pond", "Treatment_seq", "time_of_day")], 
+    EB_Changes, by = "id")
+    EB_Changes <- EB_Changes[order(as.POSIXct(EB_Changes$time)),]
+    rownames(EB_Changes) <- NULL
+  # EB_Changes is basically the initial 'df' but the repeated reads
+  # have been eliminated only to keep the first one.
+
+
+    
+    ```
+
+
 #### 2.3.1  _first.cross_ Function
 
 Once I have the antenna changes, I can start to look at which sequence of changes I am specifically interested in. To do so, I build a function which has, as:
@@ -256,3 +304,104 @@ first.cross <- function(df){
 
 ```
 
+
+
+
+    
+### 2.3 Latency to cross the box
+
+
+Next, I can apply the function above to all individuals. I also add a column containing the latency to fully explore the box. 
+
+```{r, message = FALSE}
+
+# I split my data frame per individual
+  EB_changes_list <- split(EB_Changes, f = EB_Changes$id)
+
+
+# I define a list
+  first_crosses <- list()
+
+  
+# For each individual...
+  for(i in 1:length(EB_changes_list)){
+    # I want to obtain the first full cross of the box, using the function defined above.
+    first_crosses[[i]] <- first.cross(EB_changes_list[[i]])
+  }
+  
+  
+# I bind the data frames of my list together to obtain a single data frame containing
+# The first cross of all individuals that crossed the box.
+  EB_Lat <- bind_rows(first_crosses)
+
+
+  
+# I add a new column with the time to cross the box since the start of the test
+# For the morning
+  EB_Lat_morning <- mutate(subset(EB_Lat, time_of_day == "Morning"), 
+                           time_since_start = difftime(Ant2, start_morning, units='m'))
+# For the afternoon
+  EB_Lat_afternoon <- mutate(subset(EB_Lat, time_of_day == "Afternoon"), 
+                             time_since_start = difftime(Ant2, start_afternoon, units='m'))
+
+  
+# I bind the two, and transform my column (in minutes) as numerical
+  EB_Lat <- rbind(EB_Lat_morning, EB_Lat_afternoon)
+  EB_Lat$time_since_start <- as.numeric(EB_Lat$time_since_start)
+
+
+
+```
+
+
+
+
+#### 2.3.2  _finalise.EB_ Function
+
+I make a small function, to modify my data frame containing the crossing sequence of all individuals that crossed the box in a way that I have a nice data frame for plotting. In this function, I add the individuals variables (_i.e._ pond, Time of the day, treatment sequence, hereafter _variables_). Finally, I give the maximal value (that is, 150 minutes) to all individuals that never crossed the box.
+
+
+```{r, message = FALSE}
+
+
+finalise.EB <- function(EB_Lat, EB_variables) {
+# I add the environmental variables
+  EB_Lat_final <- merge(EB_Lat[c("id", "time_since_start")], 
+                        EB_variables[c('id', "time_of_day", "Pond", "Treatment_seq")], 
+                        by = 'id', all = T)
+
+  
+  
+# I assign the maximal values to all the fish that never crossed the box.
+  EB_Lat_final$time_since_start[is.na(EB_Lat_final$time_since_start)] <- 150
+
+  
+  
+# I create an exploration index, for which a low value means that individuals never 
+# explored the box, and a high value means that individuals explored it early.
+  EB_Lat_final$Expl_index <-  abs(c(EB_Lat_final$time_since_start - 150))
+
+  
+  
+# I only keep the variables of interest for plotting.
+  EB_Lat_final <- EB_Lat_final[c("id", "Pond", "Treatment_seq", 
+                                 "time_since_start", "time_of_day", "Expl_index")]
+  
+  return(EB_Lat_final)}
+
+
+```
+
+I use the _finalise.EB_ function to clean up the output and to obtain a plottable data frame.
+
+```{r}
+# I run the finalise.EB function defined above to clean my output
+  EB_output <- finalise.EB(EB_Lat, EB_variables)
+
+# I clean my environment
+  rm(EB_Changes, EB_Lat,  
+  EB_Lat_morning, EB_Lat_afternoon, 
+  first_crosses, EB_changes_list, 
+  df_list_red, EB_list_df_id)
+
+```
