@@ -13,7 +13,7 @@ This notebook contains chunks of R script computing indices for five different b
 - Tendency to hide
 - Shoaling tendency
 
-There is no specific behavioural test for the last index. Instead, the metric is retrieved from the data collected in the four other tests. This notebook is so far written to compute the individuals behavioural indices for one week of treatment, from the four weekly data sets.
+There is no specific behavioural test for the last index. Instead, the shoaling metric is retrieved from the data collected in the four other tests. This notebook is so far written to compute the individuals behavioural indices for one week of treatment, from the four weekly data sets.
 
 ## 1. Packages, data import and basic data manipulation
 
@@ -65,7 +65,7 @@ shelter_df <- read_delim("Data/Week 1/20201104.CSV",
 
 ```
 
-Below, you will find a series of generic functions, that can be applied to one of the data sets imported above (_i.e._ data frame containing the reads for one test during one day). These functions can be applied to data sets coming from the four different tests.
+In this first section, you will find a series of generic functions, that can be applied to one of the data sets imported above (_i.e._ data frame containing the reads for one test during one day). These generic functions can be applied to data sets coming from the four different tests.
 
 
 
@@ -73,11 +73,11 @@ Below, you will find a series of generic functions, that can be applied to one o
 
 I create the **clean.data** *function*. This function does the following things:
 
-- It subsets a few columns of interest from the raw data (_i.e._ time, antenna, id)
-- It keeps only one read per individual and per second for a given antenna (_i.e._ remove repeats)
-- It assigns every individual to a category named *time of the day*, indicating if the fish was tested during the morning or during the afternoon.
+- It subsets a few columns of interest from the raw data (_i.e._ time, antenna, id).
+- It keeps only one read per individual and per second for a given antenna (_i.e._ remove repeats).
+- It assigns every individual to a category named *time of the day*, indicating if the fish was tested during the morning or during the afternoon. The time of the days represent the two replicates for each treatment sequence.
 - It renames the antenna as *1, 2, 3 and 4* (see Fig 1 & Fig 2). Therefore, antenna numbers in all ponds correspond to their respective position.
-- It removes the ghost reads, and the reads coming from antenna tests, only to keep the fish reads in the ponds.
+- It removes the ghost reads, and the reads coming from antenna tests, only to keep the fish actually read in the ponds.
 - It assigns each individual to its *pond number* and *treatment sequence*.
 
 ![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
@@ -156,7 +156,7 @@ clean.data <- function(df){
 Next, I make a small function to obtain, for each clean data frame, the number of individuals in the pond.
 
 - Input = A clean data frame (see _clean.data_ function.)
-- Output = A data frame containing then number of individuals that were read per pond, and the total number.
+- Output = A data frame containing the number of individuals that were read per pond, and the total number.
 
 ```{r}
 
@@ -224,7 +224,7 @@ Then, I write another small (and very similar) function to obtain the identity o
 ```
 
 
-Next, I can apply these generic functions to the different data sets (at the start of the next sections). The four following sections also contain chunks of code to specifically analyse the data from the four different tests, respectively. 
+Next, I can apply these three generic functions to the different data sets (at the start of the next sections). The four following sections also contain chunks of code to specifically analyse the data from the four different tests, respectively. 
 
 ---
 
@@ -241,13 +241,9 @@ I first clean my data set, and look how many fish are missing and what their ide
   EB_missing <- miss.ind(EB_clean_df)
   print(EB_missing)
   
-  
-# I split my dataframe into a list of dataframes (one object per individual)
-   EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
-
 ```
 
-Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read this day. To do so, I use the _Fish list_ imported above.
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read this day. To do so, I use the _Fish list_ imported above. The main advantage of this 'variables' data frame is that it contains the 'time of day', even for fish individuals that did not get read by the antennas.
 
 ```{r, message = FALSE}
 # I merge the clean data frame with the variables data drame
@@ -262,13 +258,11 @@ Next, I make a data frame with the characteristics of all individuals, even the 
 
 ```
 
-Now, we want to know how long individuals take to fully cross the box. To obtain this metric, I need to first define the crossing sequences and starting times.
+### 2.2 Latency to explore the box
+
+Now, serious things start: we want to know how long individuals take to fully cross the box. To obtain this metric, I need to first define a few objects: my starting times (morning/afternoon).
 
 ```{r, message = FALSE}
-# I indicate the crossing sequences (antennas 1 -> 4 and 4 -> 1)
-  p1.4 = c(1, 2, 3, 4)
-  p4.1 = c(4, 3, 2, 1)
-
 # I define my starting times
   start_morning = as.POSIXct(strptime(c("093000"),"%H%M%S"),"UTC")
   date(start_morning) <- EB_clean_df$time[1]
@@ -277,66 +271,79 @@ Now, we want to know how long individuals take to fully cross the box. To obtain
   date(start_afternoon) <- EB_clean_df$time[1]
 ```
 
----
 
 
----
+The function below aims at, from one day of EB data, obtain, for each fish, three different metrics for exploration tendency. The function is built the following way:
 
-Idea of the function is to obtain, for each individual:
+- I define a few objects and start a loop going through all individuals
 
-- Latency to enter the box (_i.e._ reach antenna 2 or 3)
-- Latency to fully cross the box (_i.e._ reach antenna 2 *and* 3) without leaving the box
-- Total time spent in the box (_i.e._ time spent between read at antenna 2 or 3 until leaving the box at antenna 1 or 4)
+- **Index 1** - Latency to enter the box. I simply obtain, for each individual, the first read at antenna 2 or 3.
+
+
+- I obtain the antenna changes. If an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), I only keep the first reads for each sequence of identical numbers. The output is, for the example above: 1, 2, 3. 
+
+
+- I split these antenna change reads as a list of data frames. Every time that an individual is read at antenna 1 or 4 (entrances of the box), I split the data frame. I know that if, after a 1 or a 4, there is a 2 or a 3, the individual entered the box. I can then trace the individual until it leaves the box again (ant 1 or 4). This perspective is used for calculating index 2.
+
+- Compute **Index 2** - First time that an individual fully crosses the box. To do so, I am interested in the first sequence containing at least a read from antenna 2 *and* a read from antenna 3, before the fish leaves the box, either via antenna 1 or via antenna 4. The sequences could be, for instance, (1,2,3,4) or (4,3,2,1) or (1,2,3,2,1) or (1,2,3,2,3,2,3,4) etc. It needs to start by a 1 or a 4, to end by a 1 or a for, and to have at least one 2 and one 3 in between.
+
+
+- Compute **Index 3** - Time spent in the box. In this case, the individual does not need to fully cross the box (i.e. no need to be read by antenna 2 *and* 3 after entering the box and before leaving the box). Instead, I simply calculate the time between an individual is read at antenna 2 or 3 until it is read at antenna 1 or 4 again, whatever the sequence is. The sequence could simply be 4 (enter the box) - 3 (in the box) - 4 (leaves the box), and I would look at the time between 3 and 4. Then, I sum all the times corresponding to the different sequences.
 
 
 ```{r}
 
+## 1. DEFINE OBJECTS
+  # I split my dataframe into a list of dataframes (one object per individual)
+    EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
+    df <- data.frame()
+    final1 <- list()
+    final2 <- list()
+  
+    
+    
+  # For every individual...
+  for (i in 1:length(EB_list_df_id)){
+    
+## 2. INDEX 1 - FIRST TIME ENTERING THE BOX
+  index1[[i]] <- subset(EB_list_df_id[[i]], antenna == 2 | antenna == 3)[1,]
+  
+    
+  
+    
 
-# I split my dataframe into a list of dataframes (one object per individual)
-EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
-
-# Define objects
-df <- data.frame()
-final1 <- list()
-final2 <- list()
-
-# For every individual
-for (i in 1:length(EB_list_df_id)){
-
-
-
-# I want to obtain the reads corresponding to an antenna change and the
-# corresponding antenna number, time and fish id.
-EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
-
-changes          <- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
-antenna          <- c(EB_list_df_id[[i]]$antenna[1], EB_list_df_id[[i]]$antenna[changes])
-time             <- c(EB_list_df_id[[i]]$time[1], EB_list_df_id[[i]]$time[changes])
-id               <- c(EB_list_df_id[[i]]$id[1], EB_list_df_id[[i]]$id[changes])
-df_list_red[[i]] <- data.frame(antenna, time, id)
+## 3. ANTENNA CHANGES
+  # I obtain the reads corresponding to an antenna change and the
+  # corresponding antenna number, time and fish id.
+  EB_list_df_id[[i]][order(as.POSIXct(EB_list_df_id[[i]]$time)),]
+  
+  changes          <- which(EB_list_df_id[[i]]$antenna!= lag(EB_list_df_id[[i]]$antenna))
+  antenna          <- c(EB_list_df_id[[i]]$antenna[1], EB_list_df_id[[i]]$antenna[changes])
+  time             <- c(EB_list_df_id[[i]]$time[1], EB_list_df_id[[i]]$time[changes])
+  id               <- c(EB_list_df_id[[i]]$id[1], EB_list_df_id[[i]]$id[changes])
+  EB_list_changes[[i]] <- data.frame(antenna, time, id)
+  
 
 
 
 
-  # Then, I mark all the row numbers at which the fish was read at antenna 1 or a 4
-  vec <- which(df_list_red[[i]][,"antenna"] == 1 | df_list_red[[i]][,"antenna"] == 4)
-  # I want to cut *after* antenna 1 and 4 were read
+## 4. SPLIT THESE ANTENNA CHANGES DF WHEN THE FISH IS READ AT ANT 1 OR 4
+  # I mark all the row numbers at which the fish was read at antenna 1 or a 4
+  vec <- which(EB_list_changes[[i]][,"antenna"] == 1 | EB_list_changes[[i]][,"antenna"] == 4)
+  
+  # I want to cut *after* reads at antenna 1 and 4
   vec <- vec  +1
   
   # I split my data frame every time the individual passes by ant 1 or 4
-  list <- split(df_list_red[[i]], cumsum(1:nrow(df_list_red[[i]]) %in% vec))
+  list <- split(EB_list_changes[[i]], cumsum(1:nrow(EB_list_changes[[i]]) %in% vec))
 
-## 1. Latency to fully explore the box
   
-  # From these sequences, I want to keep the sequences of reads corresponding
-  # to a full crossing of the box. To do so, I keep the sequences containing at
-  # least a read from antenna 2 *and* 3 before a fish is read out of the box again 
-  # at the antenna 1 or 4.  2 and 3 before leaving the box, either
-  # by antenna 1 or by antenna 4.
   
+  
+  
+## 5. INDEX 2 - FIRST TIME TO FULLY CROSS THE BOX
   # I select the sequences for which the individual is read at antennas 2 *and* 3
   cond1 <- lapply(list, function(x) nrow(x) >= 3)
-
 
   # I apply this condition to keep the crossing sequences
   list1 <- list[unlist(cond1)]
@@ -344,44 +351,45 @@ df_list_red[[i]] <- data.frame(antenna, time, id)
   # If there is such a sequence corresponding to a full crossing
   if (length(list1) != 0){
 
-  # Then I subset the first read of the first crossing, necessarily at antenna 2 or 3,
+  # Then I subset the first after being read at 1 or 3 (necessarily at antenna 2 or 3)
   final1[[i]] <- subset(list1[[1]], time == list1[[1]]$time[1])
-
 
   # Eventually, this list contains, for each individual that fully crossed the box,
   # its first read at antenna 2 or 3 after entering the box for a full cross.
 
   } # end of if
 
+  
+  
+  
+  
 
-## 2. Time spent in the box
-  
-  # Now I want to obtain the time spent in the box. However, in this case, the individuals
-  # do not need to fully cross the box (i.e. no need to be read by antenna 2 *and* 3 after
-  # entering the box). Instead, I simply calculate the time between an individual is read at
-  # antenna 2 or 3 until it is read at antenna 1 or 4 again, whatever the sequence is.
-  
+## 6. INDEX 3 - DURATION SPENT IN THE BOX
   # I select the sequences for which the individual is read at least once at antenna 2 or 3
   cond2 <- lapply(list, function(x) nrow(x) >= 2)
+  
   # I keep the sequences corresponding to this condition
   list2 <- list[unlist(cond2)]
 
   # If the individual entered the box at least once
   if (length(list2) != 0){
 
-  # For each of the sequences
+  # For each sequence
   for(x in 1:length(list2)){
+    
   # I set my initial value of a as 0
   duration <- 0
+  
   # And sum all the time spent inside the box
   duration <- duration + difftime(list2[[x]][nrow(list2[[x]]), ]$time, list2[[x]][1,]$time, units='m')
 
-  # I indicate this duration spent in the box per individual
+  # I keep this duration and indicate the name of the corresponding individual
   final2[[i]] <- data.frame(id = list2[[1]]$id[1], duration)
 
-  }}
+  } # end of index 3 sequences for loop
+  } # end of if
 
-} # end of for loop
+} # end of main for loop (going through individuals)
 
 
 # I bind the rows of my list.
@@ -553,7 +561,7 @@ I define the distances between the different antennas, and the sequence of cross
 
 ### 3.2 _trav.dist_ - A function computing the travelled distance per individual
 
-First, as above, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), we only keep the first reads for each sequence of identical numvers. The output is, for the example above: 1, 2, 3. 
+First, as above, I want to keep the reads corresponding to antenna changes. For each individual, if an individual has been read at the antenna the following way (1, 1, 1, 2, 2, 3), I only keep the first reads for each sequence of identical numvers. The output is, for the example above: 1, 2, 3. 
 
 Second, I compute the traveled distance between these antennas, for every change, and sum them up. At the end, I will obtain a proxy for the distance that a fish has traveled between the antennas during 2:30 hours.
 
