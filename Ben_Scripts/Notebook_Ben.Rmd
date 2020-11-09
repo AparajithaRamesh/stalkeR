@@ -5,7 +5,7 @@ output:
   pdf_document: default
 ---
 
-This notebook contains chunks of R script computing EB_output for five different behaviours:
+This notebook contains chunks of R script computing incices for five different behaviours:
 
 - Traveled distance
 - Tendency to spend time at the top of the pond
@@ -13,7 +13,7 @@ This notebook contains chunks of R script computing EB_output for five different
 - Tendency to hide
 - Shoaling tendency
 
-There is no specific behavioural test for the last index. Instead, the shoaling metric is retrieved from the data collected in the four other tests. This notebook is so far written to compute the individuals behavioural EB_output for one week of treatment, from the four weekly data sets.
+There is no specific behavioural test for the last index. Instead, the shoaling metric is retrieved from the data collected in the four other tests. This notebook is so far written to compute the individuals behavioural indices for one week of treatment, from the four weekly data sets.
 
 ## 1. Packages, data import and basic data manipulation
 
@@ -44,19 +44,19 @@ I import the four data sets we obtain every week, one for each behavioural test.
 ```{r, message = FALSE}
 
 # Exploration box data
-EB_df <- read_delim("Data/Week 1/20201102.CSV", 
+EB_df <- read_delim("Data/Week 1/EB.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Bottom antennas data
-bottom_df <- read_delim("Data/Week 1/20201103.CSV", 
+bottom_df <- read_delim("Data/Week 1/bottom.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Top antennas data
-top_df <- read_delim("Data/Week 1/20201105.CSV", 
+top_df <- read_delim("Data/Week 1/top.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
 # Shelters data
-shelter_df <- read_delim("Data/Week 1/20201104.CSV", 
+shelter_df <- read_delim("Data/Week 1/shelter.CSV", 
      ";", escape_double = FALSE, trim_ws = TRUE)
 
 # List of fish
@@ -80,9 +80,9 @@ I create the **clean.data** *function*. This function does the following things:
 - It removes the ghost reads, and the reads coming from antenna tests, only to keep the fish actually read in the ponds.
 - It assigns each individual to its *pond number* and *treatment sequence*.
 
-![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png)
+![Figure 1 - Location of the antennas for the *bottom* and the *shelter* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide8.png){width=75%}
 
-![Figure 2 - Location of the antennas for the *top* and the *EB* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide9.png)
+![Figure 2 - Location of the antennas for the *top* and the *EB* tests.](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Meetings/Meeting 7 - Last practical details/Practicalities/Slide9.png){width=75%}
 
 
 
@@ -270,6 +270,11 @@ Now, we want to know how long individuals take to enter the exploration box. To 
   start_afternoon = as.POSIXct(strptime(c("123000"),"%H%M%S"),"UTC")
   date(start_afternoon) <- EB_clean_df$time[1]
 ```
+
+
+![Figure 3 - Exploration box](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Photos/Illustrations/Box.png){width=50%}
+
+
 
 
 
@@ -1194,7 +1199,7 @@ I can first look at the individuals that were never read during the whole week. 
 ```{r, message = FALSE}
 
 
-week1_df <- data.frame(EB_output[c("id", "Treatment_seq", "Pond", "latency_entrance")],
+week1_df <- tibble(EB_output[c("id", "Treatment_seq", "Pond", "latency_entrance")],
                     bottom_output[c("Dist")],
                     shelter_output[c("duration_shelter")],
                     top_output[c("duration_top")],
