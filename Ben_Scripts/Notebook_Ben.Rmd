@@ -5,7 +5,7 @@ output:
   pdf_document: default
 ---
 
-This notebook contains chunks of R script computing incices for five different behaviours:
+This notebook contains chunks of R script computing indices for five different behaviours:
 
 - Traveled distance
 - Tendency to spend time at the top of the pond
@@ -65,13 +65,17 @@ shelter_df <- read_delim("Data/Week 1/shelter.CSV",
 
 ```
 
-In this first section, you will find a series of generic functions, that can be applied to one of the data sets imported above (_i.e._ data frame containing the reads for one test during one day). These generic functions can be applied to data sets coming from the four different tests.
+
+
+In this first section, you will find a series of generic functions, that can be applied to one of the data sets imported above (_i.e._ data frame containing the reads for one test during one day). These generic functions can be applied to data sets coming from any test.
+
+
 
 
 
 #### 1.1 _clean.data_ Function
 
-I create the **clean.data** *function*. This function does the following things:
+The **clean.data** function does the following things:
 
 - It subsets a few columns of interest from the raw data (_i.e._ time, antenna, id).
 - It keeps only one read per individual and per second for a given antenna (_i.e._ remove repeats).
@@ -153,9 +157,9 @@ clean.data <- function(df){
 #### 1.2 _Nb.ind_ Function
 
 
-Next, I make a small function to obtain, for each clean data frame, the number of individuals in the pond.
+Next, I make a small function to obtain, for each clean data frame, the number of individuals in the pond that were read.
 
-- Input = A clean data frame (see _clean.data_ function.)
+- Input = A clean data frame (see _clean.data_ function).
 - Output = A data frame containing the number of individuals that were read per pond, and the total number.
 
 ```{r}
@@ -186,9 +190,9 @@ Nb.ind <- function(clean_df){
 #### 1.3 _miss.ind_ Function
 
 
-Then, I write another small (and very similar) function to obtain the identity of these missing individuals.
+Then, I write another small (very similar) function to obtain the identity of these missing individuals.
 
-- Input = A clean data frame (see _clean.data_ function.)
+- Input = A clean data frame (see _clean.data_ function).
 - Output = A data frame containing the individuals that were not read, and their corresponding pond number.
 
 ```{r}
@@ -224,11 +228,16 @@ Then, I write another small (and very similar) function to obtain the identity o
 ```
 
 
-Next, I can apply these three generic functions to the different data sets (at the start of the next sections). The four following sections also contain chunks of code to specifically analyse the data from the four different tests, respectively. 
+Next, I can apply these three generic functions to the different data sets (at the start of the next sections).
 
 ---
 
 ## 2. Latency to explore the box
+
+An exploration box was introduced in the pond for 2:30 hours. Four different antennas are placed in the box, in a way that we can trace the movements of the fishes when they enter the box (see Figure 3.)
+
+![Figure 3 - Exploration box](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Photos/Illustrations/Box.png){width=50%}
+
 ### 2.1 Data manipulation
 
 I first clean my data set, and look how many fish are missing and what their identity is. I show three data frames: (i) the cleaned data frame, (ii) the number of individuals per pond, (iii) the identity of the missing fish.
@@ -243,7 +252,7 @@ I first clean my data set, and look how many fish are missing and what their ide
   
 ```
 
-Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read this day. To do so, I use the _Fish list_ imported above. The main advantage of this 'variables' data frame is that it contains the 'time of day', even for fish individuals that did not get read by the antennas.
+Next, I make a data frame with the characteristics of all individuals, even the ones that haven't been read this day. To do so, I use the _Fish list_ imported above. The main advantage of merging the clean data with the 'variables' data frame is to obtain the 'time of day' (i.e. if an individual was tested in the morning or afternoon), even for fish individuals that did not get read by the antennas.
 
 ```{r, message = FALSE}
 # I merge the clean data frame with the variables data drame
@@ -260,7 +269,7 @@ Next, I make a data frame with the characteristics of all individuals, even the 
 
 ### 2.2 Latency to explore the box
 
-Now, we want to know how long individuals take to enter the exploration box. To obtain this metric, I need to first define a few objects: my starting times (morning/afternoon).
+Now, we want to know how long individuals took to enter the exploration box. To obtain this metric, I need to first define two objects: my starting times (morning/afternoon).
 
 ```{r, message = FALSE}
 # I define my starting times
@@ -272,13 +281,8 @@ Now, we want to know how long individuals take to enter the exploration box. To 
 ```
 
 
-![Figure 3 - Exploration box](C:/Users/benka/OneDrive/Documents/Cours/M2 - Sticklebacks/Photos/Illustrations/Box.png){width=50%}
 
-
-
-
-
-Then, I obtain, for each individual, the first read at antenna 2 or 3. Then, I calculate the difference between this time and the time at which the box was introduced in the pond. 
+Next, I obtain, for each individual, the first read at antenna 2 or 3 (i.e. first time inside the box). In a second step, I calculate the difference between this time and the time at which the box was introduced in the pond. 
 
 
 ```{r}
@@ -307,8 +311,9 @@ EB_list_df_id <- split(EB_clean_df, f = EB_clean_df$id)
 
 
 # I merge this table with the EB_variables data frame
-EB_output <- merge(index[c("id", "time_entering")], EB_variables, by = "id", all = T)
+  EB_output <- merge(index[c("id", "time_entering")], EB_variables, by = "id", all = T)
 
+  
 
 # I obtain the difference between the time of entrance, and the intial time for
 # Morning
@@ -336,9 +341,9 @@ EB_output <- merge(index[c("id", "time_entering")], EB_variables, by = "id", all
 
 ---
 
-### 2.3 Plotting
+### 2.3 Plots
 
-The histogram below shows the distribution of latencies to explore the box. All fish that did not entirely cross the box received the maximal score.
+The histogram below shows the distribution of latencies to enter the box. As you can see in the last chunk, fish that did not entirely cross the box received the maximal score.
 
 ```{r, message = FALSE}
   
@@ -398,6 +403,9 @@ The plots below show the distribution of latency scores per pond and per treatme
 
 
 ## 3. Travelled distance
+
+Here, we are interested in knowing how active are the fish, and how they move between antennas placed at the bottom of the ponds.
+
 ### 3.1 Data manipulation
 
 
@@ -585,7 +593,7 @@ For every individual, indicate to what pond and treatment it is associated with.
 
 ---
 
-### 3.3 Plotting
+### 3.3 Plots
 
 
 
@@ -719,7 +727,7 @@ For every individual, I indicate to what pond and treatment it is associated wit
 
 
 
-### 4.3 Plotting
+### 4.3 Plots
 
 
 ```{r}
@@ -859,7 +867,7 @@ I indicate, for every individual, to what pond and treatment it is associated wi
 ```
 
 
-### 5.3 Plotting
+### 5.3 Plots
 
 
 
@@ -1125,7 +1133,7 @@ ggplot(data = shoaling_output, aes(shoaling)) +
 
 ```
 
-### 5.3 Plotting
+### 5.3 Plots
 
 
 
