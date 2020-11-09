@@ -322,6 +322,9 @@ EB_output <- merge(index[c("id", "time_entering")], EB_variables, by = "id", all
 # I give the maximal latency to the individuals that never entered the box
   EB_output <- EB_output %>%
     mutate(latency_entrance = if_else(is.na(latency_entrance), 150, latency_entrance))
+  
+# Clean the environment
+  rm(index)
 
 ```
 
@@ -455,8 +458,8 @@ I define the distances between the different antennas, and the sequence of cross
     
 # Sequence of antenna changes corresponding to the distances above   
     seq.width  <- c('12', '21', '34', '43')
-    seq.length <- c('13', '31', '24', '42')
-    seq.diag   <- c('14', '41', '23', '32')
+    seq.diag <- c('13', '31', '24', '42')
+    seq.length  <- c('14', '41', '23', '32')
 ```
 
 ---
@@ -471,13 +474,13 @@ Second, I compute the traveled distance between these antennas, for every change
 
 ```{r, message = FALSE}
     trav.dist <- function(new_dataset){
-    
+    new_dataset <- bottom_clean_df
     # I split my data frame into a list of data frames (one object per individual)
     df_list <- split(new_dataset, f = new_dataset$id)
 
 
 
-##  1. REMOVE THE REPEATED READS AND OBTAIN THE ANTENNA CHANGE
+##  1. OBTAIN THE ANTENNA CHANGE
 
     # I define 'df_list_red', which will be 'df_list' with only antenna changes
     df_list_red <- list()
@@ -1123,6 +1126,30 @@ ggplot(data = shoaling_output, aes(shoaling)) +
 
 
 ```{r}
+
+ # Violin plots for differences between the 8 ponds within a week
+ggplot(data = shoaling_output, aes(x = Treatment_seq, y = shoaling, fill = time_of_day)) + 
+      geom_violin(position = position_dodge(width = 0.5)) + 
+      
+      #geom_boxplot(width=.1, outlier.alpha = 0.1, 
+      #             position = position_dodge(width = 0.4), colour = "black") +
+      
+      scale_fill_brewer(palette="Blues") +
+      
+      # theme_bw() +
+      theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor = element_line(colour = "#e6e6e6"), 
+            axis.ticks.y = element_blank(), 
+            axis.ticks.x = element_blank(), 
+            panel.background = element_blank(),
+            axis.line.y = element_line(color = "black")) +
+      labs(y = "Time spent hidin (minutes)", x =" ") +
+      scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) + ggtitle("Hiding") + 
+      stat_summary(fun = median, geom="point", size=2, color="black", position = position_dodge(width = 0.5))
+
+
+
 ggplot(data = shoaling_output, aes(x = Treatment_seq, y = shoaling)) +
       geom_violin(fill = "#e4e3e8") + 
       #geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3,) +
