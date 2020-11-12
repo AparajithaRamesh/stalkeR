@@ -1,6 +1,5 @@
 
-
-square_df_raw <- read_csv("~/Cours/M2 - Sticklebacks/Data/50. Corona experiment/food_final.csv")
+square_df_raw <- read_csv("~/Cours/M2 - Sticklebacks/Data/50. Corona experiment/square_final.csv")
 square_df <- square_df_raw
 
 
@@ -21,11 +20,11 @@ clean_square_df<-subset(square_df, select=c(Actual_time, `Unit.number`, `Transpo
 names(clean_square_df) <- c("time", "antenna", "id")
 
 
-# I keep one read per second  
+# I keep one read per second
 clean_square_df <- clean_square_df  %>% distinct()
 
 # I indicate in which pond the individuals are
-clean_square_df <- clean_square_df %>% 
+clean_square_df <- clean_square_df %>%
   mutate("pond_id"= recode(antenna, "21"=1,"14"=1,"22"=2,"23"=2,"24"=3,"11"=3, "12"=4,"13"=4,
                                  "41"=5,"35"=5,"42"=6, "43"=6, "44"=7, "31"=7, "32"=8,"33"=8))
 # I reorder based on time
@@ -56,9 +55,9 @@ for(i in 1:length(clean_square_list)){
     time             <- c(clean_square_list[[i]]$time[1], clean_square_list[[i]]$time[changes])
     id               <- c(clean_square_list[[i]]$id[1], clean_square_list[[i]]$id[changes])
     clean_square_list_changes[[i]] <- data.frame(pond_id, time, id)
-    
+
   }
-  
+
 
 
 
@@ -68,14 +67,14 @@ step.length <- function(changes_df_id){
   if (nrow(changes_df_id) > 1){
   # data example
   # changes_df_id <- clean_square_list_changes[[4]]
-  
+
 # Define objects
   turnarounds <- c()
   steps <- c()
-  
+
 # For every antenna change
   for(n in 2:nrow(changes_df_id)) {
-    
+
     # where did 'row i-1' and 'row i+1' have the same value (i.e. turn around)?
     turnarounds[n] <- c(changes_df_id$pond_id[n - 1] == changes_df_id$pond_id[n + 1])
   }
@@ -99,15 +98,15 @@ for (i in 1:length(list)){
 mean_steps <- data.frame(id = changes_df_id$id[1],
                          Mean_length = mean(steps),
                          SD_length = sd(steps))}
-  
-  
+
+
   if (nrow(changes_df_id) == 1){
-    
-    mean_steps <- data.frame(id = changes_df_id$id[1], 
-                             Mean_length  = 1, 
+
+    mean_steps <- data.frame(id = changes_df_id$id[1],
+                             Mean_length  = 1,
                              SD_length = NA)
   }
-  
+
 
 return(mean_steps)
 } # end of function
@@ -124,19 +123,19 @@ step_length_df <- merge(step_length_df, variables_df, by = "id")
 
 
 
-square_plot <- ggplot(data = step_length_df, aes(x = status, y = Mean_length )) + 
-  geom_violin(fill = "#e4e3e8", draw_quantiles = c(0.5)) + 
+square_plot <- ggplot(data = step_length_df, aes(x = status, y = Mean_length )) +
+  geom_violin(fill = "#e4e3e8", draw_quantiles = c(0.5)) +
   #geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3) +
   theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
         panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_line(colour = "#e6e6e6"), 
-        axis.ticks.y = element_blank(), 
-        axis.ticks.x = element_blank(), 
+        panel.grid.minor = element_line(colour = "#e6e6e6"),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
         panel.background = element_blank(),
         axis.line.y = element_line(color = "black")) +
-  labs(y = "Travelled distance (meters)", x =" ") +  
-  
-  geom_point(position = position_jitter(width = 0.02), alpha = 0.1)+ ylim(0,5) + ggtitle('Square')
+  labs(y = "Step length", x =" ") +
+
+  geom_point(position = position_jitter(width = 0.02), alpha = 0.1)+ ylim(0,5) + ggtitle('Square (n = 40)')
 
 
 
@@ -159,7 +158,7 @@ clean_line_data<-subset(line_data, select=c(Actual_time, `Unit.number`, `Transpo
 names(clean_line_data) <- c("time", "antenna", "id")
 
 
-# I keep one read per second  
+# I keep one read per second
 clean_line_data <- clean_line_data  %>% distinct()
 
 # I indicate in which pond the individuals are
@@ -185,13 +184,13 @@ clean_line_list <- split(clean_line_data, f = clean_line_data$id)
 
 # For each individual
 for(i in 1:length(clean_line_list)){
-  
+
   changes          <- which(clean_line_list[[i]]$pond_id!= lag(clean_line_list[[i]]$pond_id))
   pond_id          <- c(clean_line_list[[i]]$pond_id[1], clean_line_list[[i]]$pond_id[changes])
   time             <- c(clean_line_list[[i]]$time[1], clean_line_list[[i]]$time[changes])
   id               <- c(clean_line_list[[i]]$id[1], clean_line_list[[i]]$id[changes])
   clean_line_list_changes[[i]] <- data.frame(pond_id, time, id)
-  
+
 }
 
 
@@ -212,19 +211,19 @@ for (i in 1:107){
 step_length_df <- merge(step_length_df, line_data_variables, by = "id")
 
 
-line_plot <- ggplot(data = step_length_df, aes(x = status, y = Mean_length )) + 
-  geom_violin(fill = "#e4e3e8", draw_quantiles = c(0.5)) + 
+line_plot <- ggplot(data = step_length_df, aes(x = status, y = Mean_length )) +
+  geom_violin(fill = "#e4e3e8", draw_quantiles = c(0.5)) +
   #geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0.3) +
   theme(panel.grid.major.y = element_line(colour = "#d4d4d4"),
         panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_line(colour = "#e6e6e6"), 
-        axis.ticks.y = element_blank(), 
-        axis.ticks.x = element_blank(), 
+        panel.grid.minor = element_line(colour = "#e6e6e6"),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
         panel.background = element_blank(),
         axis.line.y = element_line(color = "black")) +
-  labs(y = "Travelled distance (meters)", x =" ") +  
-  
-  geom_point(position = position_jitter(width = 0.02), alpha = 0.1) + ylim(0,5) + ggtitle('Line')
+  labs(y = "Step length", x =" ") +
+
+  geom_point(position = position_jitter(width = 0.02), alpha = 0.1) + ylim(0,5) + ggtitle('Line (n = 107)')
 
 
 (square_plot + line_plot)
