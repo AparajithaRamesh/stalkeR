@@ -1222,7 +1222,6 @@ week1_df <- tibble(EB_output[c("id", "Treatment_seq", "Pond", "latency_entrance"
 ```{r, message = FALSE}
 ggplot(data = week1_df, aes(x = duration_shelter, y = duration_top)) +
   geom_point(alpha = 0.5) + theme_cowplot()
-  #coord_cartesian(xlim = c(0, 100))
   #geom_smooth(colour = "gray")
 
 
