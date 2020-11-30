@@ -16,11 +16,7 @@ addons:
     sources:
       - sourceline: ppa:ubuntugis/ubuntugis-unstable
     packages:
-      - libudunits2-dev
-      - libproj-dev
-      - libgdal-dev
-      - libgeos-dev
-      - liblwgeom-dev
+ 
 
 before_install:
   - sudo apt-get install pkg-config
