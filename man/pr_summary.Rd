@@ -13,7 +13,9 @@ pr_summary(block_df, block_ref_df)
 
 }
 \description{
-pr_summary Function
+This function takes a data frame containing the reads of an experimental block and produces (i)
+a summary table containing the reads of each individual per antenna, and the total reads;
+(ii) a heatmap corresponding to a visual representation of the table.
 }
 \examples{
 

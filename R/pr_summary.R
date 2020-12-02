@@ -1,5 +1,9 @@
 #' @title pr_summary Function
 #'
+#'
+#' @description This function takes a data frame containing the reads of an experimental block and produces (i)
+#' a summary table containing the reads of each individual per antenna, and the total reads;
+#' (ii) a heatmap corresponding to a visual representation of the table.
 #' @param block_df
 #' @param block_ref_df
 #'
