@@ -2,16 +2,28 @@
 % Please edit documentation in R/pr_clean_data.R
 \name{pr_clean_data}
 \alias{pr_clean_data}
-\title{Title}
+\title{Clean the raw data from the readers}
 \usage{
 pr_clean_data(raw_df, id_ref_df)
 }
 \arguments{
-\item{id_ref_df}{}
+\item{raw_df}{Raw data frame from the PIT / RFID system,
+already formatted and containing these columns,
+"time", "date", "antenna", "id"  (already formatted)}
+
+\item{id_ref_df}{Reference data frame from the whole experiment
+containing at least one column "id", with  all
+individuals and corresponding variables (already formatted)}
 }
 \value{
-
+A data frame (clean_df), with three columns (i.e. id, antenna, time),
+and the number of rows corresponding to the total number
+of reads except duplicates within a second.
 }
 \description{
-Title
+\itemize{The function does the following:
+\item Remove ghost reads
+\item Keep one read per individual at a certain antenna per second
+\item Posixt format for time
+\item Keeps columns of interest (i.e. id, antenna, time)}
 }
