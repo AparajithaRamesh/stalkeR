@@ -7,7 +7,7 @@
 pr_filter(clean_df, block_nb, ind_names, antenna_nb, start_time, end_time)
 }
 \arguments{
-\item{clean_df}{A clean data frame of any size, containing at least one experimental blocks, and potentially many.}
+\item{clean_df}{A clean data frame containing at least one experimental blocks, and potentially many.}
 
 \item{block_nb}{The number or name of an experimental block (e.g. enclosure, pond, lake).}
 

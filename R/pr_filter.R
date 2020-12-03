@@ -8,7 +8,7 @@
 #' that occurred after 2020-11-05 12:30:00.
 #'
 #'
-#' @param clean_df A clean data frame of any size, containing at least one experimental blocks, and potentially many.
+#' @param clean_df A clean data frame containing at least one experimental blocks, and potentially many.
 #'
 #' @param block_nb The number or name of an experimental block (e.g. enclosure, pond, lake).
 #'
@@ -44,31 +44,31 @@
 #'
 pr_filter <- function(clean_df, block_nb, ind_names, antenna_nb, start_time, end_time){
 
-  # If given individuals names
+  # If block numbers are given
   if(!missing(block_nb)) {
     ind_names <- subset(id_ref_df$id, id_ref_df$Pond == block_nb)
     clean_df <- clean_df[clean_df$id %in% ind_names,]
   }
 
 
-  # If given block number
+  # If individual names are given
   if(!missing(ind_names)) {
     clean_df <- clean_df[clean_df$id %in% ind_names,]
   }
 
-  # If given antenna numbers
+  # If antenna numbers are given
   if(!missing(antenna_nb)) {
     clean_df <- clean_df[clean_df$antenna %in% antenna_nb,]
   }
 
 
-  # If given start time
+  # If start time is given
   if(!missing(start_time)) {
     clean_df <- subset(clean_df, start_time < time)
   }
 
 
-  # If given end time
+  # If end time is given
   if(!missing(end_time)) {
     clean_df <- subset(clean_df, end_time > time)
   }
