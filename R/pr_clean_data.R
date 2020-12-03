@@ -9,12 +9,15 @@
 #' individuals and corresponding variables (already formatted)
 #'
 #' @description \itemize{The function does the following:
-#' \item Remove ghost reads
-#' \item Keep one read per individual at a certain antenna per second
+#' \item Keeps columns of interest (i.e. id, antenna, time)
 #' \item Posixt format for time
-#' \item Keeps columns of interest (i.e. id, antenna, time)}
+#' \item Keep one read per individual at a certain antenna per second
+#' \item Remove ghost reads
+#' \item Orders the data frame based on time
 #'
-#' @return A data frame (clean_df), with three columns (i.e. id, antenna, time),
+#' }
+#'
+#' @return A data frame (\code{clean_df}), with three columns (i.e. id, antenna, time),
 #' and the number of rows corresponding to the total number
 #' of reads except duplicates within a second.
 #'
@@ -29,9 +32,6 @@ pr_clean_data <- function(raw_df, id_ref_df){
   raw_df$id <- as.character(raw_df$id)
   raw_df$time <- lubridate::dmy_hms(paste(raw_df$date, raw_df$time, sep=" "))
 
-
-# I make a new data frame with a subset of the variables of interest here
-  clean_df <- subset(raw_df, select=c("time", "antenna", "id"))
 
 # I only keep the variables of interest
   clean_df <- subset(raw_df, select=c(`time`, `antenna`, `id`))

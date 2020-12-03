@@ -1,4 +1,4 @@
-#' @title pr_summary
+#' @title Produces a summary table and a heatmap
 #'
 #'
 #' @description This function takes the reads from an experimental block (\code{block_df}) and a
@@ -17,7 +17,9 @@
 #' @param block_df A data frame containing the reads from an experimental block
 #' @param block_ref_df A data frame containing a reference list with all individuals present in the experimental block.
 #'
-#' @return
+#' @return A summary table containing the number of reads of each individual (per antenna, and total reads),
+#' and its visual representation as a heatmap.
+#'
 #' @export
 #'
 #' @examples

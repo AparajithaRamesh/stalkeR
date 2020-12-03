@@ -2,7 +2,7 @@
 % Please edit documentation in R/pr_summary.R
 \name{pr_summary}
 \alias{pr_summary}
-\title{pr_summary}
+\title{Produces a summary table and a heatmap}
 \usage{
 pr_summary(block_df, block_ref_df)
 }
@@ -12,7 +12,8 @@ pr_summary(block_df, block_ref_df)
 \item{block_ref_df}{A data frame containing a reference list with all individuals present in the experimental block.}
 }
 \value{
-
+A summary table containing the number of reads of each individual (per antenna, and total reads),
+and its visual representation as a heatmap.
 }
 \description{
 This function takes the reads from an experimental block (\code{block_df}) and a
