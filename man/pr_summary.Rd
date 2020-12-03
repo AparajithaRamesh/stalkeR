@@ -2,22 +2,35 @@
 % Please edit documentation in R/pr_summary.R
 \name{pr_summary}
 \alias{pr_summary}
-\title{pr_summary Function}
+\title{pr_summary}
 \usage{
 pr_summary(block_df, block_ref_df)
 }
 \arguments{
-\item{block_ref_df}{}
+\item{block_df}{A data frame containing the reads from an experimental block}
+
+\item{block_ref_df}{A data frame containing a reference list with all individuals present in the experimental block.}
 }
 \value{
 
 }
 \description{
-This function takes a data frame containing the reads of an experimental block and produces (i)
-a summary table containing the reads of each individual per antenna, and the total reads;
+This function takes the reads from an experimental block (\code{block_df}) and a
+reference list of fish present in this block (\code{block_ref_df}).
+It produces (i) a summary table containing the reads of each individual per antenna, and the total reads;
 (ii) a heatmap corresponding to a visual representation of the table.
+
+Why do we need both \code{block_df} and \code{block_ref_df}? If all the individuals have been read in \code{block_df},
+then the individuals present in \code{block_ref_df} and \code{block_df} are the same.
+However, if some individuals haven't been read in \code{block_df} (e.g. animals haven't moved, lost the tag, are dead),
+then there will be more individuals in the \code{block_ref_df}.
 }
 \examples{
+# Inputs
+block_7_df <- read.csv("~/block_7_df.txt", sep="")
+ind_block_7 <- data.frame(id = c("0007E50321", "0007A34978", "0007DF1B76"))
 
+# Run the function
+pr_summary(block_df = block_7_df, ind_block_7)
 
 }
