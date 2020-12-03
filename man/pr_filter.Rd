@@ -2,16 +2,47 @@
 % Please edit documentation in R/pr_filter.R
 \name{pr_filter}
 \alias{pr_filter}
-\title{Title}
+\title{pr_filter}
 \usage{
 pr_filter(clean_df, block_nb, ind_names, start_time, end_time)
 }
 \arguments{
-\item{end_time}{}
+\item{clean_df}{A clean data frame of any size, containing at least one experimental blocks, and potentially many.}
+
+\item{block_nb}{The number or name of an experimental block (e.g. enclosure, pond, lake).}
+
+\item{ind_names}{A vector containing the names of all the individuals to subset.}
+
+\item{start_time}{The time from which the experimental block starts (POSIXct format, see examples).}
+
+\item{end_time}{The time until which the experimental block lasts (POSIXct format, see examples).}
 }
 \value{
 
 }
 \description{
-Title
+This function subsets a clean (and potentially large) data frame based on four different possible parameters:
+experimental block number/name, individuals id, start time and end time.
+
+These parameters are cumulative. If for instance, I chose experimental block 7 with "2020-11-05 12:30:00" as
+starting time, it will take the reads, within the experimental block 7,
+that occurred after 2020-11-05 12:30:00.
+}
+\examples{
+
+# Define inputs
+ind_names_1 <- c("0007E50321", "0007A34978", "0007DF1B76")
+ind_names_2 <- c("Apu", "Jakob", "Franjo")
+pond_nb <- 7
+cage_nb <- cage5
+start_time_5_nov <- as.POSIXct(strptime(c("2020-11-05 12:30:00"),"\%Y-\%m-\%d \%H:\%M:\%OS"),"UTC")
+end_time_5_nov <- as.POSIXct(strptime(c("2020-11-05 14:00:00"),"\%Y-\%m-\%d \%H:\%M:\%OS"),"UTC")
+
+# Run the function with different parameters
+pr_filter(clean_df, ind_names = ind_names_1)
+pr_filter(clean_df, block_nb = pond_nb)
+pr_filter(clean_df, start_time = start_time)
+pr_filter(clean_df, start_time_5_nov = start_time_5_nov)
+pr_filter(clean_df, ind_names = ind_names_2, block_nb = cage5, end_time = end_time_5_nov)
+
 }
