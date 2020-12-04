@@ -1,7 +1,8 @@
-^.*\.Rproj$
+^pondr\.Rproj$
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
 ^\.travis\.yml$
 ^data-raw$
 ^appveyor\.yml$
+
