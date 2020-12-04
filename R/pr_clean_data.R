@@ -45,6 +45,8 @@ pr_clean_data <- function(raw_df, id_ref_df){
   ghost_reads <- setdiff(clean_df$id, id_ref_df$id)
 
   # Then, I remove all of them from the data frame
+
+
   if(length(ghost_reads)!=0){
     for (i in 1:length(ghost_reads)){
       clean_df <- clean_df[!(clean_df$id == ghost_reads[i]),]
