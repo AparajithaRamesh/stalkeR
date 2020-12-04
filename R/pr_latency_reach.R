@@ -1,6 +1,12 @@
 #' @title Computes the latency to reach one or several antennas
 #'
-#' @description Description missing
+#' @description This function computes, for every individual, the latency to reach (\emph{i.e.} be read at) certain antennas.
+#' This can for example be used in the context of an exploration test, in which individuals enter an exploration box,
+#' in which they are read by certain antennas.
+#'
+#' The function computes the difference between the initial time (time at which the antennas were introduced/started to record)
+#' and the first read at one or several \emph{antennas of interest}. Individuals that were not read at these antennas (notably obtained
+#' from \code{block_ref_df}) receive a score corresponding to the maximal possible duration by default.
 #'
 #' @param block_df A data frame containing the reads from an experimental block
 #'
