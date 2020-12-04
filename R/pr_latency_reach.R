@@ -1,5 +1,7 @@
 #' @title Computes the latency to reach one or several antennas
 #'
+#' @description Description missing
+#'
 #' @param block_df A data frame containing the reads from an experimental block
 #'
 #' @param block_ref_df A data frame containing a reference list with all individuals present in the experimental block.
@@ -7,12 +9,12 @@
 #' @param antenna_nb If there is one antenna of interest, then antenna_nb corresponds to its number/name (\code{antenna_nb_1} in examples).
 #' However, if there are several antennas of interest, the argument should be av vector of antenna names/numbers (\code{antenna_nb_2} in examples).
 #'
-#' @param start_time The time from which the experimental block starts (POSIXct format, see examples).
+#' @param start_time The time from which the experimental block starts (\emph{i.e.POSIXct} format, see examples).
 #'
-#' @param end_time The time until which the experimental block lasts (POSIXct format, see examples).
+#' @param end_time The time until which the experimental block lasts (\emph{i.e.POSIXct} format, see examples).
 #'
 #' @param keep_NA Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value,
-#' i.e. \code{end_time} - \code{start_time} (default option), or be kept as NA.
+#' \emph{i.e.} \code{end_time} - \code{start_time} (default option), or be kept as NA.
 #'
 #' @param unit Unit of the latency duration: m as default.
 #'
