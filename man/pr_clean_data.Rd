@@ -21,12 +21,12 @@ and the number of rows corresponding to the total number
 of reads except duplicates within a second.
 }
 \description{
-\itemize{The function does the following:
-\item Keeps columns of interest (i.e. id, antenna, time)
-\item Posixt format for time
-\item Keep one read per individual at a certain antenna per second
-\item Remove ghost reads
-\item Orders the data frame based on time
+\itemize{The function does the following;
+(i) Keeps columns of interest (i.e. id, antenna, time)
+(ii)Posixt format for time
+(iii) Keep one read per individual at a certain antenna per second
+(iv) Remove ghost reads
+(v) Orders the data frame based on time
 
 }
 }

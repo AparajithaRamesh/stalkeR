@@ -2,36 +2,29 @@
 % Please edit documentation in R/pr_summary.R
 \name{pr_summary}
 \alias{pr_summary}
-\title{Produces a summary table and a heatmap}
+\title{pr_summary Function
+#'}
 \usage{
 pr_summary(block_df, block_ref_df)
 }
 \arguments{
-\item{block_df}{A data frame containing the reads from an experimental block}
+\item{block_df}{Raw data frame from the PIT / RFID system,
+already formatted and containing these columns,
+"time", "date", "antenna", "id"  (already formatted)}
 
-\item{block_ref_df}{A data frame containing a reference list with all individuals present in the experimental block.}
+\item{block_ref_df}{Reference data frame from the whole experiment
+containing at least one column "id", with  all
+individuals and corresponding variables (already formatted)}
 }
 \value{
-A summary table containing the number of reads of each individual (per antenna, and total reads),
-and its visual representation as a heatmap.
+A data frame (clean_df), with three columns (i.e. id, antenna, time),
+and the number of rows corresponding to the total number
+of reads except duplicates within a second.
 }
 \description{
-This function takes the reads from an experimental block (\code{block_df}) and a
-reference list of fish present in this block (\code{block_ref_df}).
-It produces (i) a summary table containing the reads of each individual per antenna, and the total reads;
-(ii) a heatmap corresponding to a visual representation of the table.
-
-Why do we need both \code{block_df} and \code{block_ref_df}? If all the individuals have been read in \code{block_df},
-then the individuals present in \code{block_ref_df} and \code{block_df} are the same.
-However, if some individuals haven't been read in \code{block_df} (e.g. animals haven't moved, lost the tag, are dead),
-then there will be more individuals in the \code{block_ref_df}.
-}
-\examples{
-# Inputs
-block_7_df <- read.csv("~/block_7_df.txt", sep="")
-ind_block_7 <- data.frame(id = c("0007E50321", "0007A34978", "0007DF1B76"))
-
-# Run the function
-pr_summary(block_df = block_7_df, ind_block_7)
-
+\itemize{The function does the following:
+\item Remove ghost reads
+\item Keep one read per individual at a certain antenna per second
+\item Posixt format for time
+\item Keeps columns of interest (i.e. id, antenna, time)}
 }

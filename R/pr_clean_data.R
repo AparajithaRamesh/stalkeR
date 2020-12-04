@@ -8,12 +8,12 @@
 #' containing at least one column "id", with  all
 #' individuals and corresponding variables (already formatted)
 #'
-#' @description \itemize{The function does the following:
-#' \item Keeps columns of interest (i.e. id, antenna, time)
-#' \item Posixt format for time
-#' \item Keep one read per individual at a certain antenna per second
-#' \item Remove ghost reads
-#' \item Orders the data frame based on time
+#' @description \itemize{The function does the following;
+#' (i) Keeps columns of interest (i.e. id, antenna, time)
+#' (ii)Posixt format for time
+#' (iii) Keep one read per individual at a certain antenna per second
+#' (iv) Remove ghost reads
+#' (v) Orders the data frame based on time
 #'
 #' }
 #'
@@ -45,8 +45,12 @@ pr_clean_data <- function(raw_df, id_ref_df){
   ghost_reads <- setdiff(clean_df$id, id_ref_df$id)
 
   # Then, I remove all of them from the data frame
-  for (i in 1:length(ghost_reads)){
-    clean_df <- clean_df[!(clean_df$id == ghost_reads[i]),]
+
+
+  if(length(ghost_reads)!=0){
+    for (i in 1:length(ghost_reads)){
+      clean_df <- clean_df[!(clean_df$id == ghost_reads[i]),]
+    }
   }
 
   # I reorder the data frame based on time
