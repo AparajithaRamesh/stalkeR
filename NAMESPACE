@@ -2,6 +2,7 @@
 
 export("%>%")
 export(pr_clean_data)
+export(pr_dist)
 export(pr_filter)
 export(pr_summary)
 importFrom(magrittr,"%>%")
