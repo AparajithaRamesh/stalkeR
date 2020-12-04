@@ -36,9 +36,8 @@
 #'
 #'
 pr_sociality <- function(block_df,
-                        block_ref_df,
-                        cutoff = 10) {
-
+                         block_ref_df,
+                         cutoff = 10) {
   block_df <- block_df %>%
     # Group by antenna and time (for each antenna, within a second)
     group_by(antenna, time) %>%
@@ -64,10 +63,9 @@ pr_sociality <- function(block_df,
     # Finally, I add the individuals that haven't been read at all
     right_join(block_ref_df["id"])
 
+  # Only keep sociality score (proportion column) if tot_reads > cutoff
+  block_df[, "proportion"][block_df[, "tot_reads"] < cutoff] <- NA
 
-  if (missing(cutoff)) {
-    block_df[4][block_df[3] < cutoff] <- NA
-  }
-
-  return(block_df)
+return(block_df)
 }
+
