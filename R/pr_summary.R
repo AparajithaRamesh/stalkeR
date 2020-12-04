@@ -23,8 +23,6 @@
 #' @export
 #'
 #' @examples
-<<<<<<< HEAD
-=======
 #' # Inputs
 #' block_7_df <- read.csv("~/block_7_df.txt", sep="")
 #' ind_block_7 <- data.frame(id = c("0007E50321", "0007A34978", "0007DF1B76"))
@@ -32,8 +30,6 @@
 #' # Run the function
 #' pr_summary(block_df = block_7_df, ind_block_7)
 #'
-
->>>>>>> 2cf7f7da679267d7b01c106c8daef3b38b419c0e
 pr_summary <- function(block_df, block_ref_df){
 
 
