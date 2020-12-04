@@ -23,7 +23,6 @@
 #'
 #' @export
 #'
-#' @examples
 pr_clean_data <- function(raw_df, id_ref_df){
 
   # Defining my variables
