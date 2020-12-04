@@ -4,7 +4,15 @@
 \alias{pr_filter}
 \title{Subsets reads corresponding to one experimental block}
 \usage{
-pr_filter(clean_df, block_nb, ind_names, antenna_nb, start_time, end_time)
+pr_filter(
+  clean_df,
+  id_ref_df,
+  block_nb,
+  ind_names,
+  antenna_nb,
+  start_time,
+  end_time
+)
 }
 \arguments{
 \item{clean_df}{A clean data frame containing at least one experimental blocks, and potentially many.}

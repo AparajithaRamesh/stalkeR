@@ -42,7 +42,7 @@
 #' pr_filter(clean_df, start_time_5_nov = start_time_5_nov)
 #' pr_filter(clean_df, ind_names = ind_names_2, block_nb = cage5, end_time = end_time_5_nov)
 #'
-pr_filter <- function(clean_df, block_nb, ind_names, antenna_nb, start_time, end_time){
+pr_filter <- function(clean_df, id_ref_df, block_nb, ind_names, antenna_nb, start_time, end_time){
 
   # If block numbers are given
   if(!missing(block_nb)) {
