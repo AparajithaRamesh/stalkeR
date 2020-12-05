@@ -13,8 +13,8 @@ pr_sociality(block_df, block_ref_df, cutoff = 10)
 
 \item{cutoff}{A value corresponding to the minimum number of \emph{total reads} (both accompanied and non-accompanied) from which a
 sociability index (\emph{i.e.} proportion of accompanied reads) should be computed. For example, if an individual has been
-read only once, by chance, in presence of a conspecific, a score of 100% for this individual is likely non-representative of the
-real proportion of time it spends in presence of conspecicifs. By default, the value if set at 10 total reads. For no cutoff, one can
+read only once, by chance, in presence of a conspecific, a score of 100\% for this individual is likely non-representative of the
+real proportion of time it spends in presence of conspecifics By default, the value if set at 10 total reads. For no cutoff, one can
 use a value of 0.}
 }
 \value{
