@@ -42,39 +42,45 @@
 #' pr_filter(clean_df, start_time_5_nov = start_time_5_nov)
 #' pr_filter(clean_df, ind_names = ind_names_2, block_nb = cage5, end_time = end_time_5_nov)
 #'
-pr_filter <- function(clean_df, id_ref_df, block_nb, ind_names, antenna_nb, start_time, end_time){
+pr_filter <-
+  function(clean_df,
+           id_ref_df,
+           block_nb,
+           ind_names,
+           antenna_nb,
+           start_time,
+           end_time) {
+    # If block numbers are given
+    if (!missing(block_nb)) {
+      ind_names <- subset(id_ref_df$id, id_ref_df$Pond == block_nb)
+      clean_df <- clean_df[clean_df$id %in% ind_names, ]
+    }
 
-  # If block numbers are given
-  if(!missing(block_nb)) {
-    ind_names <- subset(id_ref_df$id, id_ref_df$Pond == block_nb)
-    clean_df <- clean_df[clean_df$id %in% ind_names,]
+
+    # If individual names are given
+    if (!missing(ind_names)) {
+      clean_df <- clean_df[clean_df$id %in% ind_names, ]
+    }
+
+    # If antenna numbers are given
+    if (!missing(antenna_nb)) {
+      clean_df <- clean_df[clean_df$antenna %in% antenna_nb, ]
+    }
+
+
+    # If start time is given
+    if (!missing(start_time)) {
+      clean_df <- subset(clean_df, start_time < time)
+    }
+
+
+    # If end time is given
+    if (!missing(end_time)) {
+      clean_df <- subset(clean_df, end_time > time)
+    }
+
+    return(clean_df)
   }
-
-
-  # If individual names are given
-  if(!missing(ind_names)) {
-    clean_df <- clean_df[clean_df$id %in% ind_names,]
-  }
-
-  # If antenna numbers are given
-  if(!missing(antenna_nb)) {
-    clean_df <- clean_df[clean_df$antenna %in% antenna_nb,]
-  }
-
-
-  # If start time is given
-  if(!missing(start_time)) {
-    clean_df <- subset(clean_df, start_time < time)
-  }
-
-
-  # If end time is given
-  if(!missing(end_time)) {
-    clean_df <- subset(clean_df, end_time > time)
-  }
-
-  return(clean_df)
-}
 
 
 #raw_df <- readr::read_delim("Dummy data/raw_df.CSV", ";", escape_double = FALSE, trim_ws = TRUE)
@@ -99,5 +105,3 @@ pr_filter <- function(clean_df, id_ref_df, block_nb, ind_names, antenna_nb, star
 #
 # roxygen2::roxygenise()
 # ?pr_filter
-
-
