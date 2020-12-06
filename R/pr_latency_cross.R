@@ -46,7 +46,7 @@
 #'))
 #'
 #'
-#'sequence-2 <- c(43, 42)
+#'sequence_2 <- c(43, 42)
 #'
 #'
 #'start_time <-
