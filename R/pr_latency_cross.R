@@ -55,7 +55,8 @@
 #'  as.POSIXct(strptime(c("2020-11-05 15:00:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
 #'
 #' pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
-#' pr_latency_cross(block_df, block_ref_df, sequence_2, start_time, end_time, keep_NA = T, unit = 's')
+#' pr_latency_cross(block_df, block_ref_df, sequence_2,
+#' start_time, end_time, keep_NA = T, unit = 's')
 #'
 #'
 pr_latency_cross <- function(block_df,
