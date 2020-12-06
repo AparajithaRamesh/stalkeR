@@ -22,7 +22,7 @@
 #' @param keep_NA Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value,
 #' \emph{i.e.} \code{end_time} - \code{start_time} (default option), or be kept as NA.
 #'
-#' @param unit Unit of the latency duration: m as default.
+#' @param unit Unit of the latency duration: 'm' as default.
 #'
 #' @return A data frame containing the latency, for every individual, to enter the antenna(s) of interest.
 #' @export

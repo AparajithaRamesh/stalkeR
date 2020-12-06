@@ -29,7 +29,7 @@ However, if there are several antennas of interest, the argument should be av ve
 \item{keep_NA}{Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value,
 \emph{i.e.} \code{end_time} - \code{start_time} (default option), or be kept as NA.}
 
-\item{unit}{Unit of the latency duration: m as default.}
+\item{unit}{Unit of the latency duration: 'm' as default.}
 }
 \value{
 A data frame containing the latency, for every individual, to enter the antenna(s) of interest.
