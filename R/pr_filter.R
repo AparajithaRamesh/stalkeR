@@ -10,6 +10,8 @@
 #'
 #' @param clean_df A clean data frame containing at least one experimental blocks, and potentially many.
 #'
+#' @param id_ref_df Reference data frame
+#'
 #' @param block_nb The number or name of an experimental block (e.g. enclosure, pond, lake).
 #'
 #' @param ind_names A vector containing the names of all the individuals to subset.
@@ -24,7 +26,7 @@
 #' @export
 #'
 #' @examples
-#'
+#' data("clean_df","block_ref_df")
 #' # Define inputs
 #' ind_names_1 <- c("0007E50321", "0007A34978", "0007DF1B76")
 #' ind_names_2 <- c("Apu", "Jakob", "Franjo")
@@ -35,12 +37,12 @@
 #' end_time_5_nov <- as.POSIXct(strptime(c("2020-11-05 14:00:00"),"%Y-%m-%d %H:%M:%OS"),"UTC")
 #'
 #' # Run the function with different parameters
-#' pr_filter(clean_df, ind_names = ind_names_1)
-#' pr_filter(clean_df, antenna_nb = antenna_nb_block7)
-#' pr_filter(clean_df, block_nb = pond_nb)
-#' pr_filter(clean_df, start_time = start_time)
-#' pr_filter(clean_df, start_time_5_nov = start_time_5_nov)
-#' pr_filter(clean_df, ind_names = ind_names_2, block_nb = cage5, end_time = end_time_5_nov)
+#' #pr_filter(clean_df, ind_names = ind_names_1)
+#' #pr_filter(clean_df, antenna_nb = antenna_nb_block7)
+#' #pr_filter(clean_df, block_nb = pond_nb)
+#' #pr_filter(clean_df, start_time = start_time)
+#' #pr_filter(clean_df, start_time_5_nov = start_time_5_nov)
+#' #pr_filter(clean_df, ind_names = ind_names_2, block_nb = cage5, end_time = end_time_5_nov)
 #'
 pr_filter <- function(clean_df, id_ref_df, block_nb, ind_names, antenna_nb, start_time, end_time){
 

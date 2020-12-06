@@ -56,21 +56,21 @@ end_time <-
 
 
 
-pr_latency_reach(
-block_df,
-block_ref_df,
-antenna_nb_2,
-start_time,
-end_time,
-keep_NA = T,
-unit = 's')
+#pr_latency_reach(
+#block_df,
+#block_ref_df,
+#antenna_nb_2,
+#start_time,
+#end_time,
+#keep_NA = T,
+#unit = 's')
 
-pr_latency_reach(
-block_df,
-block_ref_df,
-antenna_nb_1,
-start_time,
-end_time,
-keep_NA = T,
-unit = 'm')
+#pr_latency_reach(
+#block_df,
+#block_ref_df,
+#antenna_nb_1,
+#start_time,
+#end_time,
+#keep_NA = T,
+#unit = 'm')
 }

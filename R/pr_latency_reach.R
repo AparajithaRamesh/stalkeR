@@ -40,23 +40,23 @@
 #'
 #'
 #'
-#' pr_latency_reach(
-#' block_df,
-#' block_ref_df,
-#' antenna_nb_2,
-#' start_time,
-#' end_time,
-#' keep_NA = T,
-#' unit = 's')
+#' #pr_latency_reach(
+#' #block_df,
+#' #block_ref_df,
+#' #antenna_nb_2,
+#' #start_time,
+#' #end_time,
+#' #keep_NA = T,
+#' #unit = 's')
 #'
-#' pr_latency_reach(
-#' block_df,
-#' block_ref_df,
-#' antenna_nb_1,
-#' start_time,
-#' end_time,
-#' keep_NA = T,
-#' unit = 'm')
+#' #pr_latency_reach(
+#' #block_df,
+#' #block_ref_df,
+#' #antenna_nb_1,
+#' #start_time,
+#' #end_time,
+#' #keep_NA = T,
+#' #unit = 'm')
 pr_latency_reach <-
 
   function(block_df,
@@ -91,7 +91,7 @@ pr_latency_reach <-
         # Group by antennas and individual id
         dplyr::group_by(antenna, id) %>%
         # Keep first reads of each individual at the different antennas
-        dplyr::filter(row_number() == 1) %>%
+        dplyr::filter(dplyr::row_number() == 1) %>%
         # Create a column computing the latency between first read and start time
         dplyr::mutate(latency = as.numeric(difftime(time, start_time, units = unit))) %>%
         # Remove the time column
