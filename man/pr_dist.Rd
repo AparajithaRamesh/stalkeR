@@ -23,6 +23,3 @@ block_ref_antenna_df, output gives indiv, distance
 travelled, 0 for indiv that got read, didnt move and
  NA for indiv that did not get read
 }
-\examples{
-
-}

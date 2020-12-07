@@ -13,7 +13,6 @@
 #'
 #' @export
 #'
-#' @examples
 #'
 
 pr_dist<-function (block_df, block_ref_df, ant_coordinates){
