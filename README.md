@@ -2,4 +2,4 @@
 
 
 # pondR
-Package to extract, format and analyse data from PIT readers in semi-natural mesocosms
+Package to extract, format and analyse data from PIT / RFID readers.
