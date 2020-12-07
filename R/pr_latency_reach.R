@@ -91,7 +91,7 @@ pr_latency_reach <-
         # Group by antennas and individual id
         dplyr::group_by(antenna, id) %>%
         # Keep first reads of each individual at the different antennas
-        dplyr::filter(row_number() == 1) %>%
+        dplyr::filter(dplyr::row_number() == 1) %>%
         # Create a column computing the latency between first read and start time
         dplyr::mutate(latency = as.numeric(difftime(time, start_time, units = unit))) %>%
         # Remove the time column
