@@ -5,7 +5,7 @@
 \alias{raw_df}
 \title{Raw data frame obtained from the RFID / PIT tag readers}
 \format{
-A data frame with xxx rows and yy variables:
+A data frame with 808 rows and yy variables:
 \describe{
   \item{id}{RFID /PIT tag id of individuals}
   \item{date}{date of read}
