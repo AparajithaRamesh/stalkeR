@@ -1,19 +1,25 @@
 ---
-title: "Package workflow"
+title: "StalkeR package workflow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{StalkeR package workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-This package aims at providing a efficient workflow for extracting, formatting and analyzing data from PIT / RFID readers in the context of studying animal behavior using an experimental approach. A schematic version of this vignette is available in the _StalkeR cheat sheet_. First, you can (install and) load the _StalkeR_ package.
+This package aims at providing a efficient workflow for extracting, formatting and analyzing data from PIT / RFID readers in the context of studying animal behavior using an experimental approach. A schematic version of this vignette is available in the _StalkeR cheat sheet_. This package contains functions enabling to obtain, _e.g._  for each individual, a sociability index, the distance travelled between several antennas, or the latency to reach a certain antenna.
+
+
+
+First, you can (install and) load the _StalkeR_ package.
 
 ```{r setup}
 
 library(pondr)
 
 ```
+
+---
 
 # Format data
 ## What is an experimental block?
@@ -43,7 +49,7 @@ head(block_ref_df)
 
 Then, there are two options: (i) the data frame(s) you obtain from your PIT / RFID readers contain reads already corresponding to experimental blocks (one data frame per experimental block); (ii) the data frame(s) you obtain from your PIT / RFID readers contain reads from several experimental blocks (one data frame for several experimental block).
 
-If you are in the first case, you can move to the **format raw_df** section below. If you are in the second case, you need to subset the reads corresponding to your different experimental blocks. To do so, we suggest to use the `inner_join` function of the _dyplyr_ package, or the `merge` function of _base_ R, for example. 
+If you are in the first case, you can move to the 'Format `raw_df`' section below. If you are in the second case, you need to subset the reads corresponding to your different experimental blocks. To do so, we suggest to use the `inner_join` function of the _dyplyr_ package, or the `merge` function of _base_ R, for example. 
 
 ### Format `raw_df`
 You must be now working with a data frame containing reads from one experimental block. This data frame must contain at least four different columns: _id_, _date_, _time_ and _antenna_. The _id_ column must contain a unique number/code per individual; the _date_ column must contain the data at the dd-mm-yy format;the _time_ column must contain the time in the hh:mm:ss format; the _column_ must contain a unique antenna number/code. Be sure to name these columns as in the example below, keeping in mind that R is case sensitive (no capital letters in columns name).
@@ -59,10 +65,24 @@ head(raw_df)
 
 
 
+Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
+
+---
+
+# Clean the data
+
+The first function has to be used before using any of the next _StalkeR_ functions. It uses the `block_ref_df` and `raw_df` objects as inputs, and outputs a cleaner version of `raw_df` named `block_df`. The function does the following actions:
+
+- It keeps the columns of interest (_i.e._ id, antenna and time).
+- The time format is changed to _Posixt_ format.
+- It keep one read per individual at a certain antenna per second (_i.e._ remove repeats).
+- It remove ghost reads test reads, or any read that do not correspond to individuals present in the `block_ref_df` object.
+- It orders the data frame based on time.
+
+The output, `block_df`, is the working unit of this package. 
 
 
-
-
+![ The `pr_clean_data` function.](pr_clean_data.png){width=50%}
 
 
 
