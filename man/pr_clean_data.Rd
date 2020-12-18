@@ -9,9 +9,10 @@ pr_clean_data(raw_df, id_ref_df)
 \arguments{
 \item{raw_df}{Raw data frame from the PIT / RFID system,
 already formatted and containing these columns,
-"time", "date", "antenna", "id"  (already formatted)}
+"time", "date", "antenna", "id"  (already formatted). This data frame corresponds to
+the reads for \emph{one} experimental block.}
 
-\item{id_ref_df}{Reference data frame from the whole experiment
+\item{id_ref_df}{Reference data frame for an experimental block
 containing at least one column "id", with  all
 individuals and corresponding variables (already formatted)}
 }
@@ -21,12 +22,12 @@ and the number of rows corresponding to the total number
 of reads except duplicates within a second.
 }
 \description{
-\itemize{The function does the following;
-(i) Keeps columns of interest (i.e. id, antenna, time)
-(ii)Posixt format for time
-(iii) Keep one read per individual at a certain antenna per second
-(iv) Remove ghost reads
-(v) Orders the data frame based on time
+\itemize{The function does the following
+\item{}{Keeps columns of interest (i.e. id, antenna, time)}
+\item{}{Posixt format for time}
+\item{}{Keep one read per individual at a certain antenna per second}
+\item{}{Remove ghost reads}
+\item{}{Orders the data frame based on time}
 
 }
 }

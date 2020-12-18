@@ -1,19 +1,19 @@
-
 #' Clean the raw data from the readers
 #'
 #' @param raw_df Raw data frame from the PIT / RFID system,
 #' already formatted and containing these columns,
-#' "time", "date", "antenna", "id"  (already formatted)
-#' @param id_ref_df Reference data frame from the whole experiment
+#' "time", "date", "antenna", "id"  (already formatted). This data frame corresponds to
+#' the reads for \emph{one} experimental block.
+#' @param id_ref_df Reference data frame for an experimental block
 #' containing at least one column "id", with  all
 #' individuals and corresponding variables (already formatted)
 #'
-#' @description \itemize{The function does the following;
-#' (i) Keeps columns of interest (i.e. id, antenna, time)
-#' (ii)Posixt format for time
-#' (iii) Keep one read per individual at a certain antenna per second
-#' (iv) Remove ghost reads
-#' (v) Orders the data frame based on time
+#' @description \itemize{The function does the following
+#' \item{}{Keeps columns of interest (i.e. id, antenna, time)}
+#' \item{}{Posixt format for time}
+#' \item{}{Keep one read per individual at a certain antenna per second}
+#' \item{}{Remove ghost reads}
+#' \item{}{Orders the data frame based on time}
 #'
 #' }
 #'
@@ -23,17 +23,17 @@
 #'
 #' @export
 #'
-pr_clean_data <- function(raw_df, id_ref_df){
-
+pr_clean_data <- function(raw_df, id_ref_df) {
   # Defining my variables
   raw_df$time <- as.character(raw_df$time)
   raw_df$antenna <- as.integer(raw_df$antenna)
   raw_df$id <- as.character(raw_df$id)
-  raw_df$time <- lubridate::dmy_hms(paste(raw_df$date, raw_df$time, sep=" "))
+  raw_df$time <-
+    lubridate::dmy_hms(paste(raw_df$date, raw_df$time, sep = " "))
 
 
   # I only keep the variables of interest
-  clean_df <- subset(raw_df, select=c(`time`, `antenna`, `id`))
+  clean_df <- subset(raw_df, select = c(`time`, `antenna`, `id`))
 
   # I keep one read per second
   clean_df <- dplyr::distinct(clean_df)
@@ -46,14 +46,14 @@ pr_clean_data <- function(raw_df, id_ref_df){
   # Then, I remove all of them from the data frame
 
 
-  if(length(ghost_reads)!=0){
-    for (i in 1:length(ghost_reads)){
-      clean_df <- clean_df[!(clean_df$id == ghost_reads[i]),]
+  if (length(ghost_reads) != 0) {
+    for (i in 1:length(ghost_reads)) {
+      clean_df <- clean_df[!(clean_df$id == ghost_reads[i]), ]
     }
   }
 
   # I reorder the data frame based on time
-  clean_df <- clean_df[order(as.POSIXct(clean_df$time)),]
+  clean_df <- clean_df[order(as.POSIXct(clean_df$time)), ]
 
   # Reset row names
   rownames(clean_df) <- NULL
@@ -66,7 +66,3 @@ pr_clean_data <- function(raw_df, id_ref_df){
 #id_ref_df <- readxl::read_excel("Dummy data/id_ref_df.xlsx", sheet = "Sheet1")
 
 #pr_clean_data(raw_df, id_ref_df)
-
-
-
-
