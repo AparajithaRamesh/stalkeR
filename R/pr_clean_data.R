@@ -17,9 +17,9 @@
 #'
 #' }
 #'
-#' @return A data frame (\code{clean_df}), with three columns (\emph{i.e.} id, antenna, time),
+#' @return A data frame (\code{block_df}), with three columns (\emph{i.e.} id, antenna, time),
 #' and the number of rows corresponding to the total number
-#' of reads except duplicates within a second.
+#' of reads (except duplicates within a second) of a experimental block.
 #'
 #' @export
 #'
@@ -33,32 +33,32 @@ pr_clean_data <- function(raw_df, id_ref_df) {
 
 
   # I only keep the variables of interest
-  clean_df <- subset(raw_df, select = c(`time`, `antenna`, `id`))
+  block_df <- subset(raw_df, select = c(`time`, `antenna`, `id`))
 
   # I keep one read per second
-  clean_df <- dplyr::distinct(clean_df)
+  block_df <- dplyr::distinct(block_df)
 
 
   # I remove all the reads that do not come from the animals present in the focal experimental
   # block (e.g. ghost reads, test reads). I first identify them:
-  ghost_reads <- setdiff(clean_df$id, id_ref_df$id)
+  ghost_reads <- setdiff(block_df$id, id_ref_df$id)
 
   # Then, I remove all of them from the data frame
 
 
   if (length(ghost_reads) != 0) {
     for (i in 1:length(ghost_reads)) {
-      clean_df <- clean_df[!(clean_df$id == ghost_reads[i]), ]
+      block_df <- block_df[!(block_df$id == ghost_reads[i]), ]
     }
   }
 
   # I reorder the data frame based on time
-  clean_df <- clean_df[order(as.POSIXct(clean_df$time)), ]
+  block_df <- block_df[order(as.POSIXct(block_df$time)), ]
 
   # Reset row names
-  rownames(clean_df) <- NULL
+  rownames(block_df) <- NULL
 
-  return(clean_df)
+  return(block_df)
 }
 
 

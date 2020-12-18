@@ -17,9 +17,9 @@ containing at least one column "id", with  all
 individuals and corresponding variables (already formatted)}
 }
 \value{
-A data frame (\code{clean_df}), with three columns (\emph{i.e.} id, antenna, time),
+A data frame (\code{block_df}), with three columns (\emph{i.e.} id, antenna, time),
 and the number of rows corresponding to the total number
-of reads except duplicates within a second.
+of reads (except duplicates within a second) of a experimental block.
 }
 \description{
 \itemize{The function does the following
