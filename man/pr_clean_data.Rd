@@ -8,7 +8,7 @@ pr_clean_data(raw_df, id_ref_df)
 }
 \arguments{
 \item{raw_df}{Raw data frame from the PIT / RFID system,
-already formatted and containing these columns,
+already formatted and containing the columns
 "time", "date", "antenna", "id"  (already formatted). This data frame corresponds to
 the reads for \emph{one} experimental block.}
 
@@ -17,7 +17,7 @@ containing at least one column "id", with  all
 individuals and corresponding variables (already formatted)}
 }
 \value{
-A data frame (\code{clean_df}), with three columns (i.e. id, antenna, time),
+A data frame (\code{clean_df}), with three columns (\emph{i.e.} id, antenna, time),
 and the number of rows corresponding to the total number
 of reads except duplicates within a second.
 }

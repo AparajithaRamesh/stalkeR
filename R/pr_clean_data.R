@@ -1,7 +1,7 @@
 #' Clean the raw data from the readers
 #'
 #' @param raw_df Raw data frame from the PIT / RFID system,
-#' already formatted and containing these columns,
+#' already formatted and containing the columns
 #' "time", "date", "antenna", "id"  (already formatted). This data frame corresponds to
 #' the reads for \emph{one} experimental block.
 #' @param id_ref_df Reference data frame for an experimental block
@@ -17,7 +17,7 @@
 #'
 #' }
 #'
-#' @return A data frame (\code{clean_df}), with three columns (i.e. id, antenna, time),
+#' @return A data frame (\code{clean_df}), with three columns (\emph{i.e.} id, antenna, time),
 #' and the number of rows corresponding to the total number
 #' of reads except duplicates within a second.
 #'
