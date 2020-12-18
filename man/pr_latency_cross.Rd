@@ -73,7 +73,7 @@ end_time <-
 
 pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
 pr_latency_cross(block_df, block_ref_df, sequence_2,
-start_time, end_time, keep_NA = T, unit = 's')
+start_time, end_time, keep_NA = TRUE, unit = 's')
 
 
 }
