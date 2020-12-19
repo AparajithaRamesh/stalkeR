@@ -77,4 +77,6 @@ The first function has to be used before using any of the next *StalkeR* functio
 
 The output, `block_df`, is the working unit of this package.
 
+
+
 ![The `pr_clean_data` function.](pr_clean_data.png){width="50%"}
