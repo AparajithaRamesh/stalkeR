@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour using an experimental approach. A schematic version of this vignette is available in the *StalkeR cheat sheet*. Eventually, the package allows researchers to compute behavioural indices for each individual, such as a shoaling index and an activity index.
+This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour using an experimental approach. A schematic version of this vignette is available in the *StalkeR cheat sheet*. Eventually, the package allows researchers to compute several behavioural indices for each individual.
 
 First, you can (install and) load the *StalkeR* package.
 
@@ -197,16 +197,40 @@ head(ant_44_table)
 
 *Example 2, several antenna of interest:*
 ```{r}
+# Antennas of interest
 antenna_nb_2 <- c(41, 42, 43, 44)
+
+# I run my function
+mult_ant_table <- pr_latency_reach(
+block_df = block_df,
+block_ref_df = block_ref_df,
+antenna_nb_2,
+start_time = start_time,
+end_time = end_time,
+unit = 'm')
+
+head(mult_ant_table)
 ```
 
 
+---
+
+
+## Latency to *cross* one or several sequences of antennas (**pr_latency_cross**)
+
+I will need to be awake to write this one actually.
+
+
+![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
+
+
+---
+
+Same here.
 
 
 
-
-
-
+![The **pr_dist** function.](pr_dist.png){width="100%"}
 
 
 
