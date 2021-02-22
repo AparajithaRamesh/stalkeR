@@ -75,7 +75,7 @@ pr_latency_reach <-
         # Group by individual
         dplyr::group_by(id) %>%
         # Keep the first read per individual
-        dplyr::filter(row_number() == 1) %>%
+        dplyr::filter(dplyr::row_number() == 1) %>%
         # Create a column computing the latency between first read and start time
         dplyr::mutate(latency = as.numeric(difftime(time, start_time, units = unit))) %>%
         # Only keep the latency and individual column

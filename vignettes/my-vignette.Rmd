@@ -58,9 +58,10 @@ head(raw_df)
 
 Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
 
-------------------------------------------------------------------------
+---
 
-# Clean the data
+
+# Clean the data (**pr_clean_data**)
 
 The first function (**pr_clean_data**) has to be used before using any of the next *StalkeR* functions. It uses the `block_ref_df` and `raw_df` objects as inputs, and outputs a cleaner version of `raw_df` named `block_df`. The function does the following actions:
 
@@ -86,13 +87,13 @@ head(block_df)
 
 ```
 
-------------------------------------------------------------------------
+---
 
 # Compute behavioural indices
 
 Once you generated `block_df`, you can run a set of functions to compute different behavioural indices. The functions are described below:
 
-## Data summary
+## Data summary (**pr_summary**)
 
 The **pr_summary** uses, as input, the reads from an experimental block (`block_df`) and a reference list of fish present in this block (`block_ref_df`). It produces:
 
@@ -123,7 +124,9 @@ summary_heatmap
 ```
 
 
-## Sociality index
+---
+
+## Sociality index (**pr_sociality**)
 
 The **pr_sociality** computes, for every individual, the proportion of time it was read in presence of at least one conspecific. To do so, the function divides the number of *accompanied reads* (number of reads for which the focal individual was read at the same second and at the same antenna than at least another individual) by the *total number of reads* (*accompanied* plus *non-accompanied* reads). 
 
@@ -141,8 +144,10 @@ head(sociality_table)
 ```
 
 
+---
 
-## Latency to reach one or several antennas
+
+## Latency to *reach* one or several antennas (**pr_latency_reach**)
 This function computes, for every individual, the latency to reach (*i.e.* be read at) certain antennas. This can for example be used in the context of an exploration test, during which individuals enter an exploration box, in which they are read by an antenna.
 
 The function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one or several antennas of interest. Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
@@ -153,13 +158,55 @@ In addition to `block_df` and `block_ref_df`, the function needs a series of add
 
 - `antenna_nb`: If there is one antenna of interest, then `antenna_nb` corresponds to its number/name. However, if there are several antennas of interest, the argument should be a vector of antenna names/numbers.
 
-- `start_time`: The time from which the experimental block starts (_i.e._ POSIXct format, see examples).
+- `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
 
-- `end_time`: The time until which the experimental block lasts (_i.e._ POSIXct format, see examples).
+- `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
 
-- `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, _i.e._ `end_time` - `start_time` (default option), or be kept as NA.
+- `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
 
 - `unit`: Unit of the latency duration: 'm' as default.
+
+
+![The **pr_latency_reach** function.](pr_latency_reach.png){width="100%"}
+
+
+*Example 1, one antenna of interest:*
+```{r}
+# Antenna of interest
+antenna_nb_1 <- 44
+
+# Start and end time
+start_time <-
+  as.POSIXct(strptime(c("2020-11-05 12:30:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+end_time <-
+  as.POSIXct(strptime(c("2020-11-05 15:00:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+
+# I run the function
+ant_44_table <- pr_latency_reach(
+block_df = block_df,
+block_ref_df = block_ref_df,
+antenna_nb_1,
+start_time = start_time,
+end_time = end_time,
+keep_NA = T,
+unit = 's')
+
+head(ant_44_table)
+
+```
+
+*Example 2, several antenna of interest:*
+```{r}
+antenna_nb_2 <- c(41, 42, 43, 44)
+```
+
+
+
+
+
+
+
+
 
 
 
