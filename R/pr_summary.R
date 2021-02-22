@@ -89,10 +89,6 @@ output$heatmap <- ggplot2::ggplot(data = block_df,
   # Theme
   ggplot2::theme(axis.ticks.y = ggplot2::element_blank(),
         axis.ticks.x = ggplot2::element_blank(),
-        axis.title = ggplot2::element_text(family="Source Sans Pro Light"),
-        axis.text = ggplot2::element_text(family="Source Sans Pro Light"),
-        legend.text = ggplot2::element_text(family="Source Sans Pro Light"),
-        legend.title = ggplot2::element_text(family="Source Sans Pro Light"),
         axis.title.y = ggplot2::element_text(margin = ggplot2::margin(t = 0, r = 10, b = 0, l = 0)),
         axis.text.x = ggplot2::element_text(margin = ggplot2::margin(t = 10, r = 0, b = 0, l = 0)),
         panel.background = ggplot2::element_rect(fill = "transparent"))  +

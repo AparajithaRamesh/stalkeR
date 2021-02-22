@@ -13,7 +13,7 @@ First, you can (install and) load the *StalkeR* package.
 
 ```{r setup}
 
-install.packages("pondr")
+#install.packages("pondr")
 library(pondr)
 
 ```
@@ -63,14 +63,74 @@ Now that `block_ref_df` and `raw_df` are ready, you can start to use the differe
 
 # Clean the data
 
-The first function has to be used before using any of the next *StalkeR* functions. It uses the `block_ref_df` and `raw_df` objects as inputs, and outputs a cleaner version of `raw_df` named `block_df`. The function does the following actions:
+The first function (**pr_clean_data**) has to be used before using any of the next *StalkeR* functions. It uses the `block_ref_df` and `raw_df` objects as inputs, and outputs a cleaner version of `raw_df` named `block_df`. The function does the following actions:
 
 -   It keeps the columns of interest (*i.e.* id, antenna and time).
 -   The time format is changed to *Posixt* format.
--   It keep one read per individual at a certain antenna per second (*i.e.* remove repeats).
--   It remove ghost reads test reads, or any read that do not correspond to individuals present in the `block_ref_df` object.
+-   It keeps one read per individual at a certain antenna per second (*i.e.* remove repeats).
+-   It removes ghost reads test reads, or any read that do not correspond to individuals present in the `block_ref_df` object.
 -   It orders the data frame based on time.
 
 The output, `block_df`, is the working unit of this package.
 
 ![The `pr_clean_data` function.](pr_clean_data.png){width="50%"}
+
+*Example:*
+```{r}
+
+block_df <- pr_clean_data(raw_df = raw_df, 
+              id_ref_df = block_ref_df)
+
+head(block_df)
+
+
+```
+
+
+
+------------------------------------------------------------------------
+
+# Compute behavioural indices
+
+Once you generated `block_df`, you can run a set of functions to compute different behavioural indices. The functions are described below:
+
+
+## Data summary
+
+The **pr_summary** function the reads from an experimental block (\code{block_df}) and a reference list of fish present in this block (\code{block_ref_df}). It produces:
+
+- A summary table containing the reads of each individual per antenna, and the total reads.
+- A heatmap corresponding to a visual representation of the table. 
+
+Why do we need both \code{block_df} and \code{block_ref_df}? If all the individuals have been read in \code{block_df}, then the individuals present in \code{block_ref_df} and \code{block_df} are the same. However, if some individuals haven't been read in \code{block_df} (e.g. animals haven't moved, lost the tag, are dead),
+then there will be more individuals in the \code{block_ref_df}.
+
+![The `pr_summary` function.](pr_summary.png){width="100%"}
+
+
+*Example:*
+```{r}
+pr_summary(block_df = block_df, 
+           block_ref_df = block_ref_df)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
