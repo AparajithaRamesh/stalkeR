@@ -25,9 +25,9 @@ library(pondr)
 
 Before starting to use the *StalkeR* package functions, you have to format and organise your data in a certain way. The unit of the *StalkeR* package is a data frame containing *reads* for one *experimental block*. This means that in the data frame, every row is one read, containing information about the individual ID, the antenna and the exact time of the read. An *experimental block* represents a unit limited in *space* and *time*, with associated antennas. For instance, if you work with birds, an experimental block can be one enclosure with several animals. If you work with fishes, an experimental block might be a pond/aquarium containing a group of fish. To obtain reads from one experimental block, we suggest to use the following workflow.
 
-## Building a reference list per experimental block (`block_ref_df`)
+## Building a reference list per experimental block
 
-First, you should build the `block_ref_df` data frame. This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
+First, you should build the a **experimental block *reference data frame* **. This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
 
 ```{r}
 
