@@ -7,12 +7,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This package aims at providing a efficient workflow for extracting, formatting and analyzing data from PIT / RFID readers in the context of studying animal behavior using an experimental approach. A schematic version of this vignette is available in the *StalkeR cheat sheet*. This package contains functions enabling to obtain, *e.g.* for each individual, a sociability index, the distance travelled between several antennas, or the latency to reach a certain antenna.
+This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour using an experimental approach. A schematic version of this vignette is available in the *StalkeR cheat sheet*. Eventually, the package allows researchers to compute behavioural indices for each individual, such as a shoaling index and an activity index.
 
 First, you can (install and) load the *StalkeR* package.
 
 ```{r setup}
 
+install.packages("pondr")
 library(pondr)
 
 ```
@@ -23,12 +24,7 @@ library(pondr)
 
 ## What is an experimental block?
 
-Before starting to use the *StalkeR* package functions, you have to format and organize your data in a certain way. The unit of the *StalkeR* package is a data frame containing *reads* for one *experimental block*. This means that in the data frame, every row is one read, containing information about the individual id, the antenna and the exact time of the read. An *experimental block* represents a unit limited in *space* and *time*, with associated antennas. For instance, if you work with birds, an experimental block can be one enclosure with several animals. If you work with fishes, an experimental block might be a pond/aquarium containing a group of fishes. What *an* experimental block is not:
-
--   An enclosures in which a series of birds (*e.g.*, ID_1, ID_2 and ID_3) have been tested using the antennas A1, A2, and A3 during one day, and in which another set of birds (*e.g.* ID_4, ID_5, ID_6) have been tested using the antennas A4, A5, A6 the next day. In this case, day 1 represents one experimental block, and day 2 represents a second one.
--   Two aquariums in which antennas are installed during the same day. The individuals of aquarium 1 (*e.g.*, ID_A, ID_B and ID_C) can only be read by antennas A1, A2 and A3, the individuals of aquarium 2 (*e.g.* ID_D, ID_E, ID_F) can only be read by the antennas A4, A5, A6.In this case, each aquarium is an experimental block.
-
-To obtain reads from one experimental block, we suggest to use the following workflow.
+Before starting to use the *StalkeR* package functions, you have to format and organize your data in a certain way. The unit of the *StalkeR* package is a data frame containing *reads* for one *experimental block*. This means that in the data frame, every row is one read, containing information about the individual id, the antenna and the exact time of the read. An *experimental block* represents a unit limited in *space* and *time*, with associated antennas. For instance, if you work with birds, an experimental block can be one enclosure with several animals. If you work with fishes, an experimental block might be a pond/aquarium containing a group of fish. To obtain reads from one experimental block, we suggest to use the following workflow.
 
 ## Building a reference list per experimental block (`block_ref_df`)
 
@@ -45,9 +41,9 @@ head(block_ref_df)
 
 ## Building the `raw_df` object
 
-Then, there are two options: (i) the data frame(s) you obtain from your PIT / RFID readers contain reads already corresponding to experimental blocks (one data frame per experimental block); (ii) the data frame(s) you obtain from your PIT / RFID readers contain reads from several experimental blocks (one data frame for several experimental block).
+Then, depending on your experimental set-up, there are two options: (i) the data frame(s) you obtain from your RFID readers contain reads already corresponding to experimental blocks (one data frame per experimental block); (ii) the data frame(s) you obtain from your RFID readers contain reads from several experimental blocks (one data frame for several experimental block).
 
-If you are in the first case, you can move to the 'Format `raw_df`' section below. If you are in the second case, you need to subset the reads corresponding to your different experimental blocks. To do so, we suggest to use the `inner_join` function of the *dyplyr* package, or the `merge` function of *base* R, for example.
+If you are in the first case, you can move to the 'Format `raw_df`' section below. If you are in the second or the third case, you will need to subset of assemble the reads corresponding to your different experimental blocks first.
 
 ### Format `raw_df`
 
