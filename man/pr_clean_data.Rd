@@ -4,7 +4,7 @@
 \alias{pr_clean_data}
 \title{Clean the raw data from the readers}
 \usage{
-pr_clean_data(raw_df, id_ref_df)
+pr_clean_data(raw_df, block_ref_df)
 }
 \arguments{
 \item{raw_df}{Raw data frame from the PIT / RFID system,
@@ -12,7 +12,7 @@ already formatted and containing the columns
 "time", "date", "antenna", "id"  (already formatted). This data frame corresponds to
 the reads for \emph{one} experimental block.}
 
-\item{id_ref_df}{Reference data frame for an experimental block
+\item{block_ref_df}{Reference data frame for an experimental block
 containing at least one column "id", with  all
 individuals and corresponding variables (already formatted)}
 }
