@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour using an experimental approach. A schematic version of this vignette is available in the *StalkeR cheat sheet*. Eventually, the package allows researchers to compute several behavioural indices for each individual.
+This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour in experimental settings. A schematic version of this vignette is available in the *StalkeR cheat sheet*. The package allows researchers to compute several behavioural indices for each individual.
 
 First, you can (install and) load the *StalkeR* package.
 
@@ -23,7 +23,7 @@ library(pondr)
 
 ## Experimental blocks
 
-Before starting to use the *StalkeR* package functions, you have to format and organize your data in a certain way. The unit of the *StalkeR* package is a data frame containing *reads* for one *experimental block*. This means that in the data frame, every row is one read, containing information about the individual id, the antenna and the exact time of the read. An *experimental block* represents a unit limited in *space* and *time*, with associated antennas. For instance, if you work with birds, an experimental block can be one enclosure with several animals. If you work with fishes, an experimental block might be a pond/aquarium containing a group of fish. To obtain reads from one experimental block, we suggest to use the following workflow.
+Before starting to use the *StalkeR* package functions, you have to format and organise your data in a certain way. The unit of the *StalkeR* package is a data frame containing *reads* for one *experimental block*. This means that in the data frame, every row is one read, containing information about the individual ID, the antenna and the exact time of the read. An *experimental block* represents a unit limited in *space* and *time*, with associated antennas. For instance, if you work with birds, an experimental block can be one enclosure with several animals. If you work with fishes, an experimental block might be a pond/aquarium containing a group of fish. To obtain reads from one experimental block, we suggest to use the following workflow.
 
 ## Building a reference list per experimental block (`block_ref_df`)
 
@@ -36,24 +36,28 @@ data(block_ref_df)
 
 # I show the first rows of this example
 head(block_ref_df)
+
+
 ```
 
-## Building the `raw_df` object
+## Building your raw data frames
 
-Then, depending on your experimental set-up, there are two options: (i) the data frame(s) you obtain from your RFID readers contain reads already corresponding to experimental blocks (one data frame per experimental block); (ii) the data frame(s) you obtain from your RFID readers contain reads from several experimental blocks (one data frame for several experimental block).
+Then, depending on your experimental set-up, there are two options: (i) the data frame(s) you obtain from your RFID readers contain reads already corresponding to experimental blocks (one data frame per experimental block); (ii) the data frame(s) you obtain from your RFID readers contain reads from several experimental blocks (one data frame for several experimental block); several data frames obtained from your RFID readers constitute a single experimental block.
 
-If you are in the first case, you can move to the 'Format `raw_df`' section below. If you are in the second or the third case, you will need to subset of assemble the reads corresponding to your different experimental blocks first.
+Eventually, you want to obtain one data frame per experimental block. Thus, if you are in the first case, you can move to the 'Format raw data' section below directly. If however you are in the second or the third case, you will need to subset of assemble the reads corresponding to your different experimental blocks first. We suggest the use of the *merge()* or the *rbind()* functions, for example.
 
-### Format `raw_df`
+### Format raw data
 
-You must be now working with a data frame containing reads from one experimental block. This data frame must contain at least four different columns: *id*, *date*, *time* and *antenna*. The *id* column must contain a unique number/code per individual; the *date* column must contain the data at the dd-mm-yy format;the *time* column must contain the time in the hh:mm:ss format; the *column* must contain a unique antenna number/code. Be sure to name these columns as in the example below, keeping in mind that R is case sensitive (no capital letters in columns name).
+You must be now working with a data frame containing reads from one experimental block. This data frame has to contain at least four different columns: *id*, *date*, *time* and *antenna*. The *id* column must contain a unique number/code per individual; the *date* column must contain the data at the dd-mm-yy format; the *time* column must contain the time in the hh:mm:ss format; the *column* must contain a unique antenna number/code. Be sure to name these columns as in the example below, keeping in mind that R is case sensitive (no capital letters in columns name).
 
 ```{r}
+
 # I import the example data frame
 data(raw_df)
 
 # I show the first rows of this example
 head(raw_df)
+
 ```
 
 Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
