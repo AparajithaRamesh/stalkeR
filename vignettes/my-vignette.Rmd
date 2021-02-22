@@ -78,7 +78,7 @@ The output, `block_df`, is the working unit of this package.
 ```{r}
 
 block_df <- pr_clean_data(raw_df = raw_df, 
-              id_ref_df = block_ref_df)
+              block_ref_df = block_ref_df)
 
 head(block_df)
 
