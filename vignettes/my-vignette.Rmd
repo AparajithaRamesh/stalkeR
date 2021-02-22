@@ -13,7 +13,6 @@ First, you can (install and) load the *StalkeR* package.
 
 ```{r setup}
 
-#install.packages("pondr")
 library(pondr)
 
 ```
