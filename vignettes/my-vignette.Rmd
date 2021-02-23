@@ -29,6 +29,7 @@ Before starting to use the *StalkeR* package functions, you have to format and o
 
 First, you should build the a **experimental block *reference data frame* **. This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
 
+
 ```{r}
 
 # I import the example data frame
