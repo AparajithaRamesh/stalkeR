@@ -1,6 +1,7 @@
 ---
 title: "StalkeR package workflow"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{StalkeR package workflow}
   %\VignetteEngine{knitr::rmarkdown}
