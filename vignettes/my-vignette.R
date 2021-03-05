@@ -24,12 +24,11 @@ head(raw_df)
 
 ## -----------------------------------------------------------------------------
 
-block_df <- pr_clean_data(raw_df = raw_df, 
-              block_ref_df = block_ref_df)
+block_df <- pr_clean_data(raw_df, 
+              block_ref_df)
 
 head(block_df)
 
-?pr_clean_data
 
 
 
