@@ -1,15 +1,12 @@
 #' @title Distance travelled by an individual
 #'
-#' @description Distance travelled: eucleadian distance
-#' travelled by fish: block_df, block_ref_id_df,
-#' block_ref_antenna_df, output gives indiv, distance
-#' travelled, 0 for indiv that got read, didnt move and
-#'  NA for indiv that did not get read
+#' @description This function computes, for every individual, the euclidean distance travelled between all antennas it has been read at.
+#
 #'
 #' @param block_df A data frame containing the reads from an experimental block
 #' @param block_ref_df A data frame containing a reference list with all individuals present in the experimental block.
-#' @param ant_coordinates A data frame containing  "antenna" and coordinates, "x","y","z" in other columns. If there is no z axis, enter all zeros but do not omit the column
-#' @return A data frame containing the "id" and corresponding "distance" travelled by fish
+#' @param ant_coordinates A data frame containing  four columns: "antenna","x","y","z" (where "x", "y", and "z" represent the coordinates in three domensions). If there is no z axis, enter all zeros but do not omit the column.
+#' @return A data frame containing two columns: "id", and "distance", indicating the travelled distance for every individual.
 #'
 #' @export
 #'

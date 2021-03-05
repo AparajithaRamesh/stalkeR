@@ -1,10 +1,11 @@
 ---
 title: "StalkeR package workflow"
 output: rmarkdown::html_vignette
-vignette: |
 
-  %\VignetteIndexEntry{StalkeR package workflow}            %\VignetteEngine{knitr::knitr}
-   %\VignetteEncoding{UTF-8}
+vignette: >
+  %\VignetteIndexEntry{StalkeR package workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour in experimental settings. A schematic version of this vignette is available in the *StalkeR cheat sheet*. The package allows researchers to compute several behavioural indices for each individual.
@@ -17,7 +18,8 @@ library(pondr)
 
 ```
 
-------------------------------------------------------------------------
+---
+
 
 # Format data
 
@@ -27,8 +29,7 @@ Before starting to use the *StalkeR* package functions, you have to format and o
 
 ## Building a reference list per experimental block
 
-First, you should build the a **experimental block *reference data frame* **. This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
-
+First, you should build the a **experimental block *reference data frame*** . This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
 
 ```{r}
 
@@ -63,9 +64,7 @@ head(raw_df)
 
 Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
 
-
 ---
-
 
 # Clean the data (**pr_clean_data**)
 
@@ -85,10 +84,11 @@ The output `block_df`, is the working unit of this package.
 
 ```{r}
 
-block_df <- pr_clean_data(raw_df = raw_df, 
-              block_ref_df = block_ref_df)
+block_df <- pr_clean_data(raw_df, 
+              block_ref_df)
 
 head(block_df)
+
 
 
 ```
@@ -105,7 +105,6 @@ The **pr_summary** uses, as input, the reads from an experimental block (`block_
 
 -   A summary table containing the reads of each individual per antenna, and the total reads.
 -   A heatmap corresponding to a visual representation of the table.
-
 
 Why do we need both `block_df` and `block_ref_df`? If all the individuals have been read in `block_df`, then the individuals present in `block_ref_df` and `block_df` are the same. However, if some individuals haven't been read in `block_df` (e.g. animals haven't moved, lost the tag, are dead), then there will be more individuals in the `block_ref_df`.
 
@@ -129,18 +128,18 @@ summary_heatmap
 
 ```
 
-
 ---
 
 ## Sociality index (**pr_sociality**)
 
-The **pr_sociality** computes, for every individual, the proportion of time it was read in presence of at least one conspecific. To do so, the function divides the number of *accompanied reads* (number of reads for which the focal individual was read at the same second and at the same antenna than at least another individual) by the *total number of reads* (*accompanied* plus *non-accompanied* reads). 
+The **pr_sociality** computes, for every individual, the proportion of time it was read in presence of at least one conspecific. To do so, the function divides the number of *accompanied reads* (number of reads for which the focal individual was read at the same second and at the same antenna than at least another individual) by the *total number of reads* (*accompanied* plus *non-accompanied* reads).
 
 **pr_sociality** uses three different inputs: `block_df`, `block_ref_df` and `cutoff`. The `cutoff` argument is a value corresponding to the minimum number of *total reads* from which the sociality index (that is, the proportion of accompanied reads) should be computed. For example, if an individual was read only once, by chance, in presence of a conspecific, a score of 100% for this individual is probably not representative of the real proportion of time it spends in presence of conspecifics. By default, the value if set at 10 total reads. For no cutoff, one can use a value of 0.
 
 ![The **pr_sociality** function.](pr_sociality.png){width="100%"}
 
 *Example:*
+
 ```{r}
 sociality_table <- pr_sociality(block_df = block_df,
                                 block_ref_df = block_ref_df,
@@ -149,34 +148,30 @@ sociality_table <- pr_sociality(block_df = block_df,
 head(sociality_table)
 ```
 
-
 ---
 
-
 ## Latency to *reach* one or several antennas (**pr_latency_reach**)
+
 This function computes, for every individual, the latency to reach (*i.e.* be read at) certain antennas. This can for example be used in the context of an exploration test, during which individuals enter an exploration box, in which they are read by an antenna.
 
 The function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one or several antennas of interest. Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
 
-
 In addition to `block_df` and `block_ref_df`, the function needs a series of additional arguments:
 
+-   `antenna_nb`: If there is one antenna of interest, then `antenna_nb` corresponds to its number/name. However, if there are several antennas of interest, the argument should be a vector of antenna names/numbers.
 
-- `antenna_nb`: If there is one antenna of interest, then `antenna_nb` corresponds to its number/name. However, if there are several antennas of interest, the argument should be a vector of antenna names/numbers.
+-   `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
 
-- `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
+-   `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
 
-- `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
+-   `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
 
-- `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
-
-- `unit`: Unit of the latency duration: 'm' as default.
-
+-   `unit`: Unit of the latency duration: 'm' as default.
 
 ![The **pr_latency_reach** function.](pr_latency_reach.png){width="100%"}
 
-
 *Example 1, one antenna of interest:*
+
 ```{r}
 # Antenna of interest
 antenna_nb_1 <- 44
@@ -201,7 +196,8 @@ head(ant_44_table)
 
 ```
 
-*Example 2, several antenna of interest:*
+*Example 2, several antennas of interest:*
+
 ```{r}
 # Antennas of interest
 antenna_nb_2 <- c(41, 42, 43, 44)
@@ -218,25 +214,100 @@ unit = 'm')
 head(mult_ant_table)
 ```
 
-
 ---
-
 
 ## Latency to *cross* one or several sequences of antennas (**pr_latency_cross**)
 
-I will need to be awake to write this one actually.
 
+This function computes, for every individual, the latency to cross a sequence of antennas consecutively. For example if you want to know how long an individual took to go from pond A to pond B from the start of the experiment, you could install two antennas at each side of a connector (e.g. 41 and 42), you could then obtain the latency to be consecutively read at 41 then 42. In addition to the latency to go from pond A to pond B, you might be interested in knowing how long an individual took to go from pond B to pond C (e.g. antenna 43) - in this case, you can indicate several sequences of antennas of interest (e.g. 41-42 *and* 42-43).  
+
+
+Specifically, the function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one antenna of the indicated sequence(s). More details are given below. Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
+
+In addition to `block_df` and `block_ref_df`, the function needs a series of additional arguments:
+
+-   `sequence`: Either a vector of antenna numbers/names, or a data frame containing several sequences *of the same length* (one vector per row), see examples.
+
+-   `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
+
+-   `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
+
+-   `seq_position`: Which antenna, from the sequence of antennas, should be crossed by an animal to calculate the latency? By default, the first read at the *second antenna* is used to calculate the latency (`seq_position` = 2). When `seq_position` = 1, the value will correspond to the first read at the first antenna of the sequence, which might have occurred long before the animal actually crossed the sequence. For example, if the sequence is c(1, 2), the individual can have been read at antenna 1 at 12:00:00, and only cross the sequence later (cross antenna 1 at 12:45:03 and cross antenna 2 at 12:45:05). In the later case, if `seq_position` = 1, the latency will be computed with 12:00:00, and if `seq_position` = 2, the latency will be computed with 12:45:05.
+
+-   `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
+
+-   `unit`: Unit of the latency duration: 'm' as default.
 
 ![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
 
 
+*Example 1, one sequence of interest :*
+```{r}
+# Sequence of interest
+sequence_1 <- c(41, 42)
+
+
+# Start and end time
+start_time <-
+  as.POSIXct(strptime(c("2020-11-05 12:30:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+end_time <-
+  as.POSIXct(strptime(c("2020-11-05 15:00:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
+
+
+
+
+```
+
+
+*Example 2, several sequences of interest :*
+```{r}
+# Sequences of interest
+sequence_2 <- as.data.frame(rbind(
+ c(41, 42),
+ c(42, 43)
+))
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_2,
+start_time, end_time, keep_NA = TRUE, unit = 's')
+
+
+```
+
 ---
 
-Same here.
+
+## Distance travelled among antennas
+
+This function computes, for every individual, the euclidean distance it has travelled among two or more antennas. It can for example be useful as a *proxy* for activity level. The output is a data frame containing two columns: "id" and "distance", and indicates the travelled distance for all individuals.
+
+In addition to `block_df` and `block_ref_df`, the function needs one additional argument: `ant_coordinates`. `ant_coordinates` is a data frame containing the coordinates of the antennas of interest. It contains four columns: "antenna","x","y","z" (where "x", "y", and "z" represent the coordinates in three dimensions). If there is no z axis, enter all zeros but do not omit the column. Every row corresponds to one antenna.
 
 
 
 ![The **pr_dist** function.](pr_dist.png){width="100%"}
+
+*Example:*
+
+```{r}
+# I load the coordinates of four antennas
+data(ant_coordinates)
+
+ant_coordinates
+```
+
+I run the function given the coordinates indicated in `ant_coordinates`.
+
+```{r}
+pr_dist(block_df = block_df, 
+        block_ref_df = block_ref_df,
+        ant_coordinates = ant_coordinates)
+
+```
+
 
 
 
