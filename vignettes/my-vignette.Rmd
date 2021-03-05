@@ -195,7 +195,7 @@ head(ant_44_table)
 
 ```
 
-*Example 2, several antenna of interest:*
+*Example 2, several antennas of interest:*
 
 ```{r}
 # Antennas of interest
@@ -281,6 +281,25 @@ start_time, end_time, keep_NA = TRUE, unit = 's')
 Same here.
 
 ![The **pr_dist** function.](pr_dist.png){width="100%"}
+
+
+
+```{r}
+# I load the coordinates of four antennas
+data(ant_coordinates)
+
+ant_coordinates
+```
+
+```{r}
+pr_dist(block_df = block_df, 
+        block_ref_df = block_ref_df,
+        ant_coordinates = ant_coordinates)
+
+```
+
+
+
 
 
 

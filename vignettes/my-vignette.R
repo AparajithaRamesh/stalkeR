@@ -92,3 +92,37 @@ unit = 'm')
 
 head(mult_ant_table)
 
+## -----------------------------------------------------------------------------
+# Sequence of interest
+sequence_1 <- c(41, 42)
+
+
+# Start and end time
+start_time <-
+  as.POSIXct(strptime(c("2020-11-05 12:30:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+end_time <-
+  as.POSIXct(strptime(c("2020-11-05 15:00:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
+
+
+
+
+
+## -----------------------------------------------------------------------------
+# Sequences of interest
+sequence_2 <- as.data.frame(rbind(
+ c(41, 42),
+ c(42, 43)
+))
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_2,
+start_time, end_time, keep_NA = TRUE, unit = 's')
+
+
+
+## -----------------------------------------------------------------------------
+data(ant_coordinates)
+
