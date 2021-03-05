@@ -1,11 +1,10 @@
 ---
 title: "StalkeR package workflow"
-output: 
-  rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{StalkeR package workflow}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output: rmarkdown::html_vignette
+vignette: |
+
+  %\VignetteIndexEntry{StalkeR package workflow}            %\VignetteEngine{knitr::knitr}
+   %\VignetteEncoding{UTF-8}
 ---
 
 This package aims at providing an efficient workflow for extracting, formatting and analyzing data from RFID readers in the context of studying animal behaviour in experimental settings. A schematic version of this vignette is available in the *StalkeR cheat sheet*. The package allows researchers to compute several behavioural indices for each individual.

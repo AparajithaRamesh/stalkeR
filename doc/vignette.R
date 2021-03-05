@@ -5,5 +5,5 @@ knitr::opts_chunk$set(
 )
 
 ## ----setup--------------------------------------------------------------------
-library(pondanalyser)
+library(pondr)
 
