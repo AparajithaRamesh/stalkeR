@@ -124,5 +124,14 @@ start_time, end_time, keep_NA = TRUE, unit = 's')
 
 
 ## -----------------------------------------------------------------------------
+# I load the coordinates of four antennas
 data(ant_coordinates)
+
+ant_coordinates
+
+## -----------------------------------------------------------------------------
+pr_dist(block_df = block_df, 
+        block_ref_df = block_ref_df,
+        ant_coordinates = ant_coordinates)
+
 
