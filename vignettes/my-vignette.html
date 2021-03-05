@@ -381,20 +381,13 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I show the first rows of this example</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(block_ref_df)</span></code></pre></div>
-<pre><code>##         Date         id   SL Weight Plates Tagger Remarks Pond Treatment_seq
-## 1 2020-10-12 0007A03565 39.8   0.77      T  Jakob    &lt;NA&gt;    7            PP
-## 2 2020-10-12 0007A04979 38.0   0.74      S  Jakob    &lt;NA&gt;    7            PP
-## 3 2020-10-12 0007E4CFFA 40.2   0.92      T  Jakob    &lt;NA&gt;    7            PP
-## 4 2020-10-12 0007EA009A 38.1   0.69      T  Jakob    &lt;NA&gt;    7            PP
-## 5 2020-10-12 0007A5AAD5 40.5   0.84      T  Jakob    &lt;NA&gt;    7            PP
-## 6 2020-10-12 0007DF1C00 37.2   0.64      T  Jakob    &lt;NA&gt;    7            PP
-##   Replicate
-## 1         B
-## 2         B
-## 3         B
-## 4         B
-## 5         B
-## 6         B</code></pre>
+<pre><code>##           id   SL Weight Plates Pond Treatment_seq Replicate
+## 1 0007A03565 39.8   0.77      T    7            PP         B
+## 2 0007A04979 38.0   0.74      S    7            PP         B
+## 3 0007E4CFFA 40.2   0.92      T    7            PP         B
+## 4 0007EA009A 38.1   0.69      T    7            PP         B
+## 5 0007A5AAD5 40.5   0.84      T    7            PP         B
+## 6 0007DF1C00 37.2   0.64      T    7            PP         B</code></pre>
 </div>
 <div id="building-your-raw-data-frames" class="section level2">
 <h2>Building your raw data frames</h2>
@@ -408,27 +401,13 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I show the first rows of this example</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(raw_df)</span></code></pre></div>
-<pre><code>##   Identifier     date     time antenna Antenna.number Transponder.type
-## 1     201323 05-11-20 13:13:49      43              -    Trovan Unique
-## 2     201324 05-11-20 13:13:50      43              -    Trovan Unique
-## 3     201325 05-11-20 13:13:51      43              -    Trovan Unique
-## 4     201326 05-11-20 13:13:52      43              -    Trovan Unique
-## 5     201327 05-11-20 13:13:52      43              -    Trovan Unique
-## 6     201328 05-11-20 13:13:53      43              -    Trovan Unique
-##           id Weight.x Input.status Output.status Event GPS.coordinates
-## 1 0007A05274        -            0             0     -              NA
-## 2 0007A56748        -            0             0     -              NA
-## 3 0007A56748        -            0             0     -              NA
-## 4 0007A56748        -            0             0     -              NA
-## 5 0007A56748        -            0             0     -              NA
-## 6 0007A56748        -            0             0     -              NA
-##         Date SL Weight.y Plates Tagger Remarks Pond Treatment_seq Replicate
-## 1 2020-10-14 NA     0.59      T  Jakob    &lt;NA&gt;    7            PP         B
-## 2 2020-10-19 40     0.76      L  Jakob    &lt;NA&gt;    7            PP         B
-## 3 2020-10-19 40     0.76      L  Jakob    &lt;NA&gt;    7            PP         B
-## 4 2020-10-19 40     0.76      L  Jakob    &lt;NA&gt;    7            PP         B
-## 5 2020-10-19 40     0.76      L  Jakob    &lt;NA&gt;    7            PP         B
-## 6 2020-10-19 40     0.76      L  Jakob    &lt;NA&gt;    7            PP         B</code></pre>
+<pre><code>##   Identifier     date     time antenna         id GPS.coordinates
+## 1     201323 05-11-20 13:13:49      43 0007A05274              NA
+## 2     201324 05-11-20 13:13:50      43 0007A56748              NA
+## 3     201325 05-11-20 13:13:51      43 0007A56748              NA
+## 4     201326 05-11-20 13:13:52      43 0007A56748              NA
+## 5     201327 05-11-20 13:13:52      43 0007A56748              NA
+## 6     201328 05-11-20 13:13:53      43 0007A56748              NA</code></pre>
 <p>Now that <code>block_ref_df</code> and <code>raw_df</code> are ready, you can start to use the different package functions.</p>
 <hr />
 </div>
