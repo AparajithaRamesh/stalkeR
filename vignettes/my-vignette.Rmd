@@ -27,8 +27,7 @@ Before starting to use the *StalkeR* package functions, you have to format and o
 
 ## Building a reference list per experimental block
 
-First, you should build the a **experimental block *reference data frame* **. This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
-
+First, you should build the a **experimental block *reference data frame*** . This object contains a list of all the individuals of one experimental block. In addition, several covariates can be added to the data frame, *e.g.* sex, size or experimental treatment. The data frame *must* contain at least the *id* columns with the individuals identification code/number.
 
 ```{r}
 
@@ -63,9 +62,7 @@ head(raw_df)
 
 Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
 
-
----
-
+------------------------------------------------------------------------
 
 # Clean the data (**pr_clean_data**)
 
@@ -94,7 +91,7 @@ head(block_df)
 
 ```
 
----
+------------------------------------------------------------------------
 
 # Compute behavioural indices
 
@@ -106,7 +103,6 @@ The **pr_summary** uses, as input, the reads from an experimental block (`block_
 
 -   A summary table containing the reads of each individual per antenna, and the total reads.
 -   A heatmap corresponding to a visual representation of the table.
-
 
 Why do we need both `block_df` and `block_ref_df`? If all the individuals have been read in `block_df`, then the individuals present in `block_ref_df` and `block_df` are the same. However, if some individuals haven't been read in `block_df` (e.g. animals haven't moved, lost the tag, are dead), then there will be more individuals in the `block_ref_df`.
 
@@ -130,18 +126,18 @@ summary_heatmap
 
 ```
 
-
----
+------------------------------------------------------------------------
 
 ## Sociality index (**pr_sociality**)
 
-The **pr_sociality** computes, for every individual, the proportion of time it was read in presence of at least one conspecific. To do so, the function divides the number of *accompanied reads* (number of reads for which the focal individual was read at the same second and at the same antenna than at least another individual) by the *total number of reads* (*accompanied* plus *non-accompanied* reads). 
+The **pr_sociality** computes, for every individual, the proportion of time it was read in presence of at least one conspecific. To do so, the function divides the number of *accompanied reads* (number of reads for which the focal individual was read at the same second and at the same antenna than at least another individual) by the *total number of reads* (*accompanied* plus *non-accompanied* reads).
 
 **pr_sociality** uses three different inputs: `block_df`, `block_ref_df` and `cutoff`. The `cutoff` argument is a value corresponding to the minimum number of *total reads* from which the sociality index (that is, the proportion of accompanied reads) should be computed. For example, if an individual was read only once, by chance, in presence of a conspecific, a score of 100% for this individual is probably not representative of the real proportion of time it spends in presence of conspecifics. By default, the value if set at 10 total reads. For no cutoff, one can use a value of 0.
 
 ![The **pr_sociality** function.](pr_sociality.png){width="100%"}
 
 *Example:*
+
 ```{r}
 sociality_table <- pr_sociality(block_df = block_df,
                                 block_ref_df = block_ref_df,
@@ -150,34 +146,30 @@ sociality_table <- pr_sociality(block_df = block_df,
 head(sociality_table)
 ```
 
-
----
-
+------------------------------------------------------------------------
 
 ## Latency to *reach* one or several antennas (**pr_latency_reach**)
+
 This function computes, for every individual, the latency to reach (*i.e.* be read at) certain antennas. This can for example be used in the context of an exploration test, during which individuals enter an exploration box, in which they are read by an antenna.
 
 The function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one or several antennas of interest. Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
 
-
 In addition to `block_df` and `block_ref_df`, the function needs a series of additional arguments:
 
+-   `antenna_nb`: If there is one antenna of interest, then `antenna_nb` corresponds to its number/name. However, if there are several antennas of interest, the argument should be a vector of antenna names/numbers.
 
-- `antenna_nb`: If there is one antenna of interest, then `antenna_nb` corresponds to its number/name. However, if there are several antennas of interest, the argument should be a vector of antenna names/numbers.
+-   `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
 
-- `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
+-   `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
 
-- `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
+-   `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
 
-- `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
-
-- `unit`: Unit of the latency duration: 'm' as default.
-
+-   `unit`: Unit of the latency duration: 'm' as default.
 
 ![The **pr_latency_reach** function.](pr_latency_reach.png){width="100%"}
 
-
 *Example 1, one antenna of interest:*
+
 ```{r}
 # Antenna of interest
 antenna_nb_1 <- 44
@@ -203,6 +195,7 @@ head(ant_44_table)
 ```
 
 *Example 2, several antenna of interest:*
+
 ```{r}
 # Antennas of interest
 antenna_nb_2 <- c(41, 42, 43, 44)
@@ -219,28 +212,19 @@ unit = 'm')
 head(mult_ant_table)
 ```
 
-
----
-
+------------------------------------------------------------------------
 
 ## Latency to *cross* one or several sequences of antennas (**pr_latency_cross**)
 
 I will need to be awake to write this one actually.
 
-
 ![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
 
-
-?pr_latency_cross
----
+## pr_dist
 
 Same here.
 
-
-
 ![The **pr_dist** function.](pr_dist.png){width="100%"}
-
-
 
 
 
