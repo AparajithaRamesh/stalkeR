@@ -19,6 +19,7 @@ library(pondr)
 
 ------------------------------------------------------------------------
 
+
 # Format data
 
 ## Experimental blocks
@@ -216,9 +217,33 @@ head(mult_ant_table)
 
 ## Latency to *cross* one or several sequences of antennas (**pr_latency_cross**)
 
-I will need to be awake to write this one actually.
+
+This function computes, for every individual, the latency to cross a sequence of antennas consecutively. For example if you want to know how long an individual took to go from pond A to pond B from the start of the experiment, you could install two antennas at each side of a connector (e.g. 41 and 42), you could then obtain the latency to be consecutively read at 41 then 42.   
+
+
+Specifically, the function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one antenna of the indicated sequence (details below). Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
+
+In addition to `block_df` and `block_ref_df`, the function needs a series of additional arguments:
+
+-   `sequence`: Either a vector of antenna numbers/names, or a data frame containing several sequences *of the same length* (one vector per row), see examples.
+
+-   `start_time`: The time from which the experimental block starts (*i.e. POSIXct* format, see examples).
+
+-   `end_time`: The time until which the experimental block lasts (*i.e. POSIXct* format, see examples).
+
+-   `seq_position`: Which antenna, from the sequence of antennas, should be crossed by an animal to calculate the latency? By default, the first read at the *second antenna* is used to calculate the latency (`seq_position` = 2). When `seq_position` = 1, the value will correspond to the first read at the first antenna of the sequence, which might have occurred long before the animal actually crossed the sequence. For example, if the sequence is c(1, 2), the individual can have been read at antenna 1 at 12:00:00, and only cross the sequence later (cross antenna 1 at 12:45:03 and cross antenna 2 at 12:45:05). In the later case, if `seq_position` = 1, the latency will be computed with 12:00:00, and if `seq_position` = 2, the latency will be computed with 12:45:05.
+
+-   `keep_NA`: Logical argument. If the individuals are never read by the antenna(s), the latency might be set as the maximal possible value, *i.e.* `end_time` - `start_time` (default option), or be kept as NA.
+
+-   `unit`: Unit of the latency duration: 'm' as default.
 
 ![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
+
+
+*Example:*
+
+
+
 
 ## pr_dist
 
