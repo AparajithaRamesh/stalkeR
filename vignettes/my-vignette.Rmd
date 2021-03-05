@@ -85,10 +85,11 @@ The output `block_df`, is the working unit of this package.
 
 ```{r}
 
-block_df <- pr_clean_data(raw_df = raw_df, 
-              block_ref_df = block_ref_df)
+block_df <- pr_clean_data(raw_df, 
+              block_ref_df)
 
 head(block_df)
+
 
 
 ```
@@ -230,6 +231,7 @@ I will need to be awake to write this one actually.
 ![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
 
 
+?pr_latency_cross
 ---
 
 Same here.
