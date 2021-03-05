@@ -17,7 +17,7 @@ library(pondr)
 
 ```
 
-------------------------------------------------------------------------
+---
 
 
 # Format data
@@ -63,7 +63,7 @@ head(raw_df)
 
 Now that `block_ref_df` and `raw_df` are ready, you can start to use the different package functions.
 
-------------------------------------------------------------------------
+---
 
 # Clean the data (**pr_clean_data**)
 
@@ -92,7 +92,7 @@ head(block_df)
 
 ```
 
-------------------------------------------------------------------------
+---
 
 # Compute behavioural indices
 
@@ -127,7 +127,7 @@ summary_heatmap
 
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Sociality index (**pr_sociality**)
 
@@ -147,7 +147,7 @@ sociality_table <- pr_sociality(block_df = block_df,
 head(sociality_table)
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Latency to *reach* one or several antennas (**pr_latency_reach**)
 
@@ -213,15 +213,15 @@ unit = 'm')
 head(mult_ant_table)
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Latency to *cross* one or several sequences of antennas (**pr_latency_cross**)
 
 
-This function computes, for every individual, the latency to cross a sequence of antennas consecutively. For example if you want to know how long an individual took to go from pond A to pond B from the start of the experiment, you could install two antennas at each side of a connector (e.g. 41 and 42), you could then obtain the latency to be consecutively read at 41 then 42.   
+This function computes, for every individual, the latency to cross a sequence of antennas consecutively. For example if you want to know how long an individual took to go from pond A to pond B from the start of the experiment, you could install two antennas at each side of a connector (e.g. 41 and 42), you could then obtain the latency to be consecutively read at 41 then 42. In addition to the latency to go from pond A to pond B, you might be interested in knowing how long an individual took to go from pond B to pond C (e.g. antenna 43) - in this case, you can indicate several sequences of antennas of interest (e.g. 41-42 *and* 42-43).  
 
 
-Specifically, the function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one antenna of the indicated sequence (details below). Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
+Specifically, the function computes the difference between the initial time (time at which the antennas were introduced/started to record) and the first read at one antenna of the indicated sequence(s). More details are given below. Individuals that were not read at these antennas receive a score corresponding to the maximal possible duration by default.
 
 In addition to `block_df` and `block_ref_df`, the function needs a series of additional arguments:
 
@@ -240,9 +240,40 @@ In addition to `block_df` and `block_ref_df`, the function needs a series of add
 ![The **pr_latency_cross** function.](pr_latency_cross.png){width="100%"}
 
 
-*Example:*
+*Example 1, one sequence of interest :*
+```{r}
+# Sequence of interest
+sequence_1 <- c(41, 42)
 
 
+# Start and end time
+start_time <-
+  as.POSIXct(strptime(c("2020-11-05 12:30:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+end_time <-
+  as.POSIXct(strptime(c("2020-11-05 15:00:00"), "%Y-%m-%d %H:%M:%OS"), "UTC")
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
+
+
+
+
+```
+
+
+```{r}
+# Sequences of interest
+sequence_2 <- as.data.frame(rbind(
+ c(41, 42),
+ c(42, 43)
+))
+
+# I run the function
+pr_latency_cross(block_df, block_ref_df, sequence_2,
+start_time, end_time, keep_NA = TRUE, unit = 's')
+
+
+```
 
 
 ## pr_dist
