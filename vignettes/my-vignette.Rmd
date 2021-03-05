@@ -261,6 +261,7 @@ pr_latency_cross(block_df, block_ref_df, sequence_1, start_time, end_time)
 ```
 
 
+*Example 2, several sequences of interest :*
 ```{r}
 # Sequences of interest
 sequence_2 <- as.data.frame(rbind(
@@ -275,14 +276,20 @@ start_time, end_time, keep_NA = TRUE, unit = 's')
 
 ```
 
+---
 
-## pr_dist
 
-Same here.
+## Distance travelled among antennas
+
+This function computes, for every individual, the euclidean distance it has travelled among two or more antennas. It can for example be useful as a *proxy* for activity level. The output is a data frame containing two columns: "id" and "distance", and indicates the travelled distance for all individuals.
+
+In addition to `block_df` and `block_ref_df`, the function needs one additional argument: `ant_coordinates`. `ant_coordinates` is a data frame containing the coordinates of the antennas of interest. It contains four columns: "antenna","x","y","z" (where "x", "y", and "z" represent the coordinates in three dimensions). If there is no z axis, enter all zeros but do not omit the column. Every row corresponds to one antenna.
+
+
 
 ![The **pr_dist** function.](pr_dist.png){width="100%"}
 
-
+*Example:*
 
 ```{r}
 # I load the coordinates of four antennas
@@ -290,6 +297,8 @@ data(ant_coordinates)
 
 ant_coordinates
 ```
+
+I run the function given the coordinates indicated in `ant_coordinates`.
 
 ```{r}
 pr_dist(block_df = block_df, 

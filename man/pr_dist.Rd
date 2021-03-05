@@ -11,15 +11,11 @@ pr_dist(block_df, block_ref_df, ant_coordinates)
 
 \item{block_ref_df}{A data frame containing a reference list with all individuals present in the experimental block.}
 
-\item{ant_coordinates}{A data frame containing  "antenna" and coordinates, "x","y","z" in other columns. If there is no z axis, enter all zeros but do not omit the column}
+\item{ant_coordinates}{A data frame containing  four columns: "antenna","x","y","z" (where "x", "y", and "z" represent the coordinates in three domensions). If there is no z axis, enter all zeros but do not omit the column.}
 }
 \value{
-A data frame containing the "id" and corresponding "distance" travelled by fish
+A data frame containing two columns: "id", and "distance", indicating the travelled distance for every individual.
 }
 \description{
-Distance travelled: eucleadian distance
-travelled by fish: block_df, block_ref_id_df,
-block_ref_antenna_df, output gives indiv, distance
-travelled, 0 for indiv that got read, didnt move and
- NA for indiv that did not get read
+This function computes, for every individual, the euclidean distance travelled between all antennas it has been read at.
 }
